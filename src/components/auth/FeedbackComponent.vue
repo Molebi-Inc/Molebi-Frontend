@@ -11,10 +11,10 @@
     </div>
     <div>
       <MlbButton
-        type="primary"
+        type="button"
         label="Go to login"
         block
-        class="rounded-2xl! bg-primary-700! h-13!"
+        class="rounded-2xl! bg-primary-700! h-13! text-white!"
         @click="$router.push({ name: 'Guests.SigninView' })"
       />
     </div>

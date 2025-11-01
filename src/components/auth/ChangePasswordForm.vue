@@ -32,10 +32,10 @@
         </n-form-item>
       </div>
       <MlbButton
-        type="primary"
+        type="submit"
         label="Login"
         block
-        class="rounded-2xl! bg-primary-700! h-13!"
+        class="rounded-2xl! bg-primary-700! h-13! text-white!"
         @click="onFormSubmit"
       />
     </n-form>
@@ -51,7 +51,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
 import { changePasswordValidation } from '@/validations/authentication.validations'
-import { FormInst, useMessage, NForm, NFormItem, NDrawer, NDrawerContent } from 'naive-ui'
+import { useMessage, NForm, NFormItem, NDrawer, NDrawerContent } from 'naive-ui'
+import type { FormInst } from 'naive-ui'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import FeedbackComponent from '@/components/auth/FeedbackComponent.vue'

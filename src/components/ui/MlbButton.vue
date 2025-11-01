@@ -9,21 +9,18 @@ interface Props {
   secondary?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   type: 'button',
   size: 'medium',
 })
 </script>
 
 <template>
-  <NButton :type="type" :disabled="disabled" :size="size" :tertiary="secondary">
+  <NButton :attr-type="type" :disabled="disabled" :size="size" :tertiary="secondary">
     <slot name="icon" />
     <span v-if="label">{{ label }}</span>
     <slot />
   </NButton>
-  <!-- Apply Tailwind classes from parent as needed. -->
 </template>
 
 <style scoped></style>
-
-

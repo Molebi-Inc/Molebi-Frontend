@@ -1,5 +1,5 @@
 <template>
-  <MlbButton :label="label" secondary class="text-neutral-600 text-sm" @click="goBack()">
+  <MlbButton text :label="label" secondary class="text-neutral-600 text-sm" @click="goBack()">
     <template #icon>
       <MlbIcon v-if="icon" :name="icon" />
     </template>

@@ -2,10 +2,10 @@
 import { NInput } from 'naive-ui'
 
 interface Props {
-  modelValue?: string | number
+  modelValue?: string | null
   id?: string
   name?: string
-  type?: 'text' | 'email' | 'password' | 'number'
+  type?: 'text' | 'password'
   placeholder?: string
   size?: 'small' | 'medium' | 'large'
   disabled?: boolean
@@ -22,15 +22,15 @@ withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string | number | null): void
+  (e: 'update:modelValue', value: string | null): void
   (e: 'blur', event: FocusEvent): void
   (e: 'focus', event: FocusEvent): void
-  (e: 'change', value: string | number | null): void
+  (e: 'change', value: string | null): void
 }>()
 
-function onUpdate(value: string | number | null) {
-  emit('update:modelValue', value ?? '')
-  emit('change', value ?? '')
+function onUpdate(value: string | null) {
+  emit('update:modelValue', value ?? null)
+  emit('change', value ?? null)
 }
 </script>
 

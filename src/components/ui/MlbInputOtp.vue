@@ -2,7 +2,7 @@
 import { NInputOtp } from 'naive-ui'
 
 interface Props {
-  modelValue?: string | number | string[] | number[]
+  modelValue?: string[] | null
   name?: string
   placeholder?: string
   size?: 'small' | 'medium' | 'large'
@@ -11,7 +11,7 @@ interface Props {
   gap?: number
   block?: boolean
   label?: string
-  mask?: string
+  mask?: boolean
   customClass?: string
   showPasswordOn?: 'mousedown' | 'click'
 }
@@ -21,22 +21,22 @@ withDefaults(defineProps<Props>(), {
   customClass: '',
   length: 4,
   gap: 10,
-  mask: '####',
+  mask: true,
   block: false,
 })
 
 const emit = defineEmits<{
-  (e: 'finish', value: string | number | null): void
-  (e: 'update:modelValue', value: string | number | null): void
+  (e: 'finish', value: string[] | null): void
+  (e: 'update:modelValue', value: string[] | null): void
 }>()
 
-function onFinish(value: string | number | null) {
-  emit('finish', value ?? '')
+function onFinish(value: string[] | null) {
+  emit('finish', value)
 }
 </script>
 
 <template>
-  <label v-if="label" :for="id" class="text-sm font-medium text-gray-700">{{ label }}</label>
+  <label v-if="label" :for="name" class="text-sm font-medium text-gray-700">{{ label }}</label>
   <NInputOtp
     class="h-10! rounded-sm!"
     :value="modelValue"

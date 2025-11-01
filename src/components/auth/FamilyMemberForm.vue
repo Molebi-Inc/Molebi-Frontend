@@ -16,12 +16,7 @@
           <p class="text-neutral-600 font-normal text-sm text-center">Add a family member</p>
         </div>
         <div>
-          <n-form
-            ref="formRef"
-            :model="form"
-            :rules="rules"
-            class="flex flex-col gap-6 w-full"
-          >
+          <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 w-full">
             <div class="flex flex-col gap-2">
               <n-form-item path="relationship" :show-require-mark="false">
                 <template #label>
@@ -40,7 +35,9 @@
             <div class="flex flex-col gap-2">
               <n-form-item path="first_name" :show-require-mark="false">
                 <template #label>
-                  <label for="first_name" class="text-sm font-medium text-gray-700">First Name</label>
+                  <label for="first_name" class="text-sm font-medium text-gray-700"
+                    >First Name</label
+                  >
                 </template>
                 <MlbInput
                   id="first_name"
@@ -82,7 +79,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { FormInst, useMessage, NForm, NFormItem, NSelect } from 'naive-ui'
+import { useMessage, NForm, NFormItem, NSelect } from 'naive-ui'
+import type { FormInst } from 'naive-ui'
 import BackButton from '@/components/common/BackButton.vue'
 import { familyMemberValidation } from '@/validations/authentication.validations'
 import { useRouter } from 'vue-router'

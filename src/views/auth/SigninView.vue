@@ -25,7 +25,7 @@
                     v-model="form.email"
                     id="email"
                     name="email"
-                    type="email"
+                    type="text"
                     placeholder="Enter Email"
                     custom-class="border-gray-300 focus:border-primary-500"
                   />
@@ -59,10 +59,10 @@
                 />
               </div>
               <MlbButton
-                type="primary"
+                type="submit"
                 label="Login"
                 block
-                class="rounded-2xl! bg-primary-700! h-13!"
+                class="rounded-2xl! bg-primary-700! h-13! text-white!"
                 @click="onFormSubmit"
               />
               <div class="text-center mt-3 mb-12">
@@ -127,7 +127,8 @@ import { useRouter } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
 import BackButton from '@/components/common/BackButton.vue'
 import ResetPasswordEmailForm from '@/components/auth/ResetPasswordEmailForm.vue'
-import { FormInst, useMessage, NForm, NFormItem, NDrawer, NDrawerContent } from 'naive-ui'
+import { useMessage, NForm, NFormItem, NDrawer, NDrawerContent } from 'naive-ui'
+import type { FormInst } from 'naive-ui'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'

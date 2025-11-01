@@ -16,10 +16,10 @@
         />
         <div class="flex flex-col gap-[45px] h-full md:px-4">
           <div>
-            <h1 class="text-neutral-900 font-semibold text-2xl mb-2">{{ component.title }}</h1>
-            <p class="text-neutral-600 font-normal text-sm">{{ component.description }}</p>
+            <h1 class="text-neutral-900 font-semibold text-2xl mb-2">{{ component?.title }}</h1>
+            <p class="text-neutral-600 font-normal text-sm">{{ component?.description }}</p>
           </div>
-          <component :is="component.component" :key="$route.params.module" />
+          <component :is="component?.component" :key="$route.params.module as string" />
         </div>
       </div>
     </div>

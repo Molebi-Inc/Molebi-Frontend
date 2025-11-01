@@ -6,7 +6,7 @@ import type {
   SigninFormValues,
 } from '@/types/authentication.types'
 import { computed, ref } from 'vue'
-import type { FormInst, FormItemRule } from 'naive-ui'
+import type { FormItemRule } from 'naive-ui'
 import { useMessage } from 'naive-ui'
 import { z } from 'zod'
 

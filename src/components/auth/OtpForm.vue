@@ -45,10 +45,10 @@
       </div>
     </div>
     <MlbButton
-      type="primary"
+      type="submit"
       label="Verify Account"
       block
-      class="rounded-2xl! bg-primary-700! h-13!"
+      class="rounded-2xl! bg-primary-700! h-13! text-white!"
       @click="onFormSubmit"
     />
   </n-form>
@@ -59,7 +59,8 @@ import { onMounted, ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbInputOtp from '@/components/ui/MlbInputOtp.vue'
-import { FormInst, useMessage, NForm, NFormItem } from 'naive-ui'
+import { useMessage, NForm, NFormItem } from 'naive-ui'
+import type { FormInst } from 'naive-ui'
 import { otpValidation } from '@/validations/authentication.validations'
 
 const $route = useRoute()
@@ -85,7 +86,7 @@ const onFormSubmit = () => {
       message.error('Invalid form')
       return
     }
-    $router.push(handleComponentRouting.value)
+    $router.push(handleComponentRouting.value ?? {})
   })
 }
 
