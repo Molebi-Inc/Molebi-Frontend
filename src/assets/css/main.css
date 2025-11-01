@@ -1,0 +1,89 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Manrope', sans-serif;
+
+  --color-black: #494949;
+  --color-brand-background: #fcfcf9;
+
+  --color-placeholder: #9c9bab;
+
+  /* === Colors === */
+  --color-primary-50: #f2f9f2;
+  --color-primary-100: #b8eedd;
+  --color-primary-200: #8be2c7;
+  --color-primary-300: #6fca6f;
+  --color-primary-400: #30ca9a;
+  --color-primary-500: #02bf83;
+  --color-primary-600: #02996a;
+  --color-primary-700: #036603;
+  --color-primary-800: #004d35;
+  --color-primary-900: #004000;
+
+  /* === Secondary Colors === */
+  --color-secondary-50: #fff5ed;
+  --color-secondary-100: #f9e6bc;
+  --color-secondary-200: #f5d58f;
+  --color-secondary-300: #f1c561;
+  --color-secondary-400: #db6f23;
+  --color-secondary-500: #e9a506;
+  --color-secondary-600: #ba8405;
+  --color-secondary-700: #8c6304;
+  --color-secondary-800: #5d4203;
+  --color-secondary-900: #2f2101;
+
+  /* === Accent Colors === */
+  --color-accent-50: #eceef4;
+  --color-accent-100: #d1d7e5;
+  --color-accent-200: #b6bfd5;
+  --color-accent-300: #9ba7c6;
+  --color-accent-400: #808fb6;
+  --color-accent-500: #6577a7;
+  --color-accent-600: #505f86;
+  --color-accent-700: #3b4764;
+  --color-accent-800: #262f43;
+  --color-accent-900: #121821;
+
+  /* === Neutral Colors === */
+  --color-neutral-50: #f7f8fa;
+  --color-neutral-100: #e8eaee;
+  --color-neutral-200: #d9dce3;
+  --color-neutral-300: #caced9;
+  --color-neutral-400: #bbc0cf;
+  --color-neutral-500: #acb2c5;
+  --color-neutral-600: #8a90a0;
+  --color-neutral-700: #686d7a;
+  --color-neutral-800: #464a54;
+  --color-neutral-900: #23262a;
+
+  /* === Font sizes === */
+  --text-h1: 24px;
+  --text-h2: 20px;
+  --text-h3: 18px;
+  --text-body-lg: 16px;
+  --text-body-sm: 14px;
+  --text-caption: 12px;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-neutral-900);
+    background-color: var(--color-neutral-50);
+  }
+
+  h1 {
+    font-size: var(--text-h1);
+    font-weight: 800;
+  }
+
+  h2 {
+    font-size: var(--text-h2);
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: var(--text-h3);
+    font-weight: 500;
+  }
+}
