@@ -13,11 +13,12 @@
       </div>
     </div>
     <div class="flex flex-col justify-center col-span-3 md:px-[120px] px-6">
-      <BackButton
-        v-if="component?.has_back_button && isLargeScreen"
-        icon="vuesax.linear.arrow-left"
-        class="mb-8 flex justify-start"
-      />
+      <div class="flex justify-start mb-8">
+        <BackButton
+          v-if="component?.has_back_button && isLargeScreen"
+          icon="vuesax.linear.arrow-left"
+        />
+      </div>
       <div class="flex items-center gap-2 mb-2">
         <div
           v-for="i in 3"
@@ -39,13 +40,13 @@
           :label="component?.primary_button_label"
           block
           class="bg-primary-700! text-white! rounded-2xl! h-13!"
-          @click="$router.push(component?.primary_button_route ?? {})"
+          @click="component && $router.push(component.primary_button_route)"
         />
         <MlbButton
           block
           :label="component?.secondary_button_label"
           class="bg-primary-50! text-primary-900! rounded-2xl! h-13! border-primary-700!"
-          @click="$router.push(component?.secondary_button_route ?? {})"
+          @click="component && $router.push(component.secondary_button_route)"
         />
       </div>
       <div class="text-black text-caption">
@@ -80,6 +81,13 @@ type ComponentConfig = {
 }
 
 type ModuleKey = 'welcome' | 'connection' | 'vault'
+
+// Import all images dynamically using import.meta.glob
+const imageModules = import.meta.glob(['/src/assets/svg/*.svg', '/src/assets/images/*.png'], {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
 
 const componentConfigs: Record<ModuleKey, ComponentConfig> = {
   welcome: {
@@ -121,6 +129,16 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
 
 const component = computed<ComponentConfig | undefined>(() => {
   const module = $route.params.module as ModuleKey
-  return componentConfigs[module]
+  const config = componentConfigs[module]
+
+  if (!config) return undefined
+
+  // Get the proper URL from the imported modules
+  const imageUrl = (imageModules[config.image_url] as string) || ''
+
+  return {
+    ...config,
+    image_url: imageUrl,
+  }
 })
 </script>

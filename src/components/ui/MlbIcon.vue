@@ -7,7 +7,15 @@ import { computed } from 'vue'
 
 const props = defineProps<{ name: string }>()
 
+// Use import.meta.glob to handle dynamic imports properly
+const iconModules = import.meta.glob('/src/assets/icons/*.svg', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
+
 const iconSrc = computed(() => {
-  return `/src/assets/icons/${props.name}.svg`
+  const path = `/src/assets/icons/${props.name}.svg`
+  return (iconModules[path] as string) || ''
 })
 </script>
