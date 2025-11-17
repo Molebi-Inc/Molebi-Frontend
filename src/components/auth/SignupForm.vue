@@ -52,7 +52,9 @@
       </div>
       <MlbButton
         type="submit"
-        label="Continue"
+        :label="loading ? 'Signing up...' : 'Continue'"
+        :loading="loading"
+        :disabled="loading"
         block
         class="rounded-2xl! bg-primary-700! h-13! text-white!"
         @click="onFormSubmit"
@@ -96,13 +98,19 @@ import MlbButton from '@/components/ui/MlbButton.vue'
 import { useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useAuthenticationStore } from '@/stores/authentication.store'
+import { useSignupMutation } from '@/services/authentication.services'
+import { handleApiError } from '@/helpers/error.helpers'
+import { useAuthConfig } from '@/config/auth.config'
 
 const $router = useRouter()
 const message = useMessage()
 const { form, rules } = signupValidation()
 const authenticationStore = useAuthenticationStore()
+const signupMutation = useSignupMutation()
+const authConfig = useAuthConfig()
 
 const formRef = ref<FormInst | null>(null)
+const loading = computed(() => signupMutation.isPending.value)
 
 const selectOptions = [
   { label: '🇳🇬 +234', value: '+234' },
@@ -112,14 +120,24 @@ const selectOptions = [
   { label: '🇳🇿 +64', value: '+64' },
 ]
 
-const onFormSubmit = () => {
-  formRef.value?.validate((errors) => {
+const onFormSubmit = async () => {
+  formRef.value?.validate(async (errors) => {
     if (errors) {
       message.error('Invalid form')
       return
     }
     authenticationStore.setStoreProp('signupForm', form.value)
-    $router.push({ name: 'Guests.OnboardingView', params: { module: 'verify-email' } })
+    try {
+      const response = await signupMutation.mutateAsync({
+        ...form.value,
+        phone: `${form.value.code}${form.value.phone}`,
+      })
+      authConfig.setToken(response.data.token)
+
+      $router.push({ name: 'Guests.OnboardingView', params: { module: 'verify-email' } })
+    } catch (error) {
+      handleApiError(error, message)
+    }
   })
 }
 

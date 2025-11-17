@@ -99,7 +99,7 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
     primary_button_label: 'Next',
     secondary_button_label: 'Skip',
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'connection' } },
-    secondary_button_route: { name: 'Guests.OnboardingView', params: { module: 'signup' } },
+    secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
   },
   connection: {
     step: 2,
@@ -111,7 +111,7 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
     primary_button_label: 'Next',
     secondary_button_label: 'Skip',
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'vault' } },
-    secondary_button_route: { name: 'Guests.OnboardingView', params: { module: 'signup' } },
+    secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
   },
   vault: {
     step: 3,
@@ -122,7 +122,7 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
       'Your Vault keeps precious memories, files, and voice notes safe  locked away for your eyes only.With Time Capsules, save messages, photos, or letters to be opened on a special day in the future. Because some moments deserve to wait.',
     primary_button_label: "Let's get started",
     secondary_button_label: 'I already have an account',
-    primary_button_route: { name: 'Guests.OnboardingView', params: { module: 'signup' } },
+    primary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
     secondary_button_route: { name: 'Guests.SigninView' },
   },
 }
