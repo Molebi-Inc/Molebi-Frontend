@@ -1,10 +1,47 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { guestRoutes } from './guest'
-import { dashboardRoutes } from './dashboard'
+import { homeRoutes } from './home.ts'
+import { familyTreeRoutes } from './family-tree'
+import { storageRoutes } from './storage'
+import { vaultRoutes } from './vault'
+import { timeCapsuleRoutes } from './time-capsule'
+import { settingsRoutes } from './settings'
+
+const AUTH_TOKEN_KEY = 'token'
+const DEFAULT_AUTH_ROUTE = 'App.HomeView'
+const DEFAULT_GUEST_ROUTE = 'Guests.SigninView'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [guestRoutes, ...dashboardRoutes],
+  routes: [
+    guestRoutes,
+    ...homeRoutes,
+    ...familyTreeRoutes,
+    ...storageRoutes,
+    ...vaultRoutes,
+    ...timeCapsuleRoutes,
+    ...settingsRoutes,
+  ],
+})
+
+router.beforeEach((to, _from, next) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) : null
+  const isAuthenticated = Boolean(token)
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next({
+      name: DEFAULT_GUEST_ROUTE,
+      query: { redirect: to.fullPath },
+    })
+    return
+  }
+
+  if (to.meta.requiresGuest && isAuthenticated) {
+    next({ name: DEFAULT_AUTH_ROUTE })
+    return
+  }
+
+  next()
 })
 
 export default router

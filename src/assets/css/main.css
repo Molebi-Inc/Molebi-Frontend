@@ -13,11 +13,11 @@
   --color-primary-100: #b8eedd;
   --color-primary-200: #8be2c7;
   --color-primary-300: #6fca6f;
-  --color-primary-400: #30ca9a;
-  --color-primary-500: #02bf83;
+  --color-primary-400: #2bb22b;
+  --color-primary-500: #0e910e;
   --color-primary-600: #02996a;
   --color-primary-700: #036603;
-  --color-primary-800: #004d35;
+  --color-primary-800: #034e03;
   --color-primary-900: #004000;
 
   /* === Secondary Colors === */
@@ -55,6 +55,10 @@
   --color-neutral-700: #686d7a;
   --color-neutral-800: #464a54;
   --color-neutral-900: #23262a;
+
+  --color-gray-100: #f1f1f1;
+  --color-gray-500: #a1a1a1;
+  --color-gray-700: #5c5c5c;
 
   /* === Font sizes === */
   --text-h1: 24px;

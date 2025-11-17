@@ -6,6 +6,9 @@ export const guestRoutes = {
   redirect: { name: 'Guests.LandingView', params: { module: 'welcome' } },
   name: 'Guests.Layout',
   component: GuestLayout,
+  meta: {
+    layout: 'guest',
+  },
   children: [
     {
       path: ':module(welcome|connection|vault)',
@@ -13,16 +16,29 @@ export const guestRoutes = {
       component: () => import('@/views/auth/LandingView.vue'),
       meta: {
         layout: 'guest',
+        requiresGuest: true,
       },
     },
     {
-      path: '/onboarding/:module(signup|verify-email|success)',
+      path: '/onboarding/:module(signup)',
+      name: 'Guests.OnboardingSignup',
+      component: OnboardingView,
+      meta: {
+        layout: 'guest',
+        hasLayoutLogo: ['signup'],
+        hasLayoutLeaf: ['signup'],
+        requiresGuest: true,
+      },
+    },
+    {
+      path: '/onboarding/:module(verify-email|personal-info|seed-phase)',
       name: 'Guests.OnboardingView',
       component: OnboardingView,
       meta: {
         layout: 'guest',
-        hasLayoutLogo: ['signup', 'verify-email', 'success'],
-        hasLayoutLeaf: ['signup', 'verify-email', 'success'],
+        hasLayoutLogo: ['verify-email', 'personal-info'],
+        hasLayoutLeaf: ['verify-email', 'personal-info'],
+        requiresAuth: true,
       },
     },
     {
@@ -31,6 +47,7 @@ export const guestRoutes = {
       component: () => import('@/views/auth/SigninView.vue'),
       meta: {
         layout: 'guest',
+        requiresGuest: true,
       },
     },
     {
@@ -39,6 +56,7 @@ export const guestRoutes = {
       component: () => import('@/views/auth/ForgotPasswordView.vue'),
       meta: {
         layout: 'guest',
+        requiresGuest: true,
         hasLayoutLogo: ['email', 'otp', 'reset', 'success'],
         hasLayoutLeaf: ['email', 'otp', 'reset', 'success'],
       },

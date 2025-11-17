@@ -5,9 +5,8 @@ import type {
   FamilyInfoFormValues,
   SigninFormValues,
 } from '@/types/authentication.types'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import type { FormItemRule } from 'naive-ui'
-import { useMessage } from 'naive-ui'
 import { z } from 'zod'
 
 export const signupValidation = () => {
@@ -115,13 +114,16 @@ export const personalInformationValidation = () => {
   const form = ref<PersonalInformationFormValues>({
     first_name: '',
     middle_name: '',
+    nickname: '',
     family_name: '',
+    dob: null,
   })
 
   const schema = z.object({
     first_name: z.string().min(1, { message: 'First name is required.' }),
-    middle_name: z.string().min(1, { message: 'Middle name is required.' }),
+    middle_name: z.string().optional(),
     family_name: z.string().min(1, { message: 'Family name is required.' }),
+    dob: z.string().min(1, { message: 'Date of birth is required.' }),
   })
 
   const rules = {
@@ -140,7 +142,7 @@ export const personalInformationValidation = () => {
       },
     },
     middle_name: {
-      required: true,
+      required: false,
       trigger: 'input',
       validator: async (_rule: FormItemRule, value: string) => {
         try {
@@ -148,11 +150,12 @@ export const personalInformationValidation = () => {
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Middle name is required.'
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid middle name.'
           return Promise.reject(messageText)
         }
       },
     },
+    nickname: {},
     family_name: {
       required: true,
       trigger: 'input',
@@ -163,6 +166,20 @@ export const personalInformationValidation = () => {
         } catch (err: unknown) {
           const messageText =
             err instanceof z.ZodError ? err.issues?.[0]?.message : 'Family name is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    dob: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ dob: true }).parse({ dob: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Date of birth is required.'
           return Promise.reject(messageText)
         }
       },

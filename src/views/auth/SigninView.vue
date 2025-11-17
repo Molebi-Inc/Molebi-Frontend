@@ -59,9 +59,11 @@
                 />
               </div>
               <MlbButton
+                block
                 type="submit"
                 label="Login"
-                block
+                :loading="loading"
+                :disabled="loading"
                 class="rounded-2xl! bg-primary-700! h-13! text-white!"
                 @click="onFormSubmit"
               />
@@ -73,7 +75,10 @@
                     label="Click Here"
                     class="text-secondary-400! underline!"
                     @click="
-                      $router.push({ name: 'Guests.OnboardingView', params: { module: 'signup' } })
+                      $router.push({
+                        name: 'Guests.OnboardingSignup',
+                        params: { module: 'signup' },
+                      })
                     "
                   />
                 </p>
@@ -133,22 +138,35 @@ import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { ref, computed } from 'vue'
+import { useSigninMutation } from '@/services/authentication.services'
+import { useAuthConfig } from '@/config/auth.config'
+import { handleApiError } from '@/helpers/error.helpers'
 
-const { form, rules } = signinValidation()
 const $router = useRouter()
 const message = useMessage()
+const authConfig = useAuthConfig()
+const signinMutation = useSigninMutation()
+const { form, rules } = signinValidation()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
-const formRef = ref<FormInst | null>(null)
 const active = ref<boolean>(false)
+const formRef = ref<FormInst | null>(null)
 
-const onFormSubmit = () => {
-  formRef.value?.validate((errors) => {
+const loading = computed(() => signinMutation.isPending.value)
+
+const onFormSubmit = async () => {
+  formRef.value?.validate(async (errors) => {
     if (errors) {
       message.error('Invalid form')
       return
     }
-    $router.push({ name: 'App.DashboardView' })
+    try {
+      const response = await signinMutation.mutateAsync(form.value)
+      authConfig.setToken(response.data.token)
+    } catch (error) {
+      handleApiError(error, message)
+    }
+    $router.push({ name: 'App.HomeView' })
   })
 }
 
