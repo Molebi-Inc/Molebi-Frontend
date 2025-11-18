@@ -1,0 +1,327 @@
+import type { AnnouncementFormValues } from '@/types/announcement.types'
+import type {
+  FamilyTraditionFormValues,
+  FamilyMediaFormValues,
+} from '@/types/family-tradition.types'
+import type { StorageFormValues } from '@/types/storage.types'
+
+import { ref } from 'vue'
+import type { FormItemRule } from 'naive-ui'
+import { z } from 'zod'
+import type { FamilyMember } from '@/types/family-member.types'
+
+export const announcementValidation = () => {
+  const form = ref<AnnouncementFormValues>({
+    title: '',
+    description: '',
+    priority: 'high',
+    type: null,
+    family_members: [],
+    create_reminder: true,
+  })
+
+  const schema = z.object({
+    title: z.string().min(1, { message: 'Title is required.' }),
+    description: z.string().min(1, { message: 'Description is required.' }),
+    priority: z.enum(['high', 'medium', 'low'], {
+      message: 'Priority must be high, medium, or low.',
+    }),
+    family_members: z.array(z.any()).min(0),
+    create_reminder: z.boolean(),
+  })
+
+  const rules = {
+    title: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ title: true }).parse({ title: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Title is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    description: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ description: true }).parse({ description: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Description is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    priority: {
+      required: true,
+      trigger: 'change',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ priority: true }).parse({ priority: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Priority is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+  }
+
+  return {
+    form,
+    rules,
+  }
+}
+
+export const familyTraditionValidation = () => {
+  const form = ref<FamilyTraditionFormValues>({
+    name: '',
+    description: '',
+    reoccurrence: null,
+    date: new Date().toISOString().split('T')[0],
+    time: null,
+    date_mode: null,
+    family_members: [],
+  })
+
+  const schema = z.object({
+    name: z.string().min(1, { message: 'Name is required.' }),
+    description: z.string().min(1, { message: 'Description is required.' }),
+    date: z.string().min(1, { message: 'Date is required.' }),
+    time: z.string().min(1, { message: 'Time is required.' }),
+    reoccurrence: z.string().min(1, { message: 'Reoccurrence is required.' }),
+    family_members: z.array(z.any()).min(0),
+  })
+
+  const rules = {
+    name: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ name: true }).parse({ name: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Name is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    description: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ description: true }).parse({ description: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Description is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    reoccurrence: {
+      required: true,
+      trigger: 'change',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ reoccurrence: true }).parse({ reoccurrence: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Reoccurrence is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    date: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ date: true }).parse({ date: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Date is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    time: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ time: true }).parse({ time: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Time is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    family_members: {
+      required: true,
+      trigger: 'change',
+      validator: async (_rule: FormItemRule, value: FamilyMember[]) => {
+        try {
+          schema.pick({ family_members: true }).parse({ family_members: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Family members are required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+  }
+
+  return {
+    form,
+    rules,
+  }
+}
+
+export const familyMediaValidation = () => {
+  const form = ref<FamilyMediaFormValues>({
+    title: '',
+    description: '',
+    media_type: 'file',
+    media: [],
+  })
+
+  const schema = z.object({
+    title: z.string().min(1, { message: 'Title is required.' }),
+    description: z.string().min(1, { message: 'Description is required.' }),
+    media_type: z.enum(['audio', 'file'], { message: 'Media type is required.' }),
+    media: z.array(z.any()).min(0),
+  })
+
+  const rules = {
+    title: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ title: true }).parse({ title: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Title is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    description: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ description: true }).parse({ description: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Description is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    media_type: {
+      required: true,
+      trigger: 'change',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ media_type: true }).parse({ media_type: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Media type is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    media: {
+      required: true,
+      trigger: 'change',
+      validator: async (_rule: FormItemRule, value: File[]) => {
+        try {
+          schema.pick({ media: true }).parse({ media: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Media is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+  }
+
+  return {
+    form,
+    rules,
+  }
+}
+
+export const storageValidation = () => {
+  const form = ref<StorageFormValues>({
+    name: '',
+    description: '',
+    files: [],
+  })
+
+  const schema = z.object({
+    name: z.string().min(1, { message: 'Name is required.' }),
+    description: z.string().optional(),
+    files: z.array(z.instanceof(File)).min(1, { message: 'At least one file is required.' }),
+  })
+
+  const rules = {
+    name: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ name: true }).parse({ name: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Name is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    files: {
+      required: true,
+      trigger: 'change',
+      validator: async (_rule: FormItemRule, value: File[]) => {
+        try {
+          schema.pick({ files: true }).parse({ files: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError
+              ? err.issues?.[0]?.message
+              : 'At least one file is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+  }
+
+  return {
+    form,
+    rules,
+  }
+}

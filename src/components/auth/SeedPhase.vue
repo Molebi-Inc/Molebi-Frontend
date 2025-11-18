@@ -4,9 +4,9 @@
       <header>
         <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
       </header>
-      <img src="@/assets/svg/nut.svg" alt="Molebi" class="w-[540px] h-[540px]" />
+      <img src="@/assets/svg/seed.svg" alt="Molebi" class="w-[540px] h-[540px]" />
     </div>
-    <div class="flex flex-col items-center justify-center col-span-3 px-[120px]">
+    <div class="flex flex-col items-center justify-center col-span-3 px-[120px] h-screen">
       <h1 class="text-2xl font-semibold mb-2 text-black">Welcome to the Seed Planting Phase</h1>
       <p class="text-black text-body-sm">
         Welcome to the seed planting phase, start your family tree and branch procedure today by
@@ -15,10 +15,8 @@
       <div class="flex flex-col mt-12 mb-3.5">
         <MlbButton
           label="Continue"
-          class="mb-4 rounded-2xl bg-green-700 py-4 px-7 text-white w-100"
-          @click="
-            $router.push({ name: 'Guests.OnboardingView', params: { module: 'personal-info' } })
-          "
+          class="mb-4 rounded-2xl! bg-green-700! h-13! text-white! w-100!"
+          @click="$router.push({ name: 'App.HomeView' })"
         />
       </div>
     </div>

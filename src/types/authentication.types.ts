@@ -14,8 +14,10 @@ export interface SignupFormErrors {
 
 export interface PersonalInformationFormValues {
   first_name: string
-  middle_name: string
+  middle_name: string | null
+  nickname: string | null
   family_name: string
+  dob: string | null
 }
 
 export interface PersonalInformationFormErrors {
@@ -54,4 +56,50 @@ export interface SigninFormValues {
 export interface SigninFormErrors {
   email?: { message: string }[]
   password?: { message: string }[]
+}
+
+export interface VerifyEmailValues {
+  otp_code: string
+}
+
+export interface VerifyEmailErrors {
+  email?: { message: string }[]
+  otp?: { message: string }[]
+}
+
+export interface ResendOtpParams {
+  email: string
+}
+
+export interface SigninUser {
+  id: number
+  first_name: string | null
+  middle_name: string | null
+  family_name: string | null
+  nickname: string | null
+  dob: string | null
+  email: string
+  phone: string
+  tour_stage: number
+  is_tour_skipped: boolean
+  email_verified_at: string
+  avatar: string | null
+  profile_picture: string | null
+  community_name: string | null
+  num_of_children: number | null
+  mother_family_name: string | null
+  created_at: string
+}
+
+export interface SigninResponseData {
+  user: SigninUser
+  token: string
+  token_type: string
+  abilities: string[]
+  email_verified: boolean
+}
+
+export interface VerifyEmailResponseData {
+  abilities: string[]
+  token: string
 }
