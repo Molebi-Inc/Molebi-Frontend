@@ -17,7 +17,7 @@
         <p class="text-gray-600 font-normal text-xs">{{ capsule?.description }}</p>
         <div class="grid grid-cols-3 gap-4">
           <div v-for="media in capsule?.media" :key="media.id">
-            <img :src="media.url" alt="media" class="w-20 h-20 rounded-xl" />
+            <img :src="media.url ?? ''" alt="media" class="w-20 h-20 rounded-xl" />
           </div>
         </div>
         <p class="text-gray-600 font-normal text-xs">{{ capsule?.body }}</p>

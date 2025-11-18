@@ -5,7 +5,7 @@
         <n-form-item path="title" :show-require-mark="false" :show-feedback="false">
           <MlbInput
             id="title"
-            v-model="form.title"
+            v-model="form.name"
             name="title"
             type="text"
             placeholder="Add a Title.."
@@ -187,7 +187,6 @@ import {
   NFormItem,
   NInput,
   NSelect,
-  NCheckbox,
   NAvatar,
   NDatePicker,
   NInputGroup,
@@ -287,10 +286,6 @@ const onFormSubmit = () => {
 </script>
 
 <style scoped>
-:deep(.n-checkbox-box--checked) {
-  background-color: #16a34a;
-  border-color: #16a34a;
-}
 :deep(.n-input.borderless) {
   --n-border: none !important;
   --n-border-hover: none !important;

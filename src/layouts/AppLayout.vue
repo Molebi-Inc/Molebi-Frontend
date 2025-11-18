@@ -29,7 +29,7 @@ import { RouterView } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useAuthenticationStore } from '@/stores/authentication.store'
-import { useGetProfileMutation } from '@/services/authentication.services'
+import { useGetProfileQuery } from '@/services/authentication.services'
 import HeaderComponent from '@/components/common/HeaderComponent.vue'
 import SidebarComponent from '@/components/common/SidebarComponent.vue'
 import FooterComponent from '@/components/common/FooterComponent.vue'
@@ -37,14 +37,16 @@ import FooterComponent from '@/components/common/FooterComponent.vue'
 const message = useMessage()
 const authenticationStore = useAuthenticationStore()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
-const getProfileMutation = useGetProfileMutation()
+const { data, isPending, refetch } = useGetProfileQuery({
+  enabled: false,
+})
 
-const loading = computed(() => getProfileMutation.isPending.value)
+const loading = computed(() => isPending.value)
 
 const getProfile = async () => {
   try {
-    const response = await getProfileMutation.mutateAsync()
-    authenticationStore.setStoreProp('loggedInUser', response.data)
+    const response = await refetch()
+    authenticationStore.setStoreProp('loggedInUser', response.data?.data)
   } catch (error) {
     handleApiError(error, message)
   }

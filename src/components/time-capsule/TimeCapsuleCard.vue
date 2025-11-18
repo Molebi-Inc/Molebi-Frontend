@@ -53,7 +53,7 @@
 import { useRouter } from 'vue-router'
 import { NButton, NDropdown } from 'naive-ui'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import { computed, defineComponent, h, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import type { TimeCapsule } from '@/types/time-capsule.types'
 
 interface Props {
@@ -89,13 +89,12 @@ const options = [
   {
     label: 'Edit',
     key: 'edit',
-    icon: () =>
-      h(defineComponent(MlbIcon), { name: 'vuesax.linear.edit-2', size: 12, color: '#737373' }),
+    icon: () => h(MlbIcon, { name: 'vuesax.linear.edit-2', size: 12, color: '#737373' }),
   },
   {
     label: 'Delete',
     key: 'delete',
-    icon: () => h(defineComponent(MlbIcon), { name: 'delete', size: 12, color: '#C20000' }),
+    icon: () => h(MlbIcon, { name: 'delete', size: 12, color: '#C20000' }),
   },
 ]
 

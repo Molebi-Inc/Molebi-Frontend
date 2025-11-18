@@ -29,8 +29,9 @@
       <div>
         <n-upload
           action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f"
-          :default-file-list="form.media"
           list-type="image-card"
+          :file-list="uploadFileList"
+          @update:file-list="handleFileListUpdate"
         />
       </div>
 
@@ -160,7 +161,16 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useMessage, NForm, NFormItem, NInput, NAvatar, NUpload, NDatePicker } from 'naive-ui'
+import {
+  useMessage,
+  NForm,
+  NFormItem,
+  NInput,
+  NAvatar,
+  NUpload,
+  NDatePicker,
+  type UploadFileInfo,
+} from 'naive-ui'
 import type { FormInst } from 'naive-ui'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
@@ -173,6 +183,7 @@ const message = useMessage()
 const formRef = ref<FormInst | null>(null)
 const familyMemberSearch = ref<string>('')
 const showFamilyMemberDropdown = ref<boolean>(false)
+const uploadFileList = ref<UploadFileInfo[]>([])
 
 // Mock family members data - replace with actual API call
 const allFamilyMembers = ref<FamilyMember[]>([
@@ -230,6 +241,14 @@ const handleFamilyMemberBlur = () => {
   setTimeout(() => {
     showFamilyMemberDropdown.value = false
   }, 200)
+}
+
+const toValidFiles = (fileList: UploadFileInfo[]) =>
+  fileList.map((file) => file.file).filter((item): item is File => item instanceof File)
+
+const handleFileListUpdate = (fileList: UploadFileInfo[]) => {
+  uploadFileList.value = fileList
+  form.value.media = toValidFiles(fileList)
 }
 
 const emit = defineEmits<{
