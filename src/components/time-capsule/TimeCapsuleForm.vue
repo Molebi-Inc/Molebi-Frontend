@@ -1,11 +1,12 @@
 <template>
   <div class="flex flex-col gap-6">
+    <!-- Form -->
     <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-10">
       <div>
         <n-form-item path="title" :show-require-mark="false" :show-feedback="false">
           <MlbInput
             id="title"
-            v-model="form.name"
+            v-model="form.title"
             name="title"
             type="text"
             placeholder="Add a Title.."
@@ -24,66 +25,45 @@
         </n-form-item>
       </div>
 
-      <!-- Priority Select -->
-      <n-input-group class="grid grid-cols-2 gap-4">
-        <n-form-item path="date" :show-require-mark="false" :show-feedback="false" class="w-full">
+      <!-- Upload Media -->
+      <div>
+        <n-upload
+          action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f"
+          list-type="image-card"
+          :file-list="uploadFileList"
+          @update:file-list="handleFileListUpdate"
+        />
+      </div>
+
+      <div>
+        <n-form-item path="body" :show-require-mark="false" :show-feedback="false">
+          <n-input
+            v-model:value="form.body"
+            type="textarea"
+            placeholder="Add a Body..."
+            rows="5"
+            class="w-full borderless"
+          />
+        </n-form-item>
+      </div>
+      <div>
+        <n-form-item
+          path="open_date"
+          :show-require-mark="false"
+          :show-feedback="false"
+          class="w-full"
+        >
           <template #label>
-            <label for="reoccurrence" class="text-sm font-medium text-gray-500">Date</label>
+            <label for="open_date" class="text-sm font-medium text-gray-500">Open Date</label>
           </template>
           <n-date-picker
-            v-model:formatted-value="form.date"
+            v-model:formatted-value="form.open_date"
             value-format="yyyy-MM-dd"
             type="date"
+            class="w-full"
           />
         </n-form-item>
-        <n-form-item path="time" :show-require-mark="false" :show-feedback="false" class="w-full">
-          <template #label>
-            <label for="time" class="text-sm font-medium text-gray-500">Time (Optional)</label>
-          </template>
-          <NSelect
-            v-model:value="form.time"
-            placeholder="Select Time"
-            :options="timeOptions"
-            size="large"
-            class="w-full rounded!"
-          />
-        </n-form-item>
-      </n-input-group>
-
-      <!-- Priority Select -->
-      <n-form-item path="reoccurrence" :show-require-mark="false" :show-feedback="false">
-        <template #label>
-          <label for="reoccurrence" class="text-sm font-medium text-gray-500"
-            >Select Reoccurrence</label
-          >
-        </template>
-        <NSelect
-          v-model:value="form.reoccurrence"
-          placeholder="Select Reoccurrence"
-          :options="reoccurrenceOptions"
-          size="large"
-          class="w-full rounded!"
-        />
-      </n-form-item>
-
-      <!-- Date Mode Select -->
-      <n-form-item
-        v-if="form.reoccurrence === 'annually'"
-        path="date_mode"
-        :show-require-mark="false"
-        :show-feedback="false"
-      >
-        <template #label>
-          <label for="date_mode" class="text-sm font-medium text-gray-500">Date Mode</label>
-        </template>
-        <NSelect
-          v-model:value="form.date_mode"
-          :options="dateModeOptions"
-          placeholder="Select Date Mode"
-          size="large"
-          class="w-full rounded!"
-        />
-      </n-form-item>
+      </div>
 
       <!-- Family Member Selection -->
       <div class="flex flex-col gap-2">
@@ -186,28 +166,24 @@ import {
   NForm,
   NFormItem,
   NInput,
-  NSelect,
   NAvatar,
+  NUpload,
   NDatePicker,
-  NInputGroup,
+  type UploadFileInfo,
 } from 'naive-ui'
 import type { FormInst } from 'naive-ui'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import { familyTraditionValidation } from '@/validations/dashboard.validations'
-import {
-  reoccurrenceOptions,
-  dateModeOptions,
-  timeOptions,
-} from '@/assets/constants/options.constants'
+import { timeCapsuleValidation } from '@/validations/time-capsule.validations'
 import type { FamilyMember } from '@/types/family-member.types'
 
-const { form, rules } = familyTraditionValidation()
+const { form, rules } = timeCapsuleValidation()
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)
-const familyMemberSearch = ref('')
-const showFamilyMemberDropdown = ref(false)
+const familyMemberSearch = ref<string>('')
+const showFamilyMemberDropdown = ref<boolean>(false)
+const uploadFileList = ref<UploadFileInfo[]>([])
 
 // Mock family members data - replace with actual API call
 const allFamilyMembers = ref<FamilyMember[]>([
@@ -215,39 +191,41 @@ const allFamilyMembers = ref<FamilyMember[]>([
     id: '1',
     name: 'Tim Agbabiaka',
     email: 'timagbabiaka@gmail.com',
-    avatar: undefined,
+    avatar:
+      'https://fastly.picsum.photos/id/451/200/300.jpg?grayscale&hmac=mvgdXy82l2LHVTEXKHEDRa0bNKiXleNaU0SKKugv1jU',
   },
   {
     id: '2',
     name: 'James Agbabiaka',
     email: 'thejamesagbabiaka@gmail.com',
-    avatar: undefined,
+    avatar:
+      'https://fastly.picsum.photos/id/451/200/300.jpg?grayscale&hmac=mvgdXy82l2LHVTEXKHEDRa0bNKiXleNaU0SKKugv1jU',
   },
   {
     id: '3',
     name: 'Chukwuebuka Agbabiaka',
     email: 'chukkweagba220@gmail.com',
-    avatar: undefined,
+    avatar:
+      'https://fastly.picsum.photos/id/451/200/300.jpg?grayscale&hmac=mvgdXy82l2LHVTEXKHEDRa0bNKiXleNaU0SKKugv1jU',
   },
 ])
 
 const filteredFamilyMembers = computed(() => {
   if (!familyMemberSearch.value) {
     return allFamilyMembers.value.filter(
-      (member) =>
-        !form.value.family_members.some((selected: FamilyMember) => selected.id === member.id),
+      (member) => !form.value.family_members.some((selected) => selected.id === member.id),
     )
   }
   return allFamilyMembers.value.filter(
     (member) =>
-      !form.value.family_members.some((selected: FamilyMember) => selected.id === member.id) &&
+      !form.value.family_members.some((selected) => selected.id === member.id) &&
       (member.name.toLowerCase().includes(familyMemberSearch.value.toLowerCase()) ||
         member.email.toLowerCase().includes(familyMemberSearch.value.toLowerCase())),
   )
 })
 
 const addFamilyMember = (member: FamilyMember) => {
-  if (!form.value.family_members.some((m: FamilyMember) => m.id === member.id)) {
+  if (!form.value.family_members.some((m) => m.id === member.id)) {
     form.value.family_members.push(member)
     familyMemberSearch.value = ''
     showFamilyMemberDropdown.value = false
@@ -255,9 +233,7 @@ const addFamilyMember = (member: FamilyMember) => {
 }
 
 const removeFamilyMember = (memberId: string) => {
-  form.value.family_members = form.value.family_members.filter(
-    (m: FamilyMember) => m.id !== memberId,
-  )
+  form.value.family_members = form.value.family_members.filter((m) => m.id !== memberId)
 }
 
 const handleFamilyMemberBlur = () => {
@@ -265,6 +241,14 @@ const handleFamilyMemberBlur = () => {
   setTimeout(() => {
     showFamilyMemberDropdown.value = false
   }, 200)
+}
+
+const toValidFiles = (fileList: UploadFileInfo[]) =>
+  fileList.map((file) => file.file).filter((item): item is File => item instanceof File)
+
+const handleFileListUpdate = (fileList: UploadFileInfo[]) => {
+  uploadFileList.value = fileList
+  form.value.media = toValidFiles(fileList)
 }
 
 const emit = defineEmits<{
@@ -286,6 +270,10 @@ const onFormSubmit = () => {
 </script>
 
 <style scoped>
+:deep(.n-checkbox-box--checked) {
+  background-color: #16a34a;
+  border-color: #16a34a;
+}
 :deep(.n-input.borderless) {
   --n-border: none !important;
   --n-border-hover: none !important;

@@ -22,6 +22,7 @@
     "@tanstack/vue-query": "^5.90.5",
     "@vueuse/core": "^14.0.0",
     "axios": "^1.13.1",
+    "country-list-js": "^3.1.8",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",
     "vue-router": "^4.6.3",

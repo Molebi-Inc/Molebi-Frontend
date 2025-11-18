@@ -3,3 +3,8 @@ export interface Media {
   url: string
   type: string
 }
+
+export interface Country {
+  name: string
+  dialing_code: string
+}

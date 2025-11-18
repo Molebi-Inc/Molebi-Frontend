@@ -103,7 +103,7 @@ const onFormSubmit = () => {
     }
 
     authenticationStore.setStoreProp('signupForm', form.value)
-    $router.push({ name: 'App.DashboardView' })
+    $router.push({ name: 'App.HomeView' })
   })
 }
 </script>

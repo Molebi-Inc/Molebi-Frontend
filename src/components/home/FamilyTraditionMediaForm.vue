@@ -110,8 +110,13 @@ const onTabUpdate = (value: string) => {
   })
 }
 
+const getValidFiles = (fileList: UploadFileInfo[]) =>
+  fileList
+    .map((file) => file.file)
+    .filter((maybeFile): maybeFile is File => maybeFile instanceof File)
+
 const updateFileList = (fileList: UploadFileInfo[]) => {
-  form.value.media = fileList.map((file) => file.file)
+  form.value.media = getValidFiles(fileList)
 }
 
 const onFormSubmit = () => {

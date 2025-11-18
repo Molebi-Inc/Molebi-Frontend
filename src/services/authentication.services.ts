@@ -135,9 +135,11 @@ export const useSigninMutation = () => {
   })
 }
 
-export const useGetProfileMutation = () => {
-  return useMutation<ApiResponse<SigninUser>, AxiosError<ValidationErrorResponse>, undefined>({
-    mutationFn: async () => {
+export const useGetProfileQuery = ({ enabled = true }: { enabled?: boolean } = {}) => {
+  return useQuery<ApiResponse<SigninUser>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['profile'],
+    enabled,
+    queryFn: async () => {
       const response = await axiosInstance.get<ApiResponse<SigninUser>>('/api/user/profile', {
         headers: {
           Authorization: `Bearer ${authConfig.getToken()}`,
