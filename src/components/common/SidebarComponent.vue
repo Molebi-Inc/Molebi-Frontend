@@ -24,7 +24,7 @@
           ]"
         >
           <div class="flex items-center gap-3">
-            <MlbIcon :name="item.icon" class="w-6 h-6 fill-primary-500!" />
+            <MlbIcon :name="item.icon" size="24" color="fill-primary-500!" />
             <span>{{ item.label }}</span>
           </div>
         </div>
