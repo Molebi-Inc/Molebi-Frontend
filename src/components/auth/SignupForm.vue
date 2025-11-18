@@ -16,9 +16,11 @@
           <n-input-group class="w-full">
             <n-select
               v-model:value="form.code"
-              :style="{ width: '25%' }"
+              :style="{ width: '30%' }"
               placeholder="+234"
-              :options="selectOptions"
+              filterable
+              :consistent-menu-width="false"
+              :options="countryOptions"
             />
             <n-input
               v-model:value="form.phone"
@@ -91,7 +93,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { signupValidation } from '@/validations/authentication.validations'
-import type { FormInst } from 'naive-ui'
+import type { FormInst, SelectOption } from 'naive-ui'
 import { NForm, NFormItem, NInput, NSelect, NInputGroup, useMessage } from 'naive-ui'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
@@ -101,6 +103,8 @@ import { useAuthenticationStore } from '@/stores/authentication.store'
 import { useSignupMutation } from '@/services/authentication.services'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useAuthConfig } from '@/config/auth.config'
+import country from 'country-list-js'
+import type { Country } from '@/types/general.types'
 
 const $router = useRouter()
 const message = useMessage()
@@ -112,13 +116,11 @@ const authConfig = useAuthConfig()
 const formRef = ref<FormInst | null>(null)
 const loading = computed(() => signupMutation.isPending.value)
 
-const selectOptions = [
-  { label: '🇳🇬 +234', value: '+234' },
-  { label: '🇺🇸 +1', value: '+1' },
-  { label: '🇬🇧 +44', value: '+44' },
-  { label: '🇦🇺 +61', value: '+61' },
-  { label: '🇳🇿 +64', value: '+64' },
-]
+const countryOptions = Object.values(country.all as Record<string, Country>).map((country) => ({
+  label: `${country.name} (${country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`})`,
+  value:
+    country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`,
+}))
 
 const onFormSubmit = async () => {
   formRef.value?.validate(async (errors) => {
