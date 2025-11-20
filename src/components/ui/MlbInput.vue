@@ -39,7 +39,7 @@ const borderlessClasses =
   'border-none! focus:border-none! focus:ring-0! focus:outline-none! !shadow-none!'
 
 const classes = computed(() => {
-  return [props.customClass, 'h-10!', props.borderless ? borderlessClasses : attrs.class]
+  return [props.customClass, 'mlb-input', props.borderless ? borderlessClasses : attrs.class]
 })
 
 const onUpdate = (value: string | null) => {

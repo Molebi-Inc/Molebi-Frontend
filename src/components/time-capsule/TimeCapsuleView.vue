@@ -5,7 +5,7 @@
       class="flex flex-col items-center mb-12"
     >
       <div class="flex justify-center items-center w-20 h-20 bg-[#FFFDEC] rounded-full mb-4">
-        <MlbIcon name="delete" :size="34" color="#C2A100" />
+        <MlbIcon name="placeholder" :size="34" color="#C2A100" />
       </div>
       <p class="text-gray-800 font-semibold">Time capsule is not yet available for preview</p>
     </div>

@@ -105,7 +105,15 @@
     </div>
 
     <template #footer>
-      <div class="flex gap-3 justify-evenly">
+      <div
+        :class="[
+          'flex',
+          { 'flex-col gap-3': config.buttonLayout === 'vertical' && config.cancelFirst },
+          { 'flex-col-reverse gap-3': config.buttonLayout === 'vertical' && !config.cancelFirst },
+          { 'justify-evenly gap-2': config.buttonLayout === 'horizontal' && config.cancelFirst },
+          { 'flex-row-reverse gap-2': config.buttonLayout === 'horizontal' && !config.cancelFirst },
+        ]"
+      >
         <!-- Cancel Button -->
         <MlbButton
           v-if="!config.showCancelButton && config.cancelButtonText"

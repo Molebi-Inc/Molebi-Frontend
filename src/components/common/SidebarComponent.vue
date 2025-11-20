@@ -1,7 +1,7 @@
 <template>
   <section
     :class="[
-      'w-64 bg-white border-r border-gray-200 transition-all duration-300 relative h-full py-12',
+      'w-64 bg-white border-r border-gray-200 transition-all duration-300 relative h-full overflow-y-auto py-12',
       sidebarCollapsed && '-ml-64',
     ]"
   >
@@ -59,24 +59,20 @@
       <hr class="mb-4 border-gray-200" />
       <div class="px-4 py-3 rounded-lg cursor-pointer transition-colors">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8">
+          <div>
             <img
-              :src="
-                loggedInUser?.avatar ||
-                loggedInUser?.profile_picture ||
-                'https://ui-avatars.com/api/?name=' +
-                  loggedInUser?.first_name +
+              :src="profileStore.userAvatarUrl"
+              :alt="
+                profileStore.userDetails?.first_name +
                   ' ' +
-                  loggedInUser?.family_name +
-                  '&background=random&size=48'
+                  profileStore.userDetails?.family_name || 'Profile Image'
               "
-              alt="profile"
-              class="w-full h-full rounded-full"
+              class="w-12 h-12 rounded-full border border-secondary-100 object-cover"
             />
           </div>
           <div class="text-sm">
             <p class="text-gray-600 text-xs">Welcome back 👋</p>
-            <p class="font-medium text-gray-900">{{ loggedInUser?.first_name }}</p>
+            <p class="font-medium text-gray-900">{{ profileStore.userDetails?.first_name }}</p>
           </div>
         </div>
       </div>
@@ -85,14 +81,14 @@
 </template>
 
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
+import { ref, watch } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import type { SidebarItem } from '@/types/layout.types'
-import { ref, watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { useAuthenticationStore } from '@/stores/authentication.store'
+import { useProfileStore } from '@/stores/profile.store'
 
 const $route = useRoute()
-const authenticationStore = useAuthenticationStore()
+const profileStore = useProfileStore()
 
 const activeNav = ref('home')
 const sidebarCollapsed = ref(false)
@@ -141,8 +137,6 @@ const sidebarItems: SidebarItem[] = [
     main: false,
   },
 ]
-
-const loggedInUser = computed(() => authenticationStore.loggedInUser)
 
 watch(
   () => $route.name,

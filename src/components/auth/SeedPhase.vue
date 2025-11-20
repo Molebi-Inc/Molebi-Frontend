@@ -9,8 +9,8 @@
     <div class="flex flex-col items-center justify-center col-span-3 px-[120px] h-screen">
       <h1 class="text-2xl font-semibold mb-2 text-black">Welcome to the Seed Planting Phase</h1>
       <p class="text-black text-body-sm">
-        Welcome to the seed planting phase, start your family tree and branch procedure today by
-        planting the first see of your own family tree which is you
+        Welcome to the seed-planting phase. Start your family tree and branching journey today by
+        planting the first seed of your own tree - yourself.
       </p>
       <div class="flex flex-col mt-12 mb-3.5">
         <MlbButton

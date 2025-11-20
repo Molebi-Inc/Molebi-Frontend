@@ -15,15 +15,17 @@
         :show-require-mark="false"
         path="otp"
       >
-        <MlbInputOtp
-          v-model="form.otp"
-          name="otp"
-          :length="4"
-          :gap="24"
-          size="large"
-          mask
-          custom-class="border-gray-300 focus:border-primary-500"
-        />
+        <div class="mt-5">
+          <MlbInputOtp
+            v-model="form.otp"
+            name="otp"
+            :length="4"
+            :gap="24"
+            size="large"
+            mask
+            custom-class="otp-input-wrapper border-gray-300 focus:border-primary-500"
+          />
+        </div>
       </n-form-item>
       <div class="flex justify-center items-center mb-5">
         <p class="text-gray-600 font-medium text-xs line-height-18 text-center">
@@ -57,7 +59,7 @@
 <script setup lang="ts">
 import type { FormInst } from 'naive-ui'
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbInputOtp from '@/components/ui/MlbInputOtp.vue'
 import { useMessage, NForm, NFormItem } from 'naive-ui'
@@ -66,14 +68,19 @@ import { otpValidation } from '@/validations/authentication.validations'
 import { AlertService } from '@/services/alert.service'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useVerifyEmailMutation, useResendOtpMutation } from '@/services/authentication.services'
+import { useAuthenticationStore } from '@/stores/authentication.store'
 
 const $router = useRouter()
+const $route = useRoute()
 const message = useMessage()
 const authConfig = useAuthConfig()
 const { form, rules } = otpValidation()
 const verifyEmailMutation = useVerifyEmailMutation()
 const resendOtpMutation = useResendOtpMutation()
+const authenticationStore = useAuthenticationStore()
+
 const countdown = ref<number>(30)
+const loading = ref<boolean>(false)
 const formRef = ref<FormInst | null>(null)
 
 const startCountdown = () => {
@@ -91,7 +98,12 @@ const onFormSubmit = () => {
       message.error('Invalid form')
       return
     }
+    if ($route.name === 'Guests.ForgotPasswordView') {
+      handleForgotPasswordFunctionality()
+      return
+    }
     try {
+      loading.value = true
       const response = await verifyEmailMutation.mutateAsync({
         otp_code: form.value.otp.join(''),
       })
@@ -128,24 +140,22 @@ const onFormSubmit = () => {
         },
       })
     } catch (error) {
-      console.log(error)
       handleApiError(error, message)
+    } finally {
+      loading.value = false
     }
   })
 }
 
-// const handleComponentRouting = computed(() => {
-//   return {
-//     'Guests.OnboardingView': {
-//       name: 'Guests.OnboardingView',
-//       params: { module: 'success' },
-//     },
-//     'Guests.ForgotPasswordView': {
-//       name: 'Guests.ForgotPasswordView',
-//       params: { module: 'reset' },
-//     },
-//   }[$route.name as string]
-// })
+const handleForgotPasswordFunctionality = () => {
+  const storeResetPassword = authenticationStore.resetPasswordForm
+  authenticationStore.setStoreProp('resetPasswordForm', {
+    ...storeResetPassword,
+    otp_code: form.value.otp.join(''),
+  })
+  $router.push({ name: 'Guests.ForgotPasswordView', params: { module: 'reset' } })
+  message.success('OTP saved successfully')
+}
 
 const onResendOTP = async () => {
   try {
@@ -160,3 +170,18 @@ onMounted(() => {
   startCountdown()
 })
 </script>
+
+<style scoped>
+:deep(.otp-input-wrapper .n-input-wrapper) {
+  background-color: #f1f1f1 !important;
+  border-radius: 8px !important;
+}
+
+:deep(.otp-input-wrapper .n-input-wrapper:hover) {
+  background-color: #e9e9e9 !important;
+}
+
+:deep(.otp-input-wrapper .n-input-wrapper:focus) {
+  background-color: #f1f1f1 !important;
+}
+</style>

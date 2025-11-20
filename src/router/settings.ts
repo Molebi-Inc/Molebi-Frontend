@@ -1,4 +1,6 @@
-export const settingsRoutes = [
+import type { RouteRecordRaw } from 'vue-router'
+
+export const settingsRoutes: RouteRecordRaw[] = [
   {
     path: '/settings',
     name: 'App.SettingsLayout',
@@ -6,10 +8,11 @@ export const settingsRoutes = [
     meta: {
       layout: 'app',
       requiresAuth: true,
+      fullScreen: 'mobile',
     },
     children: [
       {
-        path: '',
+        path: ':section(profile|tree|privacy|security|notification|help|about)?',
         name: 'App.SettingsView',
         component: () => import('@/views/settings/SettingsView.vue'),
         meta: {

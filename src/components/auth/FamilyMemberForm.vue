@@ -84,13 +84,11 @@ import type { FormInst } from 'naive-ui'
 import BackButton from '@/components/common/BackButton.vue'
 import { familyMemberValidation } from '@/validations/authentication.validations'
 import { useRouter } from 'vue-router'
-import { useAuthenticationStore } from '@/stores/authentication.store'
-import { relationshipOptions } from '@/assets/constants/relationships.constants'
+import { relationshipOptions } from '@/constants/relationships.constants'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 
 const { form, rules } = familyMemberValidation()
-const authenticationStore = useAuthenticationStore()
 const $router = useRouter()
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)
@@ -102,7 +100,6 @@ const onFormSubmit = () => {
       return
     }
 
-    authenticationStore.setStoreProp('signupForm', form.value)
     $router.push({ name: 'App.HomeView' })
   })
 }

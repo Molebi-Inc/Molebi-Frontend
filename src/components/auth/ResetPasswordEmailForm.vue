@@ -1,6 +1,6 @@
 <template>
   <n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
-    <div class="flex flex-col mb-6 md:mb-11">
+    <div class="flex flex-col mb-6 md:mb-5.5">
       <n-form-item label="Enter your email" path="email">
         <MlbInput
           v-model="form.email"
@@ -17,6 +17,8 @@
       label="Proceed"
       block
       class="rounded-2xl! bg-primary-700! h-13! text-white!"
+      :loading="loading"
+      :disabled="loading"
       @click="onFormSubmit"
     />
   </n-form>
@@ -31,22 +33,40 @@ import type { FormInst } from 'naive-ui'
 import { useMessage, NForm, NFormItem } from 'naive-ui'
 import { useAuthenticationStore } from '@/stores/authentication.store'
 import { resetPasswordValidation } from '@/validations/authentication.validations'
+import { useForgotPasswordMutation } from '@/services/authentication.services'
+import { handleApiError } from '@/helpers/error.helpers'
 
 const message = useMessage()
 const $router = useRouter()
 const { form, rules } = resetPasswordValidation()
 const authenticationStore = useAuthenticationStore()
+const forgotPasswordMutation = useForgotPasswordMutation()
 
 const formRef = ref<FormInst | null>(null)
+const loading = ref<boolean>(false)
 
-const onFormSubmit = () => {
-  formRef.value?.validate((errors) => {
+const onFormSubmit = async () => {
+  formRef.value?.validate(async (errors) => {
     if (errors) {
       message.error('Invalid form')
       return
     }
-    authenticationStore.setStoreProp('resetPasswordForm', { email: form.value.email })
-    $router.push({ name: 'Guests.ForgotPasswordView', params: { module: 'otp' } })
+    try {
+      loading.value = true
+      const storeResetPassword = authenticationStore.resetPasswordForm
+      authenticationStore.setStoreProp('resetPasswordForm', {
+        ...storeResetPassword,
+        email: form.value.email,
+      })
+
+      const response = await forgotPasswordMutation.mutateAsync(form.value)
+      message.success(response.message || 'Password reset instructions sent to your email')
+      $router.push({ name: 'Guests.ForgotPasswordView', params: { module: 'otp' } })
+    } catch (error) {
+      handleApiError(error, message)
+    } finally {
+      loading.value = false
+    }
   })
 }
 </script>

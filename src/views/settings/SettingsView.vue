@@ -1,454 +1,297 @@
 <template>
-  <div class="flex h-full bg-white">
-    <!-- Sidebar Navigation -->
-    <aside class="w-64 border-r border-gray-200 bg-white p-6">
-      <nav class="space-y-1">
-        <button
-          v-for="item in settingsItems"
-          :key="item.id"
-          @click="activeSection = item.id"
-          :class="[
-            'w-full text-left px-4 py-3 rounded-lg transition-colors',
-            activeSection === item.id
-              ? 'bg-gray-100 text-gray-900 font-medium'
-              : 'text-gray-600 hover:bg-gray-50',
-          ]"
-        >
-          {{ item.label }}
-        </button>
-      </nav>
-    </aside>
-
-    <!-- Main Content Area -->
-    <main class="flex-1 p-8 overflow-y-auto">
-      <!-- Profile & Account -->
-      <div v-if="activeSection === 'profile'" class="max-w-4xl">
-        <h1 class="text-2xl font-semibold text-gray-900 mb-6">Profile</h1>
-
-        <!-- User Profile Header -->
-        <div class="flex items-center gap-4 mb-8">
-          <div
-            class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden"
+  <div class="min-h-full bg-white">
+    <div class="flex flex-col lg:flex-row h-full bg-white">
+      <!-- Sidebar Navigation (Desktop) -->
+      <aside class="hidden lg:block w-64 border-r border-gray-200 bg-white p-6">
+        <nav class="space-y-1">
+          <button
+            v-for="item in settingsItems.filter((item) => !item?.hide)"
+            :key="item.id"
+            @click="activeSection = item.id"
+            :class="[
+              'w-full text-left px-4 py-3 rounded-lg transition-colors',
+              activeSection === item.id
+                ? 'bg-gray-100 text-gray-900 font-medium'
+                : 'text-gray-600 hover:bg-gray-50',
+            ]"
           >
-            <img
-              src="https://ui-avatars.com/api/?name=Bode+Aboderin&background=random&size=64"
-              alt="Profile"
-              class="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900">Bode Aboderin</h2>
-          </div>
-        </div>
+            {{ item.label }}
+          </button>
+        </nav>
+      </aside>
 
-        <!-- Personal Information -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Personal Information</h3>
+      <!-- Main Content Area -->
+      <main class="flex-1 p-5 lg:p-8 overflow-y-auto space-y-6">
+        <!-- Mobile Header -->
+        <section v-if="!activeSection" class="lg:hidden">
+          <div class="flex items-center justify-between mb-8">
             <button
-              @click="isEditingProfile = !isEditingProfile"
-              class="text-primary-700 hover:text-primary-800 font-medium"
+              class="h-10 w-10 flex items-center justify-center text-gray-500"
+              @click="$router.push({ name: 'App.HomeView' })"
             >
-              {{ isEditingProfile ? 'Cancel' : 'Edit' }}
+              <MlbIcon name="vuesax.linear.arrow-left" />
+            </button>
+            <h1 class="text-lg font-semibold text-gray-800">Profile</h1>
+            <span class="h-10 w-10" />
+          </div>
+
+          <div class="flex flex-col items-center gap-3 mb-6">
+            <div class="flex items-center gap-9">
+              <MlbButton
+                text
+                class="bg-gray-100! rounded-full! p-2.5!"
+                @click="handleProfileAction('edit-picture')"
+              >
+                <template #icon>
+                  <MlbIcon name="vuesax.linear.image" />
+                </template>
+              </MlbButton>
+              <div class="w-24 h-24 rounded-full border-4 border-secondary-100 overflow-hidden">
+                <img
+                  :src="profileStore.userAvatarUrl"
+                  :alt="displayName"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <MlbButton
+                text
+                class="bg-gray-100! rounded-full! p-2.5!"
+                @click="handleProfileAction('logout')"
+              >
+                <template #icon>
+                  <MlbIcon name="vuesax.outline.logout" />
+                </template>
+              </MlbButton>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-800">{{ displayName }}</h2>
+          </div>
+
+          <div>
+            <button
+              v-for="item in settingsItems.filter((item) => !item?.hide)"
+              :key="item.id"
+              class="w-full flex items-center gap-4 py-4 text-left transition-colors hover:shadow-sm"
+              :class="activeSection === item.id ? 'bg-gray-50 shadow-sm' : ''"
+              @click="activeSection = item.id"
+            >
+              <span
+                class="h-10 w-10 rounded-full flex items-center justify-center text-gray-600"
+                :class="
+                  item.tag === 'danger'
+                    ? 'bg-red-50 text-red-500'
+                    : activeSection === item.id
+                      ? 'bg-primary-50 text-primary-600'
+                      : 'bg-gray-100'
+                "
+              >
+                <MlbIcon
+                  :name="item.icon ?? 'icon.moon.profile-light'"
+                  :color="item.tag === 'danger' ? 'fill-red-500' : 'fill-gray-500'"
+                />
+              </span>
+              <div class="flex-1">
+                <p :class="['text-sm', item.tag === 'danger' ? 'text-red-500' : 'text-gray-700']">
+                  {{ item.label }}
+                </p>
+                <p class="text-xs text-gray-700" v-if="item.description">
+                  {{ item.description }}
+                </p>
+              </div>
+              <span class="text-gray-400 text-xl">›</span>
             </button>
           </div>
+        </section>
 
-          <n-form
-            v-if="isEditingProfile"
-            ref="profileFormRef"
-            :model="profileForm"
-            :rules="profileRules"
-            class="space-y-4"
-          >
-            <div class="grid grid-cols-2 gap-4">
-              <n-form-item label="First Name" path="firstName">
-                <MlbInput
-                  v-model="profileForm.firstName"
-                  id="firstName"
-                  placeholder="Enter First Name"
-                  custom-class="border-gray-300 focus:border-primary-500"
-                />
-              </n-form-item>
-              <n-form-item label="Last Name" path="lastName">
-                <MlbInput
-                  v-model="profileForm.lastName"
-                  id="lastName"
-                  placeholder="Enter Last Name"
-                  custom-class="border-gray-300 focus:border-primary-500"
-                />
-              </n-form-item>
-            </div>
-            <n-form-item label="Email Address" path="email">
-              <MlbInput
-                v-model="profileForm.email"
-                id="email"
-                type="text"
-                placeholder="Enter Email Address"
-                custom-class="border-gray-300 focus:border-primary-500"
-              />
-            </n-form-item>
-            <n-form-item label="Phone" path="phone">
-              <MlbInput
-                v-model="profileForm.phone"
-                id="phone"
-                placeholder="Enter Phone Number"
-                custom-class="border-gray-300 focus:border-primary-500"
-              />
-            </n-form-item>
-          </n-form>
-
-          <div v-else class="grid grid-cols-2 gap-6">
-            <div>
-              <label class="text-sm font-medium text-gray-700 block mb-1">First Name</label>
-              <p class="text-gray-900">Olabode</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-700 block mb-1">Last Name</label>
-              <p class="text-gray-900">Aboderin</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-700 block mb-1">Email Address</label>
-              <p class="text-gray-900">olabodeaboderin@gmail.com</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-700 block mb-1">Phone</label>
-              <p class="text-gray-900">+234 081 267 8979</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Delete Account Button -->
-        <div class="mt-8">
-          <button class="text-red-600 hover:text-red-700 font-medium">Delete Account</button>
-        </div>
-      </div>
-
-      <!-- Tree Settings -->
-      <div v-if="activeSection === 'tree'" class="max-w-4xl">
-        <h1 class="text-2xl font-semibold text-gray-900 mb-6">Tree</h1>
-
-        <div class="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
-          <div class="flex items-center justify-between">
-            <label class="text-base font-medium text-gray-900">Show relationship titles</label>
-            <n-switch v-model:value="treeSettings.showRelationshipTitles" />
-          </div>
-          <div class="flex items-center justify-between">
-            <label class="text-base font-medium text-gray-900">Show full names</label>
-            <n-switch v-model:value="treeSettings.showFullNames" />
-          </div>
-          <div class="flex items-center justify-between">
-            <label class="text-base font-medium text-gray-900">Show only direct connections</label>
-            <n-switch v-model:value="treeSettings.showOnlyDirectConnections" />
-          </div>
-        </div>
-
-        <div class="mt-8 flex justify-center">
-          <MlbButton
-            label="Save Changes"
-            primary
-            class="rounded-lg! bg-primary-700! text-white! px-8! py-2.5!"
-            @click="saveTreeSettings"
-          />
-        </div>
-      </div>
-
-      <!-- Privacy & Permissions -->
-      <div v-if="activeSection === 'privacy'" class="max-w-4xl">
-        <h1 class="text-2xl font-semibold text-gray-900 mb-6">Privacy & Permissions</h1>
-
-        <!-- Who Can View -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Who Can View</h3>
-          <div class="space-y-3">
-            <n-checkbox
-              v-model:checked="privacySettings.viewOnlyMe"
-              :checked-value="true"
-              :unchecked-value="false"
-              @update:checked="handleViewChange('onlyMe')"
+        <section class="bg-transparent">
+          <div v-if="activeSection && !isLargeScreen" class="flex items-center gap-2">
+            <button
+              class="h-10 w-10 flex items-center justify-center text-gray-500"
+              @click="$router.push({ name: 'App.SettingsView', params: { section: null } })"
             >
-              Only Me
-            </n-checkbox>
-            <n-checkbox
-              v-model:checked="privacySettings.viewFamilyMembers"
-              :checked-value="true"
-              :unchecked-value="false"
-              @update:checked="handleViewChange('family')"
-            >
-              Family Members
-            </n-checkbox>
-            <n-checkbox
-              v-model:checked="privacySettings.viewExtendedFamilies"
-              :checked-value="true"
-              :unchecked-value="false"
-              @update:checked="handleViewChange('extended')"
-            >
-              Extended Families
-            </n-checkbox>
-            <n-checkbox
-              v-model:checked="privacySettings.viewPublicLink"
-              :checked-value="true"
-              :unchecked-value="false"
-              @update:checked="handleViewChange('public')"
-            >
-              Public Link (View Only)
-            </n-checkbox>
+              <MlbIcon name="vuesax.linear.arrow-left" />
+            </button>
+            <h1 class="flex-1 text-lg font-semibold text-gray-800 text-center">
+              {{ getItem(activeSection)?.label }}
+            </h1>
           </div>
-        </div>
-
-        <!-- Who Can Edit -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Who Can Edit</h3>
-          <div class="space-y-3">
-            <n-checkbox
-              v-model:checked="privacySettings.editOnlyAdmins"
-              :checked-value="true"
-              :unchecked-value="false"
-              @update:checked="handleEditChange('admins')"
-            >
-              Only Admins
-            </n-checkbox>
-            <n-checkbox
-              v-model:checked="privacySettings.editAnyoneInvited"
-              :checked-value="true"
-              :unchecked-value="false"
-              @update:checked="handleEditChange('invited')"
-            >
-              Anyone I Invite
-            </n-checkbox>
+          <div v-if="activeSection && (isLargeScreen || !isLargeScreen)">
+            <component :is="activeComponent" :key="activeSection" />
           </div>
-        </div>
-
-        <div class="mt-8 flex justify-center">
-          <MlbButton
-            label="Save Changes"
-            primary
-            class="rounded-lg! bg-primary-700! text-white! px-8! py-2.5!"
-            @click="savePrivacySettings"
-          />
-        </div>
-      </div>
-
-      <!-- Notification -->
-      <div v-if="activeSection === 'notification'" class="max-w-4xl">
-        <h1 class="text-2xl font-semibold text-gray-900 mb-6">Notification</h1>
-
-        <!-- General Notifications -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">General</h3>
-          <div class="space-y-6">
-            <div class="flex items-center justify-between">
-              <label class="text-base font-medium text-gray-900">Birthdays & Anniversaries</label>
-              <n-switch v-model:value="notificationSettings.birthdaysAndAnniversaries" />
-            </div>
-            <div class="flex items-center justify-between">
-              <label class="text-base font-medium text-gray-900">New Family Member Added</label>
-              <n-switch v-model:value="notificationSettings.newFamilyMemberAdded" />
-            </div>
-            <div class="flex items-center justify-between">
-              <label class="text-base font-medium text-gray-900">Photos or Memories Added</label>
-              <n-switch v-model:value="notificationSettings.photosOrMemoriesAdded" />
-            </div>
-            <div class="flex items-center justify-between">
-              <label class="text-base font-medium text-gray-900">Tree Updates / Invites</label>
-              <n-switch v-model:value="notificationSettings.treeUpdatesInvites" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Delivery Channels -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Delivery Channels</h3>
-          <div class="space-y-6">
-            <div class="flex items-center justify-between">
-              <label class="text-base font-medium text-gray-900">Email Notifications</label>
-              <n-switch v-model:value="notificationSettings.emailNotifications" />
-            </div>
-            <div class="flex items-center justify-between">
-              <label class="text-base font-medium text-gray-900">Push Notifications</label>
-              <n-switch v-model:value="notificationSettings.pushNotifications" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Help -->
-      <div v-if="activeSection === 'help'" class="max-w-4xl">
-        <h1 class="text-2xl font-semibold text-gray-900 mb-6">Help</h1>
-
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">FAQs</h2>
-
-        <n-collapse v-model:expanded-names="expandedFaqs" accordion>
-          <n-collapse-item v-for="faq in faqs" :key="faq.id" :name="faq.id" :title="faq.question">
-            <div class="text-gray-700">{{ faq.answer }}</div>
-          </n-collapse-item>
-        </n-collapse>
-      </div>
-
-      <!-- About -->
-      <div v-if="activeSection === 'about'" class="max-w-4xl">
-        <h1 class="text-2xl font-semibold text-gray-900 mb-6">About</h1>
-
-        <div class="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">About Molebi</h3>
-          <div class="text-gray-700">
-            <!-- About content will go here -->
-          </div>
-        </div>
-      </div>
-    </main>
+        </section>
+      </main>
+    </div>
+    <!-- Hidden file input for photo upload -->
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept="image/*"
+      class="hidden"
+      @change="handleFileSelect"
+    />
   </div>
 </template>
-
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import {
-  NForm,
-  NFormItem,
-  NSwitch,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  useMessage,
-} from 'naive-ui'
-import type { FormInst, FormRules } from 'naive-ui'
-import MlbInput from '@/components/ui/MlbInput.vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import ProfileSettings from '@/views/settings/partials/ProfileSettings.vue'
+import TreeSettings from '@/views/settings/partials/TreeSettings.vue'
+import PrivacyPermissions from '@/views/settings/partials/PrivacyPermissions.vue'
+import SecuritySettings from '@/views/settings/partials/SecuritySettings.vue'
+import NotificationSettings from '@/views/settings/partials/NotificationSettings.vue'
+import HelpView from '@/views/settings/partials/HelpView.vue'
+import AboutView from '@/views/settings/partials/AboutView.vue'
+import type { SettingsSection, SettingsItem } from '@/types/settings.types'
+import type { Component } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
+import { useRouter, useRoute } from 'vue-router'
+import { useGetSettingsMutation } from '@/services/settings.services'
+import { useProfileStore } from '@/stores/profile.store'
+import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
+import { AlertService } from '@/services/alert.service'
+import { useLogout } from '@/composables/useLogout'
+import { usePhoto } from '@/composables/usePhoto'
 
-const message = useMessage()
+const $route = useRoute()
+const $router = useRouter()
+const { logout } = useLogout()
+const { handlePhotoUpload } = usePhoto()
+const profileStore = useProfileStore()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
+const { refetch: refetchSettings } = useGetSettingsMutation()
 
-// Active section state
-const activeSection = ref<'profile' | 'tree' | 'privacy' | 'notification' | 'help' | 'about'>(
-  'profile',
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const activeSection = ref<SettingsSection | null>(isLargeScreen.value ? 'profile' : null)
+
+const settingsItems = computed<SettingsItem[]>(() => [
+  {
+    id: 'profile' as const,
+    label: 'Profile & Account',
+    component: ProfileSettings,
+    description: 'View and edit your information',
+    hide: false,
+  },
+  { id: 'tree' as const, label: 'Tree Settings', component: TreeSettings, hide: false },
+  {
+    id: 'privacy' as const,
+    label: 'Privacy & Permissions',
+    component: PrivacyPermissions,
+    hide: false,
+  },
+  {
+    id: 'security' as const,
+    label: 'Security',
+    component: SecuritySettings,
+    hide: false,
+  },
+  {
+    id: 'notification' as const,
+    label: 'Notification',
+    component: NotificationSettings,
+    hide: false,
+  },
+  { id: 'help' as const, label: 'Help', component: HelpView, hide: false },
+  { id: 'about' as const, label: 'About', component: AboutView, hide: false },
+  {
+    id: 'delete' as const,
+    label: 'Delete Account',
+    component: AboutView,
+    hide: isLargeScreen.value,
+    icon: 'delete',
+    tag: 'danger',
+  },
+])
+
+const displayName = computed(() => {
+  const firstName = profileStore.user?.first_name?.trim()
+  const familyName = profileStore.user?.family_name?.trim()
+  const hasName = Boolean(firstName || familyName)
+  return hasName ? `${firstName ?? ''} ${familyName ?? ''}`.trim() : 'Molebi User'
+})
+
+const activeComponent = computed<Component | undefined>(
+  () => settingsItems.value.find((item) => item.id === activeSection.value)?.component as Component,
 )
 
-// Settings navigation items
-const settingsItems = [
-  { id: 'profile' as const, label: 'Profile & Account' },
-  { id: 'tree' as const, label: 'Tree Settings' },
-  { id: 'privacy' as const, label: 'Privacy & Permissions' },
-  { id: 'notification' as const, label: 'Notification' },
-  { id: 'help' as const, label: 'Help' },
-  { id: 'about' as const, label: 'About' },
-]
-
-// Profile & Account
-const isEditingProfile = ref(false)
-const profileFormRef = ref<FormInst | null>(null)
-const profileForm = reactive({
-  firstName: 'Olabode',
-  lastName: 'Aboderin',
-  email: 'olabodeaboderin@gmail.com',
-  phone: '+234 081 267 8979',
-})
-
-const profileRules: FormRules = {
-  firstName: [{ required: true, message: 'First name is required', trigger: 'blur' }],
-  lastName: [{ required: true, message: 'Last name is required', trigger: 'blur' }],
-  email: [
-    { required: true, message: 'Email is required', trigger: 'blur' },
-    { type: 'email', message: 'Please enter a valid email', trigger: 'blur' },
-  ],
-  phone: [{ required: true, message: 'Phone is required', trigger: 'blur' }],
+const getItem = (id: SettingsSection): SettingsItem | undefined => {
+  return settingsItems.value.find((item) => item.id === id) as SettingsItem | undefined
 }
 
-// Tree Settings
-const treeSettings = reactive({
-  showRelationshipTitles: true,
-  showFullNames: false,
-  showOnlyDirectConnections: false,
-})
-
-const saveTreeSettings = () => {
-  message.success('Tree settings saved successfully')
+const fetchSettings = async () => {
+  const response = await refetchSettings()
+  profileStore.setStoreProp('settings', response.data?.data ?? null)
 }
 
-// Privacy & Permissions
-const privacySettings = reactive({
-  viewOnlyMe: true,
-  viewFamilyMembers: false,
-  viewExtendedFamilies: false,
-  viewPublicLink: false,
-  editOnlyAdmins: true,
-  editAnyoneInvited: false,
-})
+const handleProfileAction = async (action: 'edit-picture' | 'logout') => {
+  await AlertService.alert({
+    subject: action === 'edit-picture' ? 'Change Profile Photo' : 'Logout?',
+    message:
+      action === 'edit-picture'
+        ? 'Are you sure you want to change your profile photo?'
+        : 'Are you sure you want to logout?',
+    confirmButtonText: action === 'edit-picture' ? 'Upload Photo' : 'Logout',
+    cancelButtonText: action === 'edit-picture' ? 'Remove Current Photo' : 'Cancel',
+    customClass: {
+      confirmButton: 'rounded-2xl! bg-primary-700! h-13! text-white!',
+      cancelButton: 'rounded-2xl! bg-primary-50! h-13! text-primary-900!',
+    },
+    buttonLayout: 'vertical',
+    cancelFirst: false,
+    buttonConfig: {
+      confirm: {
+        text: action === 'edit-picture' ? 'Upload Photo' : 'Logout',
+        action: async () => {
+          action === 'edit-picture' ? await uploadPhoto() : await logout()
+        },
+        closeOnClick: true,
+      },
+      cancel: {
+        text: action === 'edit-picture' ? 'Remove Current Photo' : 'Cancel',
+        action: async () => {
+          action === 'edit-picture' && (await handlePhotoUpload(null))
+        },
+        closeOnClick: true,
+      },
+    },
+  })
+}
 
-const handleViewChange = (type: string) => {
-  // Reset all view options to ensure mutual exclusivity
-  if (type === 'onlyMe') {
-    if (privacySettings.viewOnlyMe) {
-      privacySettings.viewFamilyMembers = false
-      privacySettings.viewExtendedFamilies = false
-      privacySettings.viewPublicLink = false
-    }
-  } else if (type === 'family') {
-    if (privacySettings.viewFamilyMembers) {
-      privacySettings.viewOnlyMe = false
-      privacySettings.viewExtendedFamilies = false
-      privacySettings.viewPublicLink = false
-    }
-  } else if (type === 'extended') {
-    if (privacySettings.viewExtendedFamilies) {
-      privacySettings.viewOnlyMe = false
-      privacySettings.viewFamilyMembers = false
-      privacySettings.viewPublicLink = false
-    }
-  } else if (type === 'public') {
-    if (privacySettings.viewPublicLink) {
-      privacySettings.viewOnlyMe = false
-      privacySettings.viewFamilyMembers = false
-      privacySettings.viewExtendedFamilies = false
-    }
+const uploadPhoto = async () => {
+  fileInputRef.value?.click()
+}
+
+const handleFileSelect = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0] || null
+
+  if (file) {
+    await handlePhotoUpload(file)
+  }
+
+  // Reset the input so the same file can be selected again
+  if (target) {
+    target.value = ''
   }
 }
 
-const handleEditChange = (type: string) => {
-  if (type === 'admins') {
-    if (privacySettings.editOnlyAdmins) {
-      privacySettings.editAnyoneInvited = false
-    }
-  } else if (type === 'invited') {
-    if (privacySettings.editAnyoneInvited) {
-      privacySettings.editOnlyAdmins = false
-    }
-  }
-}
-
-const savePrivacySettings = () => {
-  message.success('Privacy settings saved successfully')
-}
-
-// Notification Settings
-const notificationSettings = reactive({
-  birthdaysAndAnniversaries: true,
-  newFamilyMemberAdded: false,
-  photosOrMemoriesAdded: false,
-  treeUpdatesInvites: false,
-  emailNotifications: true,
-  pushNotifications: false,
+onMounted(async () => {
+  await fetchSettings()
 })
 
-// Help FAQs
-const expandedFaqs = ref<string[]>(['faq1'])
-const faqs = [
-  {
-    id: 'faq1',
-    question: 'Can I upload photos and documents to my family tree?',
-    answer:
-      'To create your family tree, simply sign up for an account, and start adding family members by entering their names, birthdates, and relationships. You can easily add new branches and expand your tree by linking relatives together.',
+watch(
+  [() => $route.params.section, () => isLargeScreen.value],
+  ([newSection, newIsLargeScreen]) => {
+    activeSection.value =
+      !newIsLargeScreen && !$route.params.section
+        ? null
+        : (newSection as SettingsSection) || 'profile'
   },
-  {
-    id: 'faq2',
-    question: 'Can I share my family tree with others?',
-    answer:
-      'Yes, you can share your family tree with others by adjusting your privacy settings. You can choose to share with family members, extended families, or create a public link for viewing.',
-  },
-  {
-    id: 'faq3',
-    question: 'Is there a limit to how many family members I can add?',
-    answer:
-      'No, there is no limit to how many family members you can add to your family tree. You can expand your tree as much as you need.',
-  },
-]
+  { immediate: true, deep: true },
+)
+
+watch(activeSection, (newSection) => {
+  $router.push({
+    name: 'App.SettingsView',
+    params: { section: newSection as SettingsSection },
+  })
+})
 </script>
-
-<style scoped></style>

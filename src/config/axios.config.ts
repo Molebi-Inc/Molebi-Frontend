@@ -1,9 +1,10 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
-import { useMessage } from 'naive-ui'
+import router from '@/router'
+import { useAuthConfig } from './auth.config'
 // Get base URL from environment variable
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://dev-api.mymolebi.com/'
 
-const message = useMessage()
+const authConfig = useAuthConfig()
 
 // Create axios instance
 const axiosInstance = axios.create({
@@ -36,13 +37,18 @@ axiosInstance.interceptors.response.use(
   },
   (error: AxiosError) => {
     const status = error.response?.status
-    const responseData = error.response?.data
 
     // Handle different error status codes
     switch (status) {
       case 401:
         // Unauthorized - handle authentication errors
-        // Could redirect to login or clear tokens
+        // Clear tokens and redirect to login
+        authConfig.removeToken()
+        // Use replace to avoid adding to history stack and force navigation
+        router.replace({ name: 'Guests.SigninView' }).catch(() => {
+          // Fallback to window.location if router fails
+          window.location.href = '/signin'
+        })
         break
 
       case 403:
@@ -65,13 +71,8 @@ axiosInstance.interceptors.response.use(
         break
 
       default:
-        // Other errors
-        if (error.request && !error.response) {
-          // Network error
-          message.error('Network error - no response received')
-        } else {
-          message.error('Request error')
-        }
+        // Other errors - message handling should be done in components
+        // Components can use useMessage() in their setup context
         break
     }
 

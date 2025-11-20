@@ -5,38 +5,20 @@ import type {
   PersonalInformationFormValues,
   SigninFormValues,
   SigninResponseData,
+  ForgotPasswordValues,
+  ResetPasswordValues,
   SigninUser,
   VerifyEmailResponseData,
 } from '@/types/authentication.types'
+import type { AxiosError } from 'axios'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/config/axios.config'
-import type { AxiosError } from 'axios'
 import { useAuthConfig } from '@/config/auth.config'
+import type { ProfileFormValues } from '@/types/profile.types'
+import type { SignupResponseData } from '@/types/authentication.types'
+import type { ApiResponse, ValidationErrorResponse } from '@/types/general.types'
 
 const authConfig = useAuthConfig()
-// Response types
-interface ApiResponse<T = unknown> {
-  data: T
-  message?: string
-  status?: string
-}
-
-// Auth-specific response payloads
-interface SignupResponseData {
-  token: string
-}
-
-// Validation error response structure matches Laravel validation errors
-export interface ValidationErrorResponse {
-  success: false
-  message: string
-  errors: Record<string, string[]>
-  response?: {
-    data: {
-      message: string
-    }
-  }
-}
 
 // Register/Signup endpoint
 export const useSignupMutation = () => {
@@ -98,9 +80,9 @@ export const useUpdateProfileMutation = () => {
   return useMutation<
     ApiResponse,
     AxiosError<ValidationErrorResponse>,
-    PersonalInformationFormValues
+    PersonalInformationFormValues | ProfileFormValues
   >({
-    mutationFn: async (data: PersonalInformationFormValues) => {
+    mutationFn: async (data: PersonalInformationFormValues | ProfileFormValues) => {
       const response = await axiosInstance.post<ApiResponse>(
         '/api/user/profile',
         {
@@ -153,11 +135,33 @@ export const useGetProfileQuery = ({ enabled = true }: { enabled?: boolean } = {
 export const useLogoutMutation = () => {
   return useMutation<ApiResponse, AxiosError<ValidationErrorResponse>, void>({
     mutationFn: async () => {
-      const response = await axiosInstance.post<ApiResponse>('/api/user/auth/logout', {
-        headers: {
-          Authorization: `Bearer ${authConfig.getToken()}`,
-        },
+      const response = await axiosInstance.get<ApiResponse>('/api/user/auth/logout', {
+        headers: { Authorization: `Bearer ${authConfig.getToken()}` },
       })
+      return response.data
+    },
+  })
+}
+
+//forgot password endpoint
+export const useForgotPasswordMutation = () => {
+  return useMutation<ApiResponse, AxiosError<ValidationErrorResponse>, ForgotPasswordValues>({
+    mutationFn: async (data: ForgotPasswordValues) => {
+      const response = await axiosInstance.post<ApiResponse>('/api/user/auth/forgot-password', data)
+      return response.data
+    },
+    retry: false,
+  })
+}
+
+export const useResetPasswordMutation = () => {
+  return useMutation<ApiResponse, AxiosError<ValidationErrorResponse>, ResetPasswordValues>({
+    mutationFn: async (data: ResetPasswordValues) => {
+      const { email, ...rest } = data
+      const response = await axiosInstance.post<ApiResponse>(
+        `/api/user/auth/reset-password?email=${email}`,
+        { ...rest, email },
+      )
       return response.data
     },
     retry: false,

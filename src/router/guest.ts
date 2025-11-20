@@ -1,3 +1,4 @@
+import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
 import OnboardingView from '@/views/auth/OnboardingView.vue'
 import GuestLayout from '@/layouts/GuestLayout.vue'
 
@@ -51,14 +52,27 @@ export const guestRoutes = {
       },
     },
     {
-      path: '/forgot-password/:module(email|otp|reset|success)',
+      path: '/forgot-password/:module(email|otp|reset)',
       name: 'Guests.ForgotPasswordView',
       component: () => import('@/views/auth/ForgotPasswordView.vue'),
       meta: {
         layout: 'guest',
         requiresGuest: true,
-        hasLayoutLogo: ['email', 'otp', 'reset', 'success'],
-        hasLayoutLeaf: ['email', 'otp', 'reset', 'success'],
+        hasLayoutLogo: ['email', 'otp', 'reset'],
+        hasLayoutLeaf: ['email', 'otp', 'reset'],
+      },
+      beforeEnter: (
+        to: RouteLocationNormalized,
+        _from: RouteLocationNormalized,
+        next: NavigationGuardNext,
+      ) => {
+        // Only redirect to 'email' if the destination module is not 'email'
+        // This prevents infinite loops by checking the destination, not the origin
+        if (to.params.module !== 'email') {
+          next({ name: 'Guests.ForgotPasswordView', params: { module: 'email' } })
+        } else {
+          next()
+        }
       },
     },
   ],

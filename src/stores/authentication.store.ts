@@ -1,12 +1,18 @@
 import { defineStore } from 'pinia'
-import type { SigninUser } from '@/types/authentication.types'
+import type { AuthenticationStoreInterface } from '@/types/authentication.types'
 
 export const useAuthenticationStore = defineStore('authentication', {
-  state: () => ({
-    signupForm: { email: '', password: '', password_confirmation: '' },
-    resetPasswordForm: { email: '' },
+  state: (): AuthenticationStoreInterface => ({
+    resetPasswordForm: {
+      email: '',
+      otp_code: '',
+      password: '',
+      password_confirmation: '',
+    },
     landingViewStep: 1,
-    loggedInUser: null as SigninUser | null,
+    signupForm: {
+      email: '',
+    },
   }),
 
   actions: {

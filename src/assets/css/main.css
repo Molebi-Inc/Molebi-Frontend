@@ -90,4 +90,8 @@
     font-size: var(--text-h3);
     font-weight: 500;
   }
+
+  .mlb-input {
+    @apply h-11.5! rounded! flex! items-center!;
+  }
 }

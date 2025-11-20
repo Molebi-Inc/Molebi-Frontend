@@ -26,6 +26,8 @@ export function alert(config: AlertConfig): Promise<unknown> {
     // Set default type if not provided
     const alertConfig: AlertConfig = {
       type: 'modal',
+      buttonLayout: config.buttonLayout || 'horizontal',
+      cancelFirst: config.cancelFirst || true,
       showConfirmButton: true,
       showCancelButton: config.type === 'confirm',
       closable: config.type !== 'confirm',

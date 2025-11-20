@@ -1,3 +1,5 @@
+import type { NotificationSettings } from './settings.types'
+
 export interface SignupFormValues {
   email: string
   phone: string
@@ -53,6 +55,17 @@ export interface SigninFormValues {
   password: string
 }
 
+export interface ForgotPasswordValues {
+  email: string
+}
+
+export interface ResetPasswordValues {
+  password: string
+  password_confirmation: string
+  otp_code: string
+  email: string
+}
+
 export interface SigninFormErrors {
   email?: { message: string }[]
   password?: { message: string }[]
@@ -89,6 +102,7 @@ export interface SigninUser {
   num_of_children: number | null
   mother_family_name: string | null
   created_at: string
+  notification_settings?: NotificationSettings | null
 }
 
 export interface SigninResponseData {
@@ -103,3 +117,17 @@ export interface VerifyEmailResponseData {
   abilities: string[]
   token: string
 }
+
+export interface SignupResponseData {
+  token: string
+}
+
+export interface AuthenticationStoreInterface {
+  resetPasswordForm: ResetPasswordValues
+  landingViewStep: number
+  signupForm: {
+    email: string
+  }
+}
+
+export type PasswordMode = 'reset' | 'change'
