@@ -1,5 +1,5 @@
 import type { AxiosError } from 'axios'
-import type { ValidationErrorResponse } from '@/services/authentication.services'
+import type { ValidationErrorResponse } from '@/types/general.types'
 import type { MessageApi } from 'naive-ui'
 
 /**
@@ -16,7 +16,7 @@ export function handleApiError(error: unknown, message: MessageApi): void {
 
     // Loop through each field and display all error messages
     Object.entries(validationErrors).forEach(([field, messages]) => {
-      messages.forEach((errorMessage) => {
+      ;(messages as string[]).forEach((errorMessage: string) => {
         // Format: "Field name: error message" (e.g., "Email: The email has already been taken.")
         const formattedMessage = `${formatFieldName(field)}: ${errorMessage}`
         message.error(formattedMessage)

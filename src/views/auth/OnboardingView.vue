@@ -54,9 +54,6 @@ import SeedPhase from '@/components/auth/SeedPhase.vue'
 
 const $route = useRoute()
 const authenticationStore = useAuthenticationStore()
-// const isLargeScreen = useMediaQuery('(min-width: 768px)')
-
-// const active = ref<boolean>(false)
 
 const component = computed(() => {
   return {
@@ -85,14 +82,4 @@ const component = computed(() => {
     },
   }[$route.params.module as string]
 })
-
-// watch(
-//   [isLargeScreen, () => $route.params.module],
-//   ([isLargeScreenVal, moduleVal]) => {
-//     if (isLargeScreenVal === false && moduleVal === 'success') {
-//       active.value = true
-//     }
-//   },
-//   { immediate: true },
-// )
 </script>

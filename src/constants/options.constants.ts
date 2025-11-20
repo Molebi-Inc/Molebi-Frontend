@@ -1,4 +1,6 @@
+import country from 'country-list-js'
 import type { SelectOption } from 'naive-ui'
+import type { Country } from '@/types/general.types'
 
 export const reoccurrenceOptions: SelectOption[] = [
   {
@@ -59,3 +61,11 @@ export const timeOptions: SelectOption[] = [
     value: `${i + 1} pm`,
   })),
 ]
+
+export const countryOptions: SelectOption[] = Object.values(
+  country.all as Record<string, Country>,
+).map((country) => ({
+  label: `${country.name} (${country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`})`,
+  value:
+    country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`,
+}))

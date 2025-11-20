@@ -196,11 +196,7 @@ import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { familyTraditionValidation } from '@/validations/dashboard.validations'
-import {
-  reoccurrenceOptions,
-  dateModeOptions,
-  timeOptions,
-} from '@/assets/constants/options.constants'
+import { reoccurrenceOptions, dateModeOptions, timeOptions } from '@/constants/options.constants'
 import type { FamilyMember } from '@/types/family-member.types'
 
 const { form, rules } = familyTraditionValidation()

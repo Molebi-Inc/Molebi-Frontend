@@ -8,6 +8,7 @@ import type {
 import { ref } from 'vue'
 import type { FormItemRule } from 'naive-ui'
 import { z } from 'zod'
+import type { PasswordMode } from '@/types/authentication.types'
 
 export const signupValidation = () => {
   const form = ref<SignupFormValues>({
@@ -427,33 +428,64 @@ export const otpValidation = () => {
   }
 }
 
-export const changePasswordValidation = () => {
-  const form = ref<{ password: string; password_confirmation: string }>({
+export const changePasswordValidation = (mode: PasswordMode = 'reset') => {
+  const form = ref<{
+    old_password?: string
+    password: string
+    password_confirmation: string
+  }>({
+    ...(mode === 'change' ? { old_password: '' } : {}),
     password: '',
     password_confirmation: '',
   })
 
-  const changePasswordSchema = z.object({
-    password: z.string().min(1, { message: 'Password is required.' }),
-    password_confirmation: z
-      .string()
-      .min(1, { message: 'Password confirmation is required.' })
-      .refine((val) => val === form.value.password, {
-        message: 'Passwords do not match.',
-        path: ['password_confirmation'],
-      }),
-  })
+  const changePasswordSchema = z
+    .object({
+      ...(mode === 'change'
+        ? {
+            old_password: z.string().min(1, { message: 'Old password is required.' }),
+          }
+        : {}),
+      password: z.string().min(1, { message: 'Password is required.' }),
+      password_confirmation: z
+        .string()
+        .min(1, { message: 'Password confirmation is required.' })
+        .refine((val) => val === form.value.password, {
+          message: 'Passwords do not match.',
+          path: ['password_confirmation'],
+        }),
+    })
+    .refine(
+      (data) => {
+        if (mode === 'change') {
+          return data.old_password !== data.password
+        }
+        return true
+      },
+      {
+        message: 'New password must be different from old password.',
+        path: ['password'],
+      },
+    )
 
-  const rules = {
+  const rules: Record<string, any> = {
     password: {
       required: true,
       trigger: 'input',
       validator: async (_rule: FormItemRule, value: string) => {
         try {
           changePasswordSchema.pick({ password: true }).parse({ password: value })
+          if (mode === 'change' && form.value.old_password) {
+            changePasswordSchema.parse({
+              old_password: form.value.old_password,
+              password: value,
+              password_confirmation: form.value.password_confirmation,
+            })
+          }
           return Promise.resolve()
         } catch (err: unknown) {
-          const messageText = err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid OTP.'
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid password.'
           return Promise.reject(messageText)
         }
       },
@@ -466,6 +498,13 @@ export const changePasswordValidation = () => {
           changePasswordSchema
             .pick({ password_confirmation: true })
             .parse({ password_confirmation: value })
+          if (mode === 'change' && form.value.old_password) {
+            changePasswordSchema.parse({
+              old_password: form.value.old_password,
+              password: form.value.password,
+              password_confirmation: value,
+            })
+          }
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText =
@@ -474,6 +513,30 @@ export const changePasswordValidation = () => {
         }
       },
     },
+  }
+
+  if (mode === 'change') {
+    rules.old_password = {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          changePasswordSchema.pick({ old_password: true }).parse({ old_password: value })
+          if (form.value.password) {
+            changePasswordSchema.parse({
+              old_password: value,
+              password: form.value.password,
+              password_confirmation: form.value.password_confirmation,
+            })
+          }
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid old password.'
+          return Promise.reject(messageText)
+        }
+      },
+    }
   }
 
   return {

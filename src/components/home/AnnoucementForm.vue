@@ -161,9 +161,9 @@ import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { announcementValidation } from '@/validations/dashboard.validations'
-import { priorityOptions } from '@/assets/constants/priority.constants'
+import { priorityOptions } from '@/constants/priority.constants'
 import type { FamilyMember } from '@/types/family-member.types'
-import { typeOptions } from '@/assets/constants/options.constants'
+import { typeOptions } from '@/constants/options.constants'
 
 const { form, rules } = announcementValidation()
 const message = useMessage()

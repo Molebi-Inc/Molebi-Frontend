@@ -32,7 +32,7 @@
             custom-class="border-gray-300 focus:border-primary-500"
           />
         </n-form-item>
-        <n-form-item label="Family Name" path="family_name">
+        <n-form-item label="Family Name / Surname" path="family_name">
           <MlbInput
             v-model="form.family_name"
             id="family_name"
@@ -85,13 +85,11 @@ import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useUpdateProfileMutation } from '@/services/authentication.services'
-import { useAuthenticationStore } from '@/stores/authentication.store'
 import { personalInformationValidation } from '@/validations/authentication.validations'
 
 const $router = useRouter()
 const message = useMessage()
 const { form, rules } = personalInformationValidation()
-const authenticationStore = useAuthenticationStore()
 const updateProfileMutation = useUpdateProfileMutation()
 
 const formRef = ref<FormInst | null>(null)
@@ -103,7 +101,6 @@ const onFormSubmit = async () => {
       message.error('Invalid form')
       return
     }
-    authenticationStore.setStoreProp('signupForm', form.value)
     try {
       const response = await updateProfileMutation.mutateAsync(form.value)
 

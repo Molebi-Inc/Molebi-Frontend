@@ -24,7 +24,7 @@
             />
             <n-input
               v-model:value="form.phone"
-              :style="{ width: '75%' }"
+              :style="{ width: '60%' }"
               placeholder="Enter phone number"
             />
           </n-input-group>
@@ -99,7 +99,6 @@ import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import { useAuthenticationStore } from '@/stores/authentication.store'
 import { useSignupMutation } from '@/services/authentication.services'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useAuthConfig } from '@/config/auth.config'
@@ -109,7 +108,6 @@ import type { Country } from '@/types/general.types'
 const $router = useRouter()
 const message = useMessage()
 const { form, rules } = signupValidation()
-const authenticationStore = useAuthenticationStore()
 const signupMutation = useSignupMutation()
 const authConfig = useAuthConfig()
 
@@ -128,7 +126,6 @@ const onFormSubmit = async () => {
       message.error('Invalid form')
       return
     }
-    authenticationStore.setStoreProp('signupForm', form.value)
     try {
       const response = await signupMutation.mutateAsync({
         ...form.value,

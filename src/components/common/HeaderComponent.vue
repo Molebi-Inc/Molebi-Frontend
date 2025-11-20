@@ -6,20 +6,16 @@
       </span>
       <span v-else class="flex items-center gap-2">
         <img
-          :src="
-            loggedInUser?.avatar ||
-            loggedInUser?.profile_picture ||
-            'https://ui-avatars.com/api/?name=' +
-              loggedInUser?.first_name +
-              ' ' +
-              loggedInUser?.family_name +
-              '&background=random&size=48'
+          :src="profileStore.userAvatarUrl"
+          :alt="
+            profileStore.userDetails?.first_name + ' ' + profileStore.userDetails?.family_name ||
+            'Profile Image'
           "
-          alt="profile"
           class="w-10 h-10 rounded-full"
+          @click="$router.push({ name: 'App.SettingsView', params: { section: null } })"
         />
         <span>
-          <p class="text-sm text-gray-800">Welcome, {{ loggedInUser?.first_name }}</p>
+          <p class="text-sm text-gray-800">Welcome, {{ profileStore.userDetails?.first_name }}</p>
           <p class="text-sm text-primary-300">seed phase</p>
         </span>
       </span>
@@ -48,37 +44,82 @@
         <MlbIcon name="question" />
       </div>
       <div v-if="isLargeScreen">
-        <img
-          :src="
-            loggedInUser?.avatar ||
-            loggedInUser?.profile_picture ||
-            'https://ui-avatars.com/api/?name=' +
-              loggedInUser?.first_name +
-              ' ' +
-              loggedInUser?.family_name +
-              '&background=random&size=48'
-          "
-          alt="profile"
-          class="w-full h-full rounded-full"
-        />
+        <n-dropdown
+          :show="showDropdown"
+          :options="options"
+          @select="handleSelect"
+          class="z-10! profile-dropdown"
+        >
+          <n-button text type="tertiary" @click.stop.prevent="handleShowDropdown">
+            <img
+              :src="profileStore.userAvatarUrl"
+              :alt="
+                profileStore.userDetails?.first_name +
+                  ' ' +
+                  profileStore.userDetails?.family_name || 'Profile Image'
+              "
+              class="w-12 h-12 rounded-full border border-secondary-100 object-cover"
+            />
+          </n-button>
+        </n-dropdown>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, h } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
+import { NDropdown, NButton } from 'naive-ui'
+import { useRoute, useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
-import { useAuthenticationStore } from '@/stores/authentication.store'
+import { useProfileStore } from '@/stores/profile.store'
+import { useLogout } from '@/composables/useLogout'
 
 const $route = useRoute()
+const $router = useRouter()
+const { logout } = useLogout()
+const profileStore = useProfileStore()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
-const authenticationStore = useAuthenticationStore()
-
-const loggedInUser = computed(() => authenticationStore.loggedInUser)
 
 const search = ref<string | null>(null)
+const showDropdown = ref<boolean>(false)
+const options = ref([
+  {
+    label: 'Logout',
+    key: 'logout',
+    icon: () => h(MlbIcon, { name: 'vuesax.outline.logout', size: 18, color: '#5C5C5C' }),
+  },
+])
+
+const handleSelect = async (key: string) => {
+  if (key === 'logout') {
+    await logout()
+  }
+}
+
+const handleShowDropdown = () => {
+  showDropdown.value = !showDropdown.value
+}
 </script>
+
+<style scoped>
+:deep(.profile-dropdown .n-dropdown-menu) {
+  min-width: 180px !important;
+  padding: 8px 4px !important;
+}
+
+:deep(.profile-dropdown .n-dropdown-option) {
+  padding: 12px 16px !important;
+  font-size: 15px !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+:deep(.profile-dropdown .n-dropdown-option:hover) {
+  background-color: #f5f5f5 !important;
+}
+</style>

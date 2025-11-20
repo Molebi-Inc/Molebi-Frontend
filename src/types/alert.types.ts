@@ -55,6 +55,8 @@ export interface AlertConfig {
     confirm?: AlertButtonConfig
     cancel?: AlertButtonConfig
   }
+  buttonLayout?: 'horizontal' | 'vertical'
+  cancelFirst?: boolean
 
   // Styling
   customClass?: CustomButtonClass
