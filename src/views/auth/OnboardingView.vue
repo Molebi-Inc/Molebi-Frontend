@@ -1,6 +1,5 @@
 <template>
   <div class="w-full">
-    <!-- <div class="md:flex justify-center items-center h-screen"> -->
     <div :class="['w-full', { 'md:flex justify-center items-center': !component?.has_full_page }]">
       <div
         :class="[

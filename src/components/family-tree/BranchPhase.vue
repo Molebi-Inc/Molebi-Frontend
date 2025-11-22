@@ -15,18 +15,21 @@
           Your tree is thriving! Add relatives and build your <br />family's legacy, one branch at a
           time.
         </p>
-        <div class="flex flex-col mt-12 mb-3.5">
+        <div class="flex flex-col mt-12 mb-3.5 gap-4">
           <MlbButton
             label="Continue"
-            class="mb-4 rounded-2xl bg-green-700 py-4 px-7 text-white w-100"
+            class="rounded-2xl! bg-green-700! py-4! px-7! text-white! w-100! h-13!"
             @click="
-              $router.push({ name: 'Guests.OnboardingView', params: { module: 'family-member' } })
+              $router.push({
+                name: 'App.FamilyTreeOnboardingView',
+                params: { module: 'add-member' },
+              })
             "
           />
           <MlbButton
             label="Go to home screen"
-            class="bg-green-50 text-green-900 py-4 px-7 font-medium w-100"
-            @click="$router.push({ name: 'Guests.SigninView' })"
+            class="bg-green-50! text-green-900! py-4! px-7! font-medium! w-100! h-13! rounded-2xl!"
+            @click="$router.push({ name: 'App.HomeView' })"
           />
         </div>
       </div>
