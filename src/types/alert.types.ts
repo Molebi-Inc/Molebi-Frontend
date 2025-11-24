@@ -1,3 +1,5 @@
+import type { VNode } from 'vue'
+
 export type AlertType = 'toast' | 'modal' | 'confirm' | 'success' | 'error' | 'info' | 'warning'
 
 export type IconColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | string
@@ -26,6 +28,7 @@ export interface AlertButtonConfig {
   closeOnClick?: boolean // Default true
   loading?: boolean
   disabled?: boolean
+  primary?: boolean
 }
 
 export interface AlertConfig {
@@ -33,13 +36,14 @@ export interface AlertConfig {
   type?: AlertType // Default: 'modal'
   subject?: string // Title/Heading
   message?: string // Main message/description
-  html?: string // HTML content (alternative to message)
+  html?: string | VNode // HTML content (alternative to message) - can be string or VNode
 
   // Icon configuration
   iconName?: string
   iconColor?: IconColor
   iconSize?: number
   showIcon?: boolean
+  iconWrapperClass?: string
 
   // Image configuration (alternative to icon)
   imageUrl?: string
@@ -78,6 +82,7 @@ export interface AlertConfig {
 
   // Modal specific
   closable?: boolean // Show close button (default: true)
+  closablePosition?: 'right' | 'left'
   maskClosable?: boolean // Close on mask click (default: false for confirm, true for others)
   width?: string | number
   maxWidth?: string | number

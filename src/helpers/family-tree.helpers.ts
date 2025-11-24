@@ -78,9 +78,9 @@ export const buildTreeFromMembers = (
   // Simple layout: organize into generations based on order
   // In a real app, this would use relationship data
   const nodes = Array.from(nodeMap.values())
-  const rootId = currentUserId || members[0]?.id
+  const rootId = members[0]?.id //currentUserId ||
   const rootNode = rootId ? nodeMap.get(rootId) : nodes[0]
-
+  // console.log('rootNode', rootId, nodeMap)
   if (!rootNode) {
     return {
       nodes: [],
@@ -128,8 +128,8 @@ export const buildTreeFromMembers = (
       const nextGen = generations[genIndex + 1]
       generation.nodes.forEach((parentNode, parentIndex) => {
         // Connect to nodes in next generation
-        const childIndex = parentIndex % nextGen.nodes.length
-        const childNode = nextGen.nodes[childIndex]
+        const childIndex = parentIndex % (nextGen?.nodes?.length || 0)
+        const childNode = nextGen?.nodes[childIndex]
         if (childNode) {
           parentNode.children.push(childNode)
           childNode.parents.push(parentNode)

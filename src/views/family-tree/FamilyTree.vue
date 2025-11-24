@@ -135,6 +135,7 @@ import GenerationLabel from '@/components/family-tree/GenerationLabel.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useMessage } from 'naive-ui'
+import { handleApiError } from '@/helpers/error.helpers'
 
 const message = useMessage()
 const profileStore = useProfileStore()
@@ -153,6 +154,7 @@ const dragStart = ref({ x: 0, y: 0 })
 const svgWidth = ref(2000)
 const svgHeight = ref(2000)
 const isLoading = ref(false)
+const familyMembers = ref<FamilyMemberInterface[]>([])
 
 // Data
 const treeLayout = ref<TreeLayout>({
@@ -162,7 +164,7 @@ const treeLayout = ref<TreeLayout>({
 })
 
 // Queries
-const familyMembersQuery = useGetFamilyMembersQuery({ enabled: true })
+const familyMembersQuery = useGetFamilyMembersQuery()
 
 // Computed
 const currentUserId = computed(() => profileStore.userDetails?.id)
@@ -220,10 +222,11 @@ const centerTree = () => {
 
 // Watch for data changes
 watch(
-  () => familyMembersQuery.data.value,
+  () => familyMembers.value,
   (data) => {
-    if (data?.data) {
-      const members = data.data as unknown as FamilyMemberInterface[]
+    if (data) {
+      const members = data
+      console.log('123members', members)
       treeLayout.value = buildTreeFromMembers(members, currentUserId.value, isMobile.value)
       calculateSvgDimensions()
       centerTree()
@@ -234,8 +237,8 @@ watch(
 
 // Watch for mobile changes
 watch(isMobile, () => {
-  if (familyMembersQuery.data.value?.data) {
-    const members = familyMembersQuery.data.value.data as unknown as FamilyMemberInterface[]
+  if (familyMembers.value && familyMembers.value.length > 0) {
+    const members = familyMembers.value
     treeLayout.value = buildTreeFromMembers(members, currentUserId.value, isMobile.value)
     calculateSvgDimensions()
     centerTree()
@@ -243,7 +246,7 @@ watch(isMobile, () => {
 })
 
 watch(
-  () => familyMembersQuery.isLoading.value,
+  () => familyMembersQuery.isFetching.value,
   (loading) => {
     isLoading.value = loading
   },
@@ -359,23 +362,34 @@ const handleShare = () => {
   // TODO: Implement share functionality
 }
 
+const fetchFamilyMembers = async () => {
+  try {
+    const response = await familyMembersQuery.refetch()
+    familyMembers.value = response?.data?.data as FamilyMemberInterface[]
+  } catch (error) {
+    handleApiError(error, message)
+  }
+}
+
 // Lifecycle
-onMounted(() => {
-  if (familyMembersQuery.data.value?.data) {
-    const members = familyMembersQuery.data.value.data as unknown as FamilyMemberInterface[]
+onMounted(async () => {
+  await fetchFamilyMembers()
+  if (familyMembers.value.length > 0) {
+    const members = familyMembers.value
     treeLayout.value = buildTreeFromMembers(
       members,
       currentUserId.value ?? undefined,
       isMobile.value,
     )
+    console.log('1234members', treeLayout.value)
     calculateSvgDimensions()
     centerTree()
   }
 
   // Handle window resize
   const handleResize = () => {
-    if (familyMembersQuery.data.value?.data) {
-      const members = familyMembersQuery.data.value.data as unknown as FamilyMemberInterface[]
+    if (familyMembers.value && familyMembers.value.length > 0) {
+      const members = familyMembers.value
       treeLayout.value = buildTreeFromMembers(
         members,
         currentUserId.value ?? undefined,

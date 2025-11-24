@@ -1,5 +1,5 @@
 <template>
-  <n-modal v-model:show="localShow">
+  <n-modal v-model:show="localShow" @on-update:show="emit('close')">
     <n-card
       :style="{ width: '90%', maxWidth: '600px' }"
       :bordered="false"
@@ -28,6 +28,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
+  (e: 'close'): void
 }>()
 
 const localShow = computed({

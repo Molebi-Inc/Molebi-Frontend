@@ -29,3 +29,43 @@ export const extractCountryCode = (phoneNumber: string): { code: string; phone: 
   // If no match found, return empty code and full phone number
   return { code: '', phone: phoneNumber }
 }
+
+
+// Convert time from "1 am" format to "H:i" format (e.g., "01:00", "14:00")
+export const convertTimeToHIFormat = (timeValue: string | null | undefined): string | null => {
+  if (!timeValue) return null
+
+  const match = timeValue.match(/(\d+)\s*(am|pm)/i)
+  if (!match || !match[1] || !match[2]) return null
+
+  let hour = parseInt(match[1], 10)
+  const period = match[2].toLowerCase()
+
+  if (period === 'pm' && hour !== 12) {
+    hour += 12
+  } else if (period === 'am' && hour === 12) {
+    hour = 0
+  }
+
+  return `${hour.toString().padStart(2, '0')}:00`
+}
+
+// Convert time from "H:i" format to "1 am" format for display
+export const convertTimeFromHIFormat = (timeValue: string | null | undefined): string | null => {
+  if (!timeValue) return null
+
+  const match = timeValue.match(/(\d{2}):(\d{2})/)
+  const hourStr = match?.[1]
+  if (!match || !hourStr) return timeValue // Return as-is if not in H:i format
+
+  let hour = parseInt(hourStr, 10)
+  const period = hour >= 12 ? 'pm' : 'am'
+
+  if (hour === 0) {
+    hour = 12
+  } else if (hour > 12) {
+    hour -= 12
+  }
+
+  return `${hour} ${period}`
+}

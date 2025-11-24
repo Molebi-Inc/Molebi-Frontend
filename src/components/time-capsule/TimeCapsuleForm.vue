@@ -108,18 +108,18 @@
                 class="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 bg-gray-50 rounded-lg"
                 @click="addFamilyMember(member)"
               >
-                <!-- :src="member.avatar" -->
                 <NAvatar
                   :src="
-                    member.avatar ||
-                    `https://ui-avatars.com/api/?name=${member.name}&background=random`
+                    member.profile_picture_url ||
+                    `https://ui-avatars.com/api/?name=${member.first_name} ${member.family_name}&background=random`
                   "
                   round
                   :size="40"
                 />
                 <div class="flex-1">
-                  <p class="font-semibold text-gray-900">{{ member.name }}</p>
-                  <p class="text-xs text-gray-500">{{ member.email }}</p>
+                  <p class="font-semibold text-gray-900">
+                    {{ member?.first_name }} {{ member?.family_name }}
+                  </p>
                 </div>
                 <MlbIcon name="vuesax.broke.add-square" :size="20" class="text-gray-400" />
               </div>
@@ -131,14 +131,14 @@
         <div v-if="form.family_members.length > 0" class="flex items-center gap-2 flex-wrap mt-2">
           <div v-for="member in form.family_members" :key="member.id" class="relative">
             <NAvatar
-              :src="member.avatar"
-              :fallback-src="`https://ui-avatars.com/api/?name=${member.name}&background=random`"
+              :src="String(member.profile_picture_url)"
+              :fallback-src="`https://ui-avatars.com/api/?name=${member.first_name} ${member.family_name}&background=random`"
               round
               :size="40"
               class="border-2 border-white"
             />
             <button
-              @click="removeFamilyMember(member.id)"
+              @click="removeFamilyMember(member.id as number)"
               class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-600"
             >
               ×
@@ -176,7 +176,7 @@ import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { timeCapsuleValidation } from '@/validations/time-capsule.validations'
-import type { FamilyMember } from '@/types/family-member.types'
+import type { FamilyMemberInterface } from '@/types/family-tree.types'
 
 const { form, rules } = timeCapsuleValidation()
 const message = useMessage()
@@ -186,31 +186,24 @@ const showFamilyMemberDropdown = ref<boolean>(false)
 const uploadFileList = ref<UploadFileInfo[]>([])
 
 // Mock family members data - replace with actual API call
-const allFamilyMembers = ref<FamilyMember[]>([
+const allFamilyMembers = ref<Partial<FamilyMemberInterface>[]>([
   {
-    id: '1',
-    name: 'Tim Agbabiaka',
-    email: 'timagbabiaka@gmail.com',
-    avatar:
+    id: 1,
+    first_name: 'Tim',
+    family_name: 'Agbabiaka',
+    profile_picture_url:
       'https://fastly.picsum.photos/id/451/200/300.jpg?grayscale&hmac=mvgdXy82l2LHVTEXKHEDRa0bNKiXleNaU0SKKugv1jU',
   },
   {
-    id: '2',
-    name: 'James Agbabiaka',
-    email: 'thejamesagbabiaka@gmail.com',
-    avatar:
-      'https://fastly.picsum.photos/id/451/200/300.jpg?grayscale&hmac=mvgdXy82l2LHVTEXKHEDRa0bNKiXleNaU0SKKugv1jU',
-  },
-  {
-    id: '3',
-    name: 'Chukwuebuka Agbabiaka',
-    email: 'chukkweagba220@gmail.com',
-    avatar:
+    id: 2,
+    first_name: 'James',
+    family_name: 'Agbabiaka',
+    profile_picture_url:
       'https://fastly.picsum.photos/id/451/200/300.jpg?grayscale&hmac=mvgdXy82l2LHVTEXKHEDRa0bNKiXleNaU0SKKugv1jU',
   },
 ])
 
-const filteredFamilyMembers = computed(() => {
+const filteredFamilyMembers = computed<Partial<FamilyMemberInterface>[]>(() => {
   if (!familyMemberSearch.value) {
     return allFamilyMembers.value.filter(
       (member) => !form.value.family_members.some((selected) => selected.id === member.id),
@@ -219,12 +212,12 @@ const filteredFamilyMembers = computed(() => {
   return allFamilyMembers.value.filter(
     (member) =>
       !form.value.family_members.some((selected) => selected.id === member.id) &&
-      (member.name.toLowerCase().includes(familyMemberSearch.value.toLowerCase()) ||
-        member.email.toLowerCase().includes(familyMemberSearch.value.toLowerCase())),
+      (member.first_name?.toLowerCase().includes(familyMemberSearch.value.toLowerCase()) ||
+        member.family_name?.toLowerCase().includes(familyMemberSearch.value.toLowerCase())),
   )
 })
 
-const addFamilyMember = (member: FamilyMember) => {
+const addFamilyMember = (member: Partial<FamilyMemberInterface>) => {
   if (!form.value.family_members.some((m) => m.id === member.id)) {
     form.value.family_members.push(member)
     familyMemberSearch.value = ''
@@ -232,7 +225,7 @@ const addFamilyMember = (member: FamilyMember) => {
   }
 }
 
-const removeFamilyMember = (memberId: string) => {
+const removeFamilyMember = (memberId: number) => {
   form.value.family_members = form.value.family_members.filter((m) => m.id !== memberId)
 }
 

@@ -8,6 +8,7 @@ import { toValue } from 'vue'
 import type { MaybeRef } from 'vue'
 import type {
   FamilyMemberFormValues,
+  FamilyMemberInterface,
   FamilyRequestFormValues,
   FamilyTreeByUniqueIdentifierResponse,
 } from '@/types/family-tree.types'
@@ -80,10 +81,10 @@ export const useRequestToJoinFamilyMutation = () => {
 }
 
 export const useGetFamilyMembersQuery = (options?: { enabled?: boolean }) => {
-  return useQuery<ApiResponse<FamilyMemberFormValues[]>, AxiosError<ValidationErrorResponse>>({
+  return useQuery<ApiResponse<FamilyMemberInterface[]>, AxiosError<ValidationErrorResponse>>({
     queryKey: ['family-members'],
     queryFn: async () => {
-      const response = await axiosInstance.get<ApiResponse<FamilyMemberFormValues[]>>(
+      const response = await axiosInstance.get<ApiResponse<FamilyMemberInterface[]>>(
         '/api/user/family-members',
         {
           headers: {

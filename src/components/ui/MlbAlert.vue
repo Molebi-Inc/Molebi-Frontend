@@ -10,7 +10,13 @@
     }"
   >
     <template #header>
-      <div v-if="config.closable !== false" class="flex justify-end mb-4">
+      <div
+        v-if="config.closable !== false"
+        :class="[
+          'flex mb-4',
+          config.closablePosition === 'right' ? 'justify-end' : 'justify-start',
+        ]"
+      >
         <button
           @click="handleClose"
           class="p-1 hover:bg-gray-100 rounded-full transition-colors"
@@ -25,27 +31,29 @@
       <!-- Icon or Image -->
       <div
         v-if="config.showIcon !== false && (config.iconName || config.imageUrl)"
-        class="flex justify-center mb-4"
+        :class="['flex justify-center mb-4']"
       >
-        <!-- Icon -->
-        <MlbIcon
-          v-if="config.iconName && !config.imageUrl"
-          :name="config.iconName"
-          :color="getIconColor(config.iconColor)"
-          :size="config.iconSize || 64"
-        />
-        <!-- Image -->
-        <!-- :src="config.imageUrl" -->
-        <img
-          v-else-if="config.imageUrl"
-          :src="`/src/assets/${config.imageUrl}`"
-          :alt="config.imageAlt || config.subject || 'Alert image'"
-          :class="['max-w-full h-auto', config.imageClass || 'w-16 h-16 object-contain']"
-          :style="{
-            width: config.iconSize ? `${config.iconSize}px` : undefined,
-            height: config.iconSize ? `${config.iconSize}px` : undefined,
-          }"
-        />
+        <div :class="[config.iconWrapperClass]">
+          <!-- Icon -->
+          <MlbIcon
+            v-if="config.iconName && !config.imageUrl"
+            :name="config.iconName"
+            :color="getIconColor(config.iconColor)"
+            :size="config.iconSize || 64"
+          />
+          <!-- Image -->
+          <!-- :src="config.imageUrl" -->
+          <img
+            v-else-if="config.imageUrl"
+            :src="`/src/assets/${config.imageUrl}`"
+            :alt="config.imageAlt || config.subject || 'Alert image'"
+            :class="['max-w-full h-auto', config.imageClass || 'w-16 h-16 object-contain']"
+            :style="{
+              width: config.iconSize ? `${config.iconSize}px` : undefined,
+              height: config.iconSize ? `${config.iconSize}px` : undefined,
+            }"
+          />
+        </div>
       </div>
 
       <!-- Subject/Title -->
@@ -55,11 +63,14 @@
 
       <!-- Message -->
       <div v-if="config.message" class="text-gray-700 text-center mb-6">
-        {{ config.message }}
+        <span v-html="config.message"></span>
       </div>
 
       <!-- HTML Content -->
-      <div v-if="config.html" class="text-gray-700 mb-6" v-html="config.html" />
+      <div v-if="config.html" class="text-gray-700 mb-6">
+        <component v-if="typeof config.html !== 'string'" :is="config.html" />
+        <span v-else v-html="config.html"></span>
+      </div>
 
       <!-- Input Fields -->
       <div v-if="config.inputs && config.inputs.length > 0" class="space-y-4 mb-6">
@@ -132,10 +143,11 @@
         <MlbButton
           v-if="config.showConfirmButton !== false && config.confirmButtonText"
           :label="config.confirmButtonText || 'Confirm'"
-          primary
+          :primary="config.buttonConfig?.confirm?.primary || false"
           :loading="config.buttonConfig?.confirm?.loading"
           :disabled="config.buttonConfig?.confirm?.disabled"
           :class="['rounded-lg! px-8! py-2.5!', getConfirmButtonClass()]"
+          :style="{ 'text-danger-500': getConfirmButtonClass().includes('bg-red') }"
           @click="handleConfirm"
         />
       </div>
@@ -323,7 +335,7 @@ function getConfirmButtonClass(): string {
   }
 
   const typeClass =
-    typeClasses[config.type || ''] || 'bg-primary-700! text-white! hover:bg-primary-800!'
+    typeClasses[config.type || ''] || 'bg-primary-700! text-white hover:bg-primary-800!'
 
   return [
     'rounded-lg! px-8! py-2.5!',

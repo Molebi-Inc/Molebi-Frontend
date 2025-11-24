@@ -127,16 +127,16 @@ const capsules = ref<TimeCapsule[]>([
     open_date: new Date(),
     family_members: [
       {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        avatar: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+        id: 1,
+        first_name: 'John',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
       },
       {
-        id: '2',
-        name: 'Jane Doe',
-        email: 'jane.doe@example.com',
-        avatar: 'https://ui-avatars.com/api/?rounded=true&name=Jane Doe',
+        id: 2,
+        first_name: 'Jane',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=Jane Doe',
       },
     ],
   },
@@ -160,16 +160,29 @@ const capsules = ref<TimeCapsule[]>([
         status: 'finished',
         url: 'https://picsum.photos/200/300?grayscale',
       },
-    ],
-    open_date: new Date(),
-    family_members: [
       {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        avatar: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+        id: '3',
+        name: 'media3.jpg',
+        type: 'image',
+        status: 'finished',
+        url: 'https://picsum.photos/200/300?grayscale',
       },
     ],
+    family_members: [
+      {
+        id: 1,
+        first_name: 'John',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+      },
+      {
+        id: 2,
+        first_name: 'Jane',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=Jane Doe',
+      },
+    ],
+    open_date: new Date(),
   },
   {
     id: '3',
@@ -191,14 +204,27 @@ const capsules = ref<TimeCapsule[]>([
         status: 'finished',
         url: 'https://picsum.photos/200/300?grayscale',
       },
+      {
+        id: '3',
+        name: 'media3.jpg',
+        type: 'image',
+        status: 'finished',
+        url: 'https://picsum.photos/200/300?grayscale',
+      },
     ],
     open_date: new Date('2025-12-15'),
     family_members: [
       {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        avatar: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+        id: 1,
+        first_name: 'John',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+      },
+      {
+        id: 2,
+        first_name: 'Jane',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
       },
     ],
   },
@@ -226,10 +252,16 @@ const capsules = ref<TimeCapsule[]>([
     open_date: new Date(),
     family_members: [
       {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        avatar: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+        id: 1,
+        first_name: 'John',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+      },
+      {
+        id: 2,
+        first_name: 'Jane',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=Jane Doe',
       },
     ],
   },
@@ -257,10 +289,16 @@ const capsules = ref<TimeCapsule[]>([
     open_date: new Date(),
     family_members: [
       {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        avatar: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+        id: 1,
+        first_name: 'John',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+      },
+      {
+        id: 2,
+        first_name: 'Jane',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=Jane Doe',
       },
     ],
   },
@@ -288,10 +326,16 @@ const capsules = ref<TimeCapsule[]>([
     open_date: new Date(),
     family_members: [
       {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        avatar: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+        id: 1,
+        first_name: 'John',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=John Doe',
+      },
+      {
+        id: 2,
+        first_name: 'Jane',
+        family_name: 'Doe',
+        profile_picture_url: 'https://ui-avatars.com/api/?rounded=true&name=Jane Doe',
       },
     ],
   },
@@ -322,7 +366,6 @@ const timeCapsuleModalOptions = computed(() => {
 })
 
 const handleConfirm = () => {
-  console.log('cancel')
   showConfirmationModal.value = false
 }
 

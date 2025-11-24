@@ -101,7 +101,7 @@ export function confirmAlert(config: Omit<AlertConfig, 'type'>): Promise<unknown
     ...config,
     type: 'confirm',
     showCancelButton: true,
-    closable: false,
+    closable: config.closable || false,
     maskClosable: false,
     iconName: config.iconName || 'vuesax.linear.question',
     iconColor: config.iconColor || 'primary',

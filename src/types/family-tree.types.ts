@@ -34,6 +34,9 @@ export interface FamilyTreeDetails {
 
 export interface FamilyMemberInterface {
   id: number
+  name?: string
+  email?: string
+  avatar_url?: string
   first_name: string
   middle_name: string | null
   family_name: string

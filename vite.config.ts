@@ -83,6 +83,8 @@ export default defineConfig({
     createSvgIconsPlugin({
       iconDirs: [path.resolve(process.cwd(), 'src/assets/icons')],
       symbolId: 'mlb-[name]',
+      inject: 'body-last',
+      customDomId: '__svg__icons__dom__',
     }),
   ],
   resolve: {

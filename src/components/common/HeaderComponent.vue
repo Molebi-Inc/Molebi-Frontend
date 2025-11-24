@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-2 md:grid-cols-10 bg-white py-5 px-6 md:px-8 rounded-2xl mb-8">
+  <div class="grid grid-cols-2 md:grid-cols-10 bg-white py-5 md:px-8 rounded-2xl mb-8">
     <div class="text-neutral-900 text-h2 font-bold md:col-span-3">
       <span v-if="isLargeScreen">
         {{ $route.meta.pageTitle }}
@@ -40,6 +40,7 @@
       <div
         v-if="isLargeScreen"
         class="cursor-pointer h-12 w-12 bg-gray-50 flex justify-center items-center rounded-full"
+        @click="$router.push({ name: 'App.SettingsView', params: { section: 'help' } })"
       >
         <MlbIcon name="question" />
       </div>
