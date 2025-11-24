@@ -15,37 +15,38 @@
       </button>
       <div class="w-px bg-gray-200" :class="isMobile ? 'my-0.5' : 'my-1'" />
       <button
-        class="hover:bg-gray-50 rounded-md text-gray-600 transition-colors"
+        class="hover:bg-gray-50 rounded-md text-gray-600 transition-colors w-5 h-5"
         :class="isMobile ? 'p-1.5' : 'p-2'"
         title="Zoom Out"
         @click="$emit('zoom-out')"
       >
-        <MlbIcon name="vuesax.linear.minus" :size="isMobile ? 18 : 20" />
+        -
+        <!-- <MlbIcon name="vuesax.linear.minus" :size="isMobile ? 18 : 20" /> -->
       </button>
-      <div v-if="!isMobile" class="w-px bg-gray-200 my-1" />
-      <button
+      <!-- <div v-if="!isMobile" class="w-px bg-gray-200 my-1"> -->
+      <!-- <button
         v-if="!isMobile"
         class="p-2 hover:bg-gray-50 rounded-md text-gray-600 transition-colors"
         title="Reset Zoom"
         @click="$emit('zoom-reset')"
       >
         <MlbIcon name="vuesax.linear.refresh" :size="20" />
-      </button>
+      </button>  -->
     </div>
 
     <!-- Share Button - Hidden on mobile -->
-    <MlbButton v-if="!isMobile" label="Share Tree" secondary size="small" @click="$emit('share')">
+    <!-- <MlbButton v-if="!isMobile" label="Share Tree" secondary size="small" @click="$emit('share')">
       <template #icon>
         <MlbIcon name="vuesax.linear.export" :size="16" class="mr-1" />
       </template>
-    </MlbButton>
+    </MlbButton> -->
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import MlbButton from '@/components/ui/MlbButton.vue'
+// import MlbButton from '@/components/ui/MlbButton.vue'
 
 defineEmits<{
   'zoom-in': []

@@ -1,3 +1,4 @@
+import type { FamilyMemberInterface } from './family-tree.types'
 export interface Media {
   id: string
   url: string
@@ -24,4 +25,22 @@ export interface ValidationErrorResponse {
       message: string
     }
   }
+}
+
+export interface PaginationParams {
+  page: number
+  per_page: number
+}
+
+export type FormType = 'announcement' | 'family_tradition' | 'family_tradition_media'
+
+export interface HomeFormConfig {
+  id: number
+  name: FormType
+  title: string
+  component: any
+}
+
+export interface GeneralStoreInterface {
+  familyMembers: FamilyMemberInterface[]
 }

@@ -2,7 +2,7 @@
   <div class="min-h-full bg-white">
     <div class="flex flex-col lg:flex-row h-full bg-white">
       <!-- Sidebar Navigation (Desktop) -->
-      <aside class="hidden lg:block w-64 border-r border-gray-200 bg-white p-6">
+      <aside class="hidden md:block w-64 border-r border-gray-200 bg-white p-6">
         <nav class="space-y-1">
           <button
             v-for="item in settingsItems.filter((item) => !item?.hide)"

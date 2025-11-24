@@ -14,11 +14,11 @@
           />
         </n-form-item>
         <hr class="border-gray-200" />
-        <n-form-item path="description" :show-require-mark="false" :show-feedback="false">
+        <n-form-item path="content" :show-require-mark="false" :show-feedback="false">
           <n-input
-            v-model:value="form.description"
+            v-model:value="form.content"
             type="textarea"
-            placeholder="Add a Description..."
+            placeholder="Add a Content..."
             rows="2"
             class="w-full borderless"
           />
@@ -54,86 +54,13 @@
       </n-form-item>
 
       <!-- Family Member Selection -->
-      <div class="flex flex-col gap-2">
-        <label class="text-sm font-medium text-gray-500">Add Family Member</label>
-
-        <!-- Search Input -->
-        <div class="relative">
-          <NInput
-            v-model:value="familyMemberSearch"
-            placeholder="Select Family"
-            class="w-full"
-            size="large"
-            @focus="showFamilyMemberDropdown = true"
-            @blur="handleFamilyMemberBlur"
-          >
-            <template #suffix>
-              <MlbIcon name="vuesax.linear.add" :size="16" />
-            </template>
-          </NInput>
-
-          <!-- Family Member Dropdown -->
-          <div
-            v-if="showFamilyMemberDropdown"
-            class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto py-3 px-2"
-          >
-            <NInput
-              v-model:value="familyMemberSearch"
-              placeholder="Search Name"
-              class="w-full"
-              size="large"
-              @focus="showFamilyMemberDropdown = true"
-              @blur="handleFamilyMemberBlur"
-            >
-              <template #prefix>
-                <MlbIcon name="vuesax.linear.search-normal" :size="20" class="text-gray-400" />
-              </template>
-            </NInput>
-            <div v-if="filteredFamilyMembers.length > 0" class="mt-3 flex flex-col gap-3">
-              <div
-                v-for="member in filteredFamilyMembers"
-                :key="member.id"
-                class="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 bg-gray-50 rounded-lg"
-                @click="addFamilyMember(member)"
-              >
-                <!-- :src="member.avatar" -->
-                <NAvatar
-                  :src="
-                    member.avatar ||
-                    `https://ui-avatars.com/api/?name=${member.name}&background=random`
-                  "
-                  round
-                  :size="40"
-                />
-                <div class="flex-1">
-                  <p class="font-semibold text-gray-900">{{ member.name }}</p>
-                  <p class="text-xs text-gray-500">{{ member.email }}</p>
-                </div>
-                <MlbIcon name="vuesax.broke.add-square" :size="20" class="text-gray-400" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Selected Family Members Avatars -->
-        <div v-if="form.family_members.length > 0" class="flex items-center gap-2 flex-wrap mt-2">
-          <div v-for="member in form.family_members" :key="member.id" class="relative">
-            <NAvatar
-              :src="member.avatar"
-              :fallback-src="`https://ui-avatars.com/api/?name=${member.name}&background=random`"
-              round
-              :size="40"
-              class="border-2 border-white"
-            />
-            <button
-              @click="removeFamilyMember(member.id)"
-              class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-600"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      </div>
+      <UserSelector
+        label="Family Members"
+        :form="form"
+        :users="familyMembers"
+        :options="userSelectorOptions"
+        @update:selected-users="updateForm"
+      />
 
       <!-- Reminder Checkbox -->
       <div class="flex items-center gap-2 mb-11">
@@ -145,6 +72,8 @@
       <MlbButton
         type="submit"
         label="Create"
+        :loading="!!loading"
+        :disabled="!!loading"
         :primary="true"
         class="w-full rounded-2xl! h-13!"
         @click="onFormSubmit"
@@ -154,22 +83,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useMessage, NForm, NFormItem, NInput, NSelect, NCheckbox, NAvatar } from 'naive-ui'
-import type { FormInst, SelectOption } from 'naive-ui'
+import { ref, computed, onMounted } from 'vue'
+import { useHome } from '@/composables/useHome'
 import MlbInput from '@/components/ui/MlbInput.vue'
+import type { FormInst, SelectOption } from 'naive-ui'
 import MlbButton from '@/components/ui/MlbButton.vue'
-import MlbIcon from '@/components/ui/MlbIcon.vue'
-import { announcementValidation } from '@/validations/dashboard.validations'
-import { priorityOptions } from '@/constants/priority.constants'
-import type { FamilyMember } from '@/types/family-member.types'
+import { useGeneralStore } from '@/stores/general.store'
 import { typeOptions } from '@/constants/options.constants'
+import type { FamilyMemberInterface } from '@/types/family-tree.types'
+import UserSelector from '@/components/common/UserSelector.vue'
+import { priorityOptions } from '@/constants/priority.constants'
+import { announcementValidation } from '@/validations/dashboard.validations'
+import type { UserSelectorOptions } from '@/components/common/UserSelector.vue'
+import { useMessage, NForm, NFormItem, NInput, NSelect, NCheckbox } from 'naive-ui'
+import { useAnnouncementStore } from '@/stores/announcement.store'
 
-const { form, rules } = announcementValidation()
 const message = useMessage()
+const generalStore = useGeneralStore()
+const announcementStore = useAnnouncementStore()
+const { form, rules } = announcementValidation()
+const { loading, createAnnouncement, fetchFamilyMembers } = useHome()
+
 const formRef = ref<FormInst | null>(null)
-const familyMemberSearch = ref<string>('')
-const showFamilyMemberDropdown = ref<boolean>(false)
+const userSelectorOptions: UserSelectorOptions = {
+  form_user_ids_field: 'member_ids',
+  search_fields: ['first_name', 'middle_name', 'family_name'],
+  avatar_field: 'profile_picture_url',
+  name_fields: ['first_name', 'middle_name', 'family_name'],
+}
+
+const familyMembers = computed<FamilyMemberInterface[]>(() => generalStore.familyMembers)
 
 // Format priority options for NSelect
 const formattedPriorityOptions = computed<SelectOption[]>(() => {
@@ -179,77 +122,45 @@ const formattedPriorityOptions = computed<SelectOption[]>(() => {
   }))
 })
 
-// Mock family members data - replace with actual API call
-const allFamilyMembers = ref<FamilyMember[]>([
-  {
-    id: '1',
-    name: 'Tim Agbabiaka',
-    email: 'timagbabiaka@gmail.com',
-    avatar: undefined,
-  },
-  {
-    id: '2',
-    name: 'James Agbabiaka',
-    email: 'thejamesagbabiaka@gmail.com',
-    avatar: undefined,
-  },
-  {
-    id: '3',
-    name: 'Chukwuebuka Agbabiaka',
-    email: 'chukkweagba220@gmail.com',
-    avatar: undefined,
-  },
-])
-
-const filteredFamilyMembers = computed(() => {
-  if (!familyMemberSearch.value) {
-    return allFamilyMembers.value.filter(
-      (member) => !form.value.family_members.some((selected) => selected.id === member.id),
-    )
-  }
-  return allFamilyMembers.value.filter(
-    (member) =>
-      !form.value.family_members.some((selected) => selected.id === member.id) &&
-      (member.name.toLowerCase().includes(familyMemberSearch.value.toLowerCase()) ||
-        member.email.toLowerCase().includes(familyMemberSearch.value.toLowerCase())),
-  )
-})
-
-const addFamilyMember = (member: FamilyMember) => {
-  if (!form.value.family_members.some((m) => m.id === member.id)) {
-    form.value.family_members.push(member)
-    familyMemberSearch.value = ''
-    showFamilyMemberDropdown.value = false
-  }
-}
-
-const removeFamilyMember = (memberId: string) => {
-  form.value.family_members = form.value.family_members.filter((m) => m.id !== memberId)
-}
-
-const handleFamilyMemberBlur = () => {
-  // Delay to allow click events to fire first
-  setTimeout(() => {
-    showFamilyMemberDropdown.value = false
-  }, 200)
-}
-
 const emit = defineEmits<{
   (e: 'submit', data: typeof form.value): void
   (e: 'close'): void
 }>()
 
-const onFormSubmit = () => {
-  formRef.value?.validate((errors) => {
+const onFormSubmit = async () => {
+  formRef.value?.validate(async (errors) => {
     if (errors) {
       message.error('Please fill in all required fields.')
       return
     }
-
+    await createAnnouncement(form.value)
     emit('submit', form.value)
-    message.success('Announcement created successfully!')
+    emit('close')
   })
 }
+
+const updateForm = (value: number[]) => {
+  form.value.member_ids = value
+}
+
+const getEditData = () => {
+  const selectedAnnouncement = announcementStore.selectedAnnouncement
+  if (selectedAnnouncement) {
+    form.value = {
+      title: selectedAnnouncement.title,
+      content: selectedAnnouncement.content,
+      type: null,
+      priority: selectedAnnouncement.priority.value,
+      member_ids: selectedAnnouncement.members.map((member: FamilyMemberInterface) => member.id),
+      create_reminder: selectedAnnouncement.send_to_all,
+    }
+  }
+}
+
+onMounted(() => {
+  fetchFamilyMembers()
+  getEditData()
+})
 </script>
 
 <style scoped>

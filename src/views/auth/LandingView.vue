@@ -95,7 +95,7 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
     image_url: '/src/assets/svg/tree.svg',
     title: 'Watch Your Family Grow',
     description:
-      'See your family come to life as a growing tree every new member adds a branch, every connection deepens your story.',
+      'See your family come to life as a growing tree—every new member adds a branch, and every connection deepens your story.',
     primary_button_label: 'Next',
     secondary_button_label: 'Skip',
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'connection' } },
@@ -107,7 +107,7 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
     title: 'Stay Rooted, Stay Connected',
     has_back_button: true,
     description:
-      'Discover and preserve the stories, traditions, and values that shape your heritage. Explore your town of origin, share insights, and connect with others who carry the same cultural roots, all in one shared space of belonging.',
+      'Discover and preserve the stories, traditions, and values that shape your heritage. Explore your town of origin, share insights, and connect with others who carry the same cultural roots—all within one shared space of belonging.',
     primary_button_label: 'Next',
     secondary_button_label: 'Skip',
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'vault' } },
@@ -119,7 +119,7 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
     title: 'Protect What Matters Most',
     has_back_button: true,
     description:
-      'Your Vault keeps precious memories, files, and voice notes safe  locked away for your eyes only.With Time Capsules, save messages, photos, or letters to be opened on a special day in the future. Because some moments deserve to wait.',
+      'Your Vault keeps precious memories, files, and voice notes safe—locked away for your eyes only. With Time Capsules, save messages, photos, or letters to be opened on a special day in the future. Because some moments deserve to wait.',
     primary_button_label: "Let's get started",
     secondary_button_label: 'I already have an account',
     primary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },

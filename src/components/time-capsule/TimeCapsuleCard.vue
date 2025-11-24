@@ -32,9 +32,13 @@
           v-for="(member, index) in visibleMembers"
           :key="index"
           class="w-9 h-9 rounded-full border-2 border-white bg-gray-300 flex items-center justify-center overflow-hidden"
-          :title="member.name"
+          :title="`${member.first_name} ${member.family_name}`"
         >
-          <img :src="member.avatar" :alt="member.name" class="w-full h-full object-cover" />
+          <img
+            :src="String(member.profile_picture_url || '')"
+            :alt="`${member.first_name} ${member.family_name}`"
+            class="w-full h-full object-cover"
+          />
         </div>
       </div>
 

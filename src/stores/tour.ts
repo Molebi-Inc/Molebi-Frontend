@@ -15,7 +15,7 @@ export const useTourStore = defineStore('tour', () => {
             title: 'This is your family’s central hub.',
           },
           content:
-            '<ul><li>Add family announcements</li><li>Create traditions to celebrate</li><li>View reminders for birthdays or family events</li></ul>',
+            '<ul style="list-style: disc; text-align: start;"><li>Add family announcements</li><li>Create traditions to celebrate</li><li>View reminders for birthdays or family events</li></ul>',
         },
         {
           target: '#home-tour-step-2',

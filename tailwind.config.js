@@ -64,6 +64,11 @@ export default {
           800: '#414447',
           900: '#212223',
         },
+        gray: {
+          100: '#F1F1F1',
+          500: '#A1A1A1',
+          700: '#5C5C5C',
+        },
         feedback: {
           success: {
             50: '#E6F9EF',

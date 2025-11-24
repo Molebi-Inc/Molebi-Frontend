@@ -1,5 +1,5 @@
 <template>
-  <NGAvatarGroup :options="avatarOptions" :size="40" :max="3">
+  <NGAvatarGroup :options="avatarOptions" :size="size" :max="max">
     <template #avatar="{ option: { name, src } }">
       <n-tooltip>
         <template #trigger>
@@ -62,14 +62,18 @@ const avatarOptions = computed(() => {
       ]
 })
 
-const handleUserFormatting = (user: Record<string, any>): { name: string, src: string } => {
+const handleUserFormatting = (user: Record<string, any>): { name: string; src: string } => {
   const firstName = user[props.options.firstname_field as keyof typeof user]
-  const familyName = props.options.lastname_field ? user[props.options.lastname_field as keyof typeof user] : undefined
+  const familyName = props.options.lastname_field
+    ? user[props.options.lastname_field as keyof typeof user]
+    : undefined
   const name = `${firstName ?? ''} ${familyName ?? ''}`.trim()
   const hasName = Boolean(firstName || familyName)
   const fallbackName = hasName ? `${firstName ?? ''} ${familyName ?? ''}`.trim() : 'Molebi User'
   const encodedName = encodeURIComponent(fallbackName)
-  const src = props.options.src_field ? user[props.options.src_field as keyof typeof user] : `https://ui-avatars.com/api/?name=${encodedName}&background=random&size=${props.size}`
+  const src = props.options.src_field
+    ? user[props.options.src_field as keyof typeof user]
+    : `https://ui-avatars.com/api/?name=${encodedName}&background=random&size=${props.size}`
   return { name, src }
 }
 </script>

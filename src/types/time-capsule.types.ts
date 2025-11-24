@@ -1,5 +1,5 @@
 import type { UploadFileInfo } from 'naive-ui'
-import type { FamilyMember } from './family-member.types'
+import type { FamilyMemberInterface } from './family-tree.types'
 // import type { Media } from './general.types'
 
 export interface TimeCapsule {
@@ -9,7 +9,7 @@ export interface TimeCapsule {
   body: string
   media: UploadFileInfo[]
   open_date: Date
-  family_members: FamilyMember[]
+  family_members: Partial<FamilyMemberInterface>[]
 }
 
 export interface TimeCapsuleFormValues {
@@ -17,6 +17,6 @@ export interface TimeCapsuleFormValues {
   description: string
   body: string
   open_date?: string
-  family_members: FamilyMember[]
+  family_members: Partial<FamilyMemberInterface>[]
   media: File[]
 }

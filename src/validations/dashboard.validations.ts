@@ -8,15 +8,15 @@ import type { StorageFormValues } from '@/types/storage.types'
 import { ref } from 'vue'
 import type { FormItemRule } from 'naive-ui'
 import { z } from 'zod'
-import type { FamilyMember } from '@/types/family-member.types'
+import type { FamilyMemberInterface } from '@/types/family-tree.types'
 
 export const announcementValidation = () => {
   const form = ref<AnnouncementFormValues>({
     title: '',
-    description: '',
+    content: '',
     priority: 'high',
     type: null,
-    family_members: [],
+    member_ids: [],
     create_reminder: true,
   })
 
@@ -26,7 +26,7 @@ export const announcementValidation = () => {
     priority: z.enum(['high', 'medium', 'low'], {
       message: 'Priority must be high, medium, or low.',
     }),
-    family_members: z.array(z.any()).min(0),
+    member_ids: z.array(z.any()).min(0),
     create_reminder: z.boolean(),
   })
 
@@ -83,22 +83,22 @@ export const announcementValidation = () => {
 
 export const familyTraditionValidation = () => {
   const form = ref<FamilyTraditionFormValues>({
-    name: '',
+    title: '',
     description: '',
-    reoccurrence: null,
+    recurrence: null,
     date: new Date().toISOString().split('T')[0],
     time: null,
     date_mode: null,
-    family_members: [],
+    family_member_ids: [],
   })
 
   const schema = z.object({
-    name: z.string().min(1, { message: 'Name is required.' }),
+    title: z.string().min(1, { message: 'Name is required.' }),
     description: z.string().min(1, { message: 'Description is required.' }),
     date: z.string().min(1, { message: 'Date is required.' }),
     time: z.string().min(1, { message: 'Time is required.' }),
-    reoccurrence: z.string().min(1, { message: 'Reoccurrence is required.' }),
-    family_members: z.array(z.any()).min(0),
+    recurrence: z.string().min(1, { message: 'Reoccurrence is required.' }),
+    family_member_ids: z.array(z.number()).min(0),
   })
 
   const rules = {
@@ -107,7 +107,7 @@ export const familyTraditionValidation = () => {
       trigger: 'input',
       validator: async (_rule: FormItemRule, value: string) => {
         try {
-          schema.pick({ name: true }).parse({ name: value })
+          schema.pick({ title: true }).parse({ title: value })
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText =
@@ -130,12 +130,12 @@ export const familyTraditionValidation = () => {
         }
       },
     },
-    reoccurrence: {
+    recurrence: {
       required: true,
       trigger: 'change',
       validator: async (_rule: FormItemRule, value: string) => {
         try {
-          schema.pick({ reoccurrence: true }).parse({ reoccurrence: value })
+          schema.pick({ recurrence: true }).parse({ recurrence: value })
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText =
@@ -172,12 +172,12 @@ export const familyTraditionValidation = () => {
         }
       },
     },
-    family_members: {
+    family_member_ids: {
       required: true,
       trigger: 'change',
-      validator: async (_rule: FormItemRule, value: FamilyMember[]) => {
+      validator: async (_rule: FormItemRule, value: FamilyMemberInterface['id'][]) => {
         try {
-          schema.pick({ family_members: true }).parse({ family_members: value })
+          schema.pick({ family_member_ids: true }).parse({ family_member_ids: value })
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText =
@@ -311,9 +311,7 @@ export const storageValidation = () => {
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText =
-            err instanceof z.ZodError
-              ? err.issues?.[0]?.message
-              : 'At least one file is required.'
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'At least one file is required.'
           return Promise.reject(messageText)
         }
       },

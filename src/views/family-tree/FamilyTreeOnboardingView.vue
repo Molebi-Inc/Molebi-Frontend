@@ -42,7 +42,7 @@ import { useRoute } from 'vue-router'
 import BackButton from '@/components/common/BackButton.vue'
 import BranchPhase from '@/components/family-tree/BranchPhase.vue'
 import FlourishPhase from '@/components/family-tree/FlourishPhase.vue'
-import FamilyMemberForm from '@/components/auth/FamilyMemberForm.vue'
+import FamilyMemberForm from '@/components/family-tree/FamilyMemberForm.vue'
 
 const $route = useRoute()
 

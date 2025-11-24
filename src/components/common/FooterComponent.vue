@@ -3,6 +3,7 @@
     <div class="relative">
       <div
         class="absolute left-1/2 -translate-x-1/2 -top-8 w-16 h-16 rounded-full bg-primary-800 flex items-center justify-center shadow-[0px_10px_30px_rgba(16,111,75,0.35)]"
+        @click="$router.push({ name: 'App.FamilyTreeLayout' })"
       >
         <img src="@/assets/svg/home-footer-tree.svg" alt="growth icon" class="w-10 h-10" />
       </div>
