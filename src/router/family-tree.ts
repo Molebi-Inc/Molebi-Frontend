@@ -14,7 +14,7 @@ export const familyTreeRoutes = [
         component: () => import('@/layouts/FamilyTreeLayout.vue'),
         children: [
           {
-            path: ':create(add-member|join-family|edit-member)?',
+            path: ':module(add-member|join-family|edit-member)?',
             name: 'App.FamilyTreeView',
             component: () => import('@/views/family-tree/FamilyTree.vue'),
             meta: {

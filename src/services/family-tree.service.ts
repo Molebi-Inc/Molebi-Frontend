@@ -11,6 +11,7 @@ import type {
   FamilyMemberInterface,
   FamilyRequestFormValues,
   FamilyTreeByUniqueIdentifierResponse,
+  FamilyTreeInterface,
 } from '@/types/family-tree.types'
 const authConfig = useAuthConfig()
 
@@ -122,5 +123,23 @@ export const useGetFamilyMembersByIdentifierQuery = (
       return response.data
     },
     enabled: options?.enabled,
+  })
+}
+
+export const useGetFamilyTreesQuery = (options?: { enabled?: boolean }) => {
+  return useQuery<ApiResponse<FamilyTreeInterface>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['family-trees'],
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<FamilyTreeInterface>>(
+        '/api/user/family-trees',
+        {
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+          },
+        },
+      )
+      return response.data
+    },
+    enabled: options?.enabled ?? true,
   })
 }

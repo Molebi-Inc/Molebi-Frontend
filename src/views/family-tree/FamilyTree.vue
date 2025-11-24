@@ -107,14 +107,29 @@
     </div>
 
     <!-- Mobile Floating Action Button -->
+    <!-- v-if="isMobile" -->
     <button
-      v-if="isMobile"
-      class="fixed bottom-20 right-4 w-14 h-14 bg-primary-600 rounded-full shadow-lg flex items-center justify-center text-white z-20 hover:bg-primary-700 transition-colors"
+      class="fixed bottom-20 right-4 w-14 h-14 cursor-pointer bg-primary-700 rounded-full shadow-lg flex items-center justify-center text-white z-20 hover:bg-primary-800 transition-colors"
       @click="handleAddFirstMember"
       title="Add Family Member"
     >
-      <MlbIcon name="vuesax.bold.add" :size="24" />
+      <MlbIcon name="vuesax.linear.add" :size="24" />
     </button>
+    <MlbModal v-model:show="showFamilyTreeModal" class="rounded-3xl!" @close="handleCloseModal">
+      <template #header>
+        <div>
+          <BackButton icon="vuesax.linear.arrow-left" class="mb-6" />
+        </div>
+      </template>
+
+      <h1 class="text-neutral-900 font-semibold text-2xl mb-2 text-center">
+        {{ familyTreeComponent?.title }}
+      </h1>
+      <p class="text-neutral-600 font-normal text-sm text-center mb-11">
+        {{ familyTreeComponent?.description }}
+      </p>
+      <FamilyMemberForm />
+    </MlbModal>
   </div>
 </template>
 
@@ -123,11 +138,12 @@ import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import type {
   TreeNode as TreeNodeType,
   TreeLayout,
-  FamilyMemberInterface,
+  FamilyTreeInterface,
 } from '@/types/family-tree.types'
-import { useGetFamilyMembersQuery } from '@/services/family-tree.service'
-import { buildTreeFromMembers } from '@/helpers/family-tree.helpers'
-import { useProfileStore } from '@/stores/profile.store'
+import MlbModal from '@/components/ui/MlbModal.vue'
+import BackButton from '@/components/common/BackButton.vue'
+import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
+import { buildTreeFromFamilyTree } from '@/helpers/family-tree.helpers'
 import TreeNode from '@/components/family-tree/TreeNode.vue'
 import TreeConnector from '@/components/family-tree/TreeConnector.vue'
 import TreeControls from '@/components/family-tree/TreeControls.vue'
@@ -135,16 +151,19 @@ import GenerationLabel from '@/components/family-tree/GenerationLabel.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useMessage } from 'naive-ui'
+import { useRouter, useRoute } from 'vue-router'
 import { handleApiError } from '@/helpers/error.helpers'
+// import NewMemberForm from '@/components/family-tree/NewMemberForm.vue'
+// import ExistingFamilyForm from '@/components/family-tree/ExistingFamilyForm.vue'
+import FamilyMemberForm from '@/components/family-tree/FamilyMemberForm.vue'
 
 const message = useMessage()
-const profileStore = useProfileStore()
-
+const $router = useRouter()
+const $route = useRoute()
 // Refs
 const treeContainerRef = ref<HTMLElement | null>(null)
 const treeWrapperRef = ref<HTMLElement | null>(null)
 const selectedNodeId = ref<number | null>(null)
-
 // State
 const zoomLevel = ref(1)
 const panX = ref(0)
@@ -154,7 +173,8 @@ const dragStart = ref({ x: 0, y: 0 })
 const svgWidth = ref(2000)
 const svgHeight = ref(2000)
 const isLoading = ref(false)
-const familyMembers = ref<FamilyMemberInterface[]>([])
+const showFamilyTreeModal = ref(false)
+const familyTreeData = ref<FamilyTreeInterface | null>(null)
 
 // Data
 const treeLayout = ref<TreeLayout>({
@@ -164,10 +184,15 @@ const treeLayout = ref<TreeLayout>({
 })
 
 // Queries
-const familyMembersQuery = useGetFamilyMembersQuery()
+const familyTreesQuery = useGetFamilyTreesQuery()
 
 // Computed
-const currentUserId = computed(() => profileStore.userDetails?.id)
+const familyTreeComponent = computed(() => {
+  return {
+    'add-member': { description: 'Add a family member', title: 'Add Family Member' },
+    'join-family': { description: 'Enter your personal Information', title: 'Join Family Tree' },
+  }[$route.params.module as string]
+})
 const isMobile = computed(() => {
   if (typeof window === 'undefined') return false
   return window.innerWidth < 768
@@ -180,7 +205,7 @@ const backgroundClass = computed(() => {
 })
 
 const backgroundPatternClass = computed(() => {
-  return isMobile.value ? 'bg-[#F5F1E8]' : 'bg-gray-50'
+  return isMobile.value ? 'bg-[#F5F1E8]' : 'bg-[#F5F1E8]'
 })
 
 const containerClass = computed(() => {
@@ -205,6 +230,13 @@ const calculateSvgDimensions = () => {
   svgHeight.value = Math.max(2000, maxY - minY)
 }
 
+const handleCloseModal = () => {
+  showFamilyTreeModal.value = false
+  const params = { ...$route.params }
+  delete params.create
+  $router.push({ name: 'App.FamilyTreeView', params })
+}
+
 const centerTree = () => {
   if (treeLayout.value.nodes.length === 0) return
 
@@ -222,12 +254,10 @@ const centerTree = () => {
 
 // Watch for data changes
 watch(
-  () => familyMembers.value,
+  () => familyTreeData.value,
   (data) => {
     if (data) {
-      const members = data
-      console.log('123members', members)
-      treeLayout.value = buildTreeFromMembers(members, currentUserId.value, isMobile.value)
+      treeLayout.value = buildTreeFromFamilyTree(data, isMobile.value)
       calculateSvgDimensions()
       centerTree()
     }
@@ -237,19 +267,29 @@ watch(
 
 // Watch for mobile changes
 watch(isMobile, () => {
-  if (familyMembers.value && familyMembers.value.length > 0) {
-    const members = familyMembers.value
-    treeLayout.value = buildTreeFromMembers(members, currentUserId.value, isMobile.value)
+  if (familyTreeData.value) {
+    treeLayout.value = buildTreeFromFamilyTree(familyTreeData.value, isMobile.value)
     calculateSvgDimensions()
     centerTree()
   }
 })
 
 watch(
-  () => familyMembersQuery.isFetching.value,
+  () => familyTreesQuery.isFetching.value,
   (loading) => {
     isLoading.value = loading
   },
+)
+
+// Watch query data directly
+watch(
+  () => familyTreesQuery.data.value?.data,
+  (data) => {
+    if (data) {
+      familyTreeData.value = data as FamilyTreeInterface
+    }
+  },
+  { immediate: true },
 )
 
 const getNodeSize = (node: TreeNodeType): 'small' | 'medium' | 'large' => {
@@ -352,8 +392,8 @@ const handleAddSpouse = (node: TreeNodeType) => {
 }
 
 const handleAddFirstMember = () => {
-  message.info('Add first family member')
-  // TODO: Navigate to add member form
+  showFamilyTreeModal.value = true
+  $router.push({ name: 'App.FamilyTreeView', params: { module: 'add-member' } })
 }
 
 // Share handler
@@ -362,49 +402,37 @@ const handleShare = () => {
   // TODO: Implement share functionality
 }
 
-const fetchFamilyMembers = async () => {
+const fetchFamilyTrees = async () => {
   try {
-    const response = await familyMembersQuery.refetch()
-    familyMembers.value = response?.data?.data as FamilyMemberInterface[]
+    await familyTreesQuery.refetch()
   } catch (error) {
     handleApiError(error, message)
   }
 }
 
-// Lifecycle
-onMounted(async () => {
-  await fetchFamilyMembers()
-  if (familyMembers.value.length > 0) {
-    const members = familyMembers.value
-    treeLayout.value = buildTreeFromMembers(
-      members,
-      currentUserId.value ?? undefined,
-      isMobile.value,
-    )
-    console.log('1234members', treeLayout.value)
+const handleResize = () => {
+  if (familyTreeData.value) {
+    treeLayout.value = buildTreeFromFamilyTree(familyTreeData.value, isMobile.value)
     calculateSvgDimensions()
     centerTree()
   }
+}
 
-  // Handle window resize
-  const handleResize = () => {
-    if (familyMembers.value && familyMembers.value.length > 0) {
-      const members = familyMembers.value
-      treeLayout.value = buildTreeFromMembers(
-        members,
-        currentUserId.value ?? undefined,
-        isMobile.value,
-      )
-      calculateSvgDimensions()
-      centerTree()
-    }
+const addResizeListener = () => window.addEventListener('resize', handleResize)
+const removeResizeListener = () => window.removeEventListener('resize', handleResize)
+
+// Lifecycle
+onMounted(async () => {
+  await fetchFamilyTrees()
+  if (familyTreeData.value) {
+    treeLayout.value = buildTreeFromFamilyTree(familyTreeData.value, isMobile.value)
+    calculateSvgDimensions()
+    centerTree()
   }
-
-  window.addEventListener('resize', handleResize)
-  onUnmounted(() => {
-    window.removeEventListener('resize', handleResize)
-  })
+  addResizeListener()
 })
+
+onUnmounted(removeResizeListener)
 </script>
 
 <style scoped>

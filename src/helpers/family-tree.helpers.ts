@@ -4,6 +4,7 @@ import type {
   TreeConnection,
   Generation,
   TreeLayout,
+  FamilyTreeInterface,
 } from '@/types/family-tree.types'
 
 /**
@@ -39,8 +40,234 @@ export const getMemberDisplayName = (member: FamilyMemberInterface): string => {
 }
 
 /**
+ * Build tree structure from structured FamilyTreeInterface
+ * Uses actual relationship data to create accurate tree layout
+ */
+export const buildTreeFromFamilyTree = (
+  familyTreeData: FamilyTreeInterface,
+  isMobile = false,
+): TreeLayout => {
+  const { familyTree } = familyTreeData
+  const nodeMap = new Map<number, TreeNode>()
+  const connections: TreeConnection[] = []
+
+  // Helper to create or get node
+  const getOrCreateNode = (member: FamilyMemberInterface): TreeNode => {
+    if (nodeMap.has(member.id)) {
+      return nodeMap.get(member.id)!
+    }
+    const node: TreeNode = {
+      id: member.id,
+      member,
+      generation: 0,
+      x: 0,
+      y: 0,
+      children: [],
+      parents: [],
+      displayName: getMemberDisplayName(member),
+      avatarUrl: getMemberAvatarUrl(member),
+    }
+    nodeMap.set(member.id, node)
+    return node
+  }
+
+  // Create self node (generation 0 - center)
+  const selfNode = getOrCreateNode(familyTree.self)
+  selfNode.generation = 0
+
+  // Create parent nodes (generation -1)
+  familyTree.parents.forEach((parent) => {
+    const parentNode = getOrCreateNode(parent)
+    parentNode.generation = -1
+    selfNode.parents.push(parentNode)
+    parentNode.children.push(selfNode)
+    connections.push({
+      from: parentNode,
+      to: selfNode,
+      type: 'parent-child',
+      color: '#0D9488',
+    })
+  })
+
+  // Create grandparent nodes (generation -2)
+  familyTree.grandparents.forEach((grandparent) => {
+    const grandparentNode = getOrCreateNode(grandparent)
+    grandparentNode.generation = -2
+    // Connect to parents if they exist
+    familyTree.parents.forEach((parent) => {
+      const parentNode = nodeMap.get(parent.id)
+      if (parentNode) {
+        grandparentNode.children.push(parentNode)
+        parentNode.parents.push(grandparentNode)
+        connections.push({
+          from: grandparentNode,
+          to: parentNode,
+          type: 'parent-child',
+          color: '#0D9488',
+        })
+      }
+    })
+  })
+
+  // Create child nodes (generation +1)
+  familyTree.children.forEach((child) => {
+    const childNode = getOrCreateNode(child)
+    childNode.generation = 1
+    selfNode.children.push(childNode)
+    childNode.parents.push(selfNode)
+    connections.push({
+      from: selfNode,
+      to: childNode,
+      type: 'parent-child',
+      color: '#0D9488',
+    })
+  })
+
+  // Create grandchild nodes (generation +2)
+  familyTree.grandchildren.forEach((grandchild) => {
+    const grandchildNode = getOrCreateNode(grandchild)
+    grandchildNode.generation = 2
+    // Connect to children if they exist
+    familyTree.children.forEach((child) => {
+      const childNode = nodeMap.get(child.id)
+      if (childNode) {
+        childNode.children.push(grandchildNode)
+        grandchildNode.parents.push(childNode)
+        connections.push({
+          from: childNode,
+          to: grandchildNode,
+          type: 'parent-child',
+          color: '#0D9488',
+        })
+      }
+    })
+  })
+
+  // Create spouse nodes (generation 0 - same as self)
+  familyTree.spouse.forEach((spouse) => {
+    const spouseNode = getOrCreateNode(spouse)
+    spouseNode.generation = 0
+    selfNode.spouse = spouseNode
+    spouseNode.spouse = selfNode
+    connections.push({
+      from: selfNode,
+      to: spouseNode,
+      type: 'spouse',
+      color: '#D97706',
+    })
+  })
+
+  // Create sibling nodes (generation 0 - same as self)
+  familyTree.siblings.forEach((sibling) => {
+    const siblingNode = getOrCreateNode(sibling)
+    siblingNode.generation = 0
+    // Share same parents
+    selfNode.parents.forEach((parent) => {
+      if (!siblingNode.parents.includes(parent)) {
+        siblingNode.parents.push(parent)
+        parent.children.push(siblingNode)
+      }
+    })
+    connections.push({
+      from: selfNode,
+      to: siblingNode,
+      type: 'sibling',
+      color: '#059669',
+    })
+  })
+
+  // Create aunt/uncle nodes (generation -1 - same as parents)
+  familyTree.aunts_uncles.forEach((auntUncle) => {
+    const auntUncleNode = getOrCreateNode(auntUncle)
+    auntUncleNode.generation = -1
+    // Connect to grandparents if they exist
+    familyTree.grandparents.forEach((grandparent) => {
+      const grandparentNode = nodeMap.get(grandparent.id)
+      if (grandparentNode) {
+        grandparentNode.children.push(auntUncleNode)
+        auntUncleNode.parents.push(grandparentNode)
+        connections.push({
+          from: grandparentNode,
+          to: auntUncleNode,
+          type: 'parent-child',
+          color: '#0D9488',
+        })
+      }
+    })
+  })
+
+  // Create niece/nephew nodes (generation +1 - same as children)
+  familyTree.nieces_nephews.forEach((nieceNephew) => {
+    const nieceNephewNode = getOrCreateNode(nieceNephew)
+    nieceNephewNode.generation = 1
+    // Connect to siblings if they exist
+    familyTree.siblings.forEach((sibling) => {
+      const siblingNode = nodeMap.get(sibling.id)
+      if (siblingNode) {
+        siblingNode.children.push(nieceNephewNode)
+        nieceNephewNode.parents.push(siblingNode)
+        connections.push({
+          from: siblingNode,
+          to: nieceNephewNode,
+          type: 'parent-child',
+          color: '#0D9488',
+        })
+      }
+    })
+  })
+
+  // Create cousin nodes (generation 0 - same as self)
+  familyTree.cousins.forEach((cousin) => {
+    const cousinNode = getOrCreateNode(cousin)
+    cousinNode.generation = 0
+    connections.push({
+      from: selfNode,
+      to: cousinNode,
+      type: 'sibling',
+      color: '#059669',
+    })
+  })
+
+  // Group nodes by generation
+  const generationMap = new Map<number, TreeNode[]>()
+  const nodes = Array.from(nodeMap.values())
+  nodes.forEach((node) => {
+    const gen = node.generation
+    if (!generationMap.has(gen)) {
+      generationMap.set(gen, [])
+    }
+    generationMap.get(gen)!.push(node)
+  })
+
+  // Create generation objects
+  const generations: Generation[] = []
+  const sortedGenerations = Array.from(generationMap.keys()).sort((a, b) => a - b)
+  sortedGenerations.forEach((genLevel) => {
+    const genNodes = generationMap.get(genLevel) || []
+    if (genNodes.length > 0) {
+      generations.push({
+        level: genLevel,
+        label: getGenerationLabel(genLevel),
+        nodes: genNodes,
+      })
+    }
+  })
+
+  // Calculate positions with responsive spacing
+  calculatePositions(generations, nodeMap, isMobile)
+
+  return {
+    nodes,
+    connections,
+    generations,
+    rootNode: selfNode,
+  }
+}
+
+/**
  * Build tree structure from flat family member data
  * Creates a simple tree layout even without explicit relationships
+ * @deprecated Use buildTreeFromFamilyTree instead for structured data
  */
 export const buildTreeFromMembers = (
   members: FamilyMemberInterface[],
@@ -202,11 +429,20 @@ const assignGenerations = (
  * Get generation label
  */
 const getGenerationLabel = (level: number): string => {
-  const labels: string[] = ['Generation X', 'Generation Y', 'Generation Z']
-  if (level < labels.length) {
-    return labels[level]!
+  // Handle negative generations (ancestors)
+  if (level < 0) {
+    if (level === -1) return 'Parents'
+    if (level === -2) return 'Grandparents'
+    if (level === -3) return 'Great Grandparents'
+    return `Generation ${Math.abs(level)} (Ancestors)`
   }
-  return `Generation ${String.fromCharCode(87 + level)}` // W, X, Y, Z...
+  
+  // Handle positive generations (descendants)
+  if (level === 0) return 'Current Generation'
+  if (level === 1) return 'Children'
+  if (level === 2) return 'Grandchildren'
+  if (level === 3) return 'Great Grandchildren'
+  return `Generation ${level} (Descendants)`
 }
 
 /**
@@ -219,16 +455,18 @@ const calculatePositions = (
 ): void => {
   const horizontalSpacing = isMobile ? 120 : 200
   const verticalSpacing = isMobile ? 180 : 250
-  const startY = isMobile ? 80 : 100
+  const centerY = isMobile ? 400 : 500 // Center Y position for generation 0
 
-  generations.forEach((generation, genIndex) => {
+  generations.forEach((generation) => {
     const nodes = generation.nodes
     const totalWidth = (nodes.length - 1) * horizontalSpacing
     const startX = -totalWidth / 2
+    // Use generation.level instead of array index to handle negative generations
+    const yOffset = generation.level * verticalSpacing
 
     nodes.forEach((node, nodeIndex) => {
       node.x = startX + nodeIndex * horizontalSpacing
-      node.y = startY + genIndex * verticalSpacing
+      node.y = centerY + yOffset
     })
   })
 }

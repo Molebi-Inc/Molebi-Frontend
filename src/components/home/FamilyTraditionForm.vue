@@ -181,9 +181,7 @@ const getEditData = () => {
       time: selectedFamilyTradition.time,
       recurrence: selectedFamilyTradition.recurrence,
       date_mode: null,
-      family_member_ids: selectedFamilyTradition.members.map(
-        (member: Partial<FamilyMemberInterface>) => member.id as number,
-      ),
+      family_member_ids: selectedFamilyTradition.members.map((member) => member.id),
     }
   }
 }

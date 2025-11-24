@@ -41,6 +41,8 @@ export interface FamilyMemberInterface {
   middle_name: string | null
   family_name: string
   family_tree_id: number
+  full_name?: string
+  is_registered?: boolean
   profile_picture_url: string | null
   is_same_family_name: boolean
   nickname: string | null
@@ -78,4 +80,20 @@ export interface TreeLayout {
   connections: TreeConnection[]
   generations: Generation[]
   rootNode?: TreeNode
+}
+
+export interface FamilyTreeInterface {
+  userId: string
+  familyTree: {
+    self: FamilyMemberInterface
+    parents: FamilyMemberInterface[]
+    siblings: FamilyMemberInterface[]
+    spouse: FamilyMemberInterface[]
+    children: FamilyMemberInterface[]
+    grandparents: FamilyMemberInterface[]
+    grandchildren: FamilyMemberInterface[]
+    aunts_uncles: FamilyMemberInterface[]
+    nieces_nephews: FamilyMemberInterface[]
+    cousins: FamilyMemberInterface[]
+  }
 }
