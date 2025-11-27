@@ -1,6 +1,4 @@
-import { getCurrentInstance, nextTick, ref, type ComponentInternalInstance } from 'vue'
-import type { App as VueApp } from 'vue'
-import { useTourStore } from '@/stores/tour'
+import { nextTick, type App as VueApp } from 'vue'
 import { useUpdateTourStageMutation, useSkipTourMutation } from '@/services/general.service'
 import { useProfile } from './useProfile'
 
@@ -15,16 +13,19 @@ interface Tour {
 }
 
 export function useTour(tourName?: string) {
-  const vm = ref<Record<string, any>>({})
-  const tourStore = useTourStore()
   const { getProfile } = useProfile()
   const { mutate: updateTourStageMutation } = useUpdateTourStageMutation()
   const { mutate: skipTourMutation } = useSkipTourMutation()
-  
+
   const getTours = (): Record<string, Tour> | null => {
-    const app = getCurrentInstance()
-    vm.value = (app as ComponentInternalInstance).appContext.config.globalProperties
-    return vm.value.$tours || null
+    // Access the globally stored app instance from main.ts
+    const app = (window as { __VUE_APP__?: VueApp }).__VUE_APP__
+    if (!app || !app.config) {
+      return null
+    }
+    const globalProperties = app.config.globalProperties
+    const tours = (globalProperties as unknown as { $tours?: Record<string, Tour> }).$tours
+    return tours || null
   }
 
   const startTour = (name?: string) => {

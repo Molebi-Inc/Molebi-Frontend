@@ -39,9 +39,15 @@ export const useUpdateTourStageMutation = () => {
 export const useSkipTourMutation = () => {
   return useMutation<ApiResponse, AxiosError<ValidationErrorResponse>, void>({
     mutationFn: async () => {
-      const response = await axiosInstance.patch<ApiResponse>('/api/user/tour/skip', {
-        headers: { Authorization: `Bearer ${authConfig.getToken()}` },
-      })
+      const response = await axiosInstance.patch<ApiResponse>(
+        '/api/user/tour/skip',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+          },
+        },
+      )
       return response.data
     },
   })

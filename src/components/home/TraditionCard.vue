@@ -131,7 +131,7 @@ const handleSelect = (key: string, tradition: FamilyTradition) => {
       familyTraditionStore.setStoreProp('selectedFamilyTradition', tradition)
       $router.push({
         name: $route.name,
-        query: { ftype: 'family_tradition_media', fid: tradition.id },
+        query: { ftype: 'family_tradition_media', fid: tradition.id, tab: 'file' },
       })
     },
     delete: () => deleteFamilyTradition(tradition.id),
@@ -161,7 +161,6 @@ const handleClick = (tradition: FamilyTradition) => {
 }
 
 const handleAddNewMemory = () => {
-  console.log('add new memory')
   AlertService.close()
 }
 </script>
