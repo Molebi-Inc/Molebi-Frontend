@@ -42,10 +42,9 @@
             :size="config.iconSize || 64"
           />
           <!-- Image -->
-          <!-- :src="config.imageUrl" -->
           <img
             v-else-if="config.imageUrl"
-            :src="`/src/assets/${config.imageUrl}`"
+            :src="getImageUrl(config.imageUrl)"
             :alt="config.imageAlt || config.subject || 'Alert image'"
             :class="['max-w-full h-auto', config.imageClass || 'w-16 h-16 object-contain']"
             :style="{
@@ -164,6 +163,21 @@ import MlbModal from '@/components/ui/MlbModal.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
+
+// Preload all images from assets/images for dynamic access
+const imageModules = import.meta.glob(
+  [
+    '/src/assets/images/*.png',
+    '/src/assets/images/*.jpg',
+    '/src/assets/images/*.jpeg',
+    '/src/assets/images/*.svg',
+  ],
+  {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  },
+)
 
 const alertState = useAlertState()
 const notification = useNotification()
@@ -320,6 +334,30 @@ function getIconColor(color?: string): string {
   }
 
   return colorMap[color] || color
+}
+
+function getImageUrl(imagePath: string): string {
+  // If it's already a full URL or starts with /, return as is
+  if (
+    imagePath.startsWith('http://') ||
+    imagePath.startsWith('https://') ||
+    imagePath.startsWith('/')
+  ) {
+    return imagePath
+  }
+
+  // Construct the full path to match the glob pattern
+  const fullPath = `/src/assets/${imagePath}`
+
+  // Look up the image in the preloaded modules
+  const imageUrl = (imageModules[fullPath] as string) || null
+
+  if (imageUrl) {
+    return imageUrl
+  }
+
+  // Fallback: return the original path (might work in some cases)
+  return fullPath
 }
 
 function getConfirmButtonClass(): string {

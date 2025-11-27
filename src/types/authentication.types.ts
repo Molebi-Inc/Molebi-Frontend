@@ -3,7 +3,7 @@ import type { NotificationSettings } from './settings.types'
 export interface SignupFormValues {
   email: string
   phone: string
-  code: string
+  code: string | null
   password: string
   password_confirmation: string
 }
@@ -116,10 +116,12 @@ export interface SigninResponseData {
 export interface VerifyEmailResponseData {
   abilities: string[]
   token: string
+  expires_in_minutes: number
 }
 
 export interface SignupResponseData {
   token: string
+  expires_in_minutes: number
 }
 
 export interface AuthenticationStoreInterface {
@@ -131,3 +133,12 @@ export interface AuthenticationStoreInterface {
 }
 
 export type PasswordMode = 'reset' | 'change'
+
+export interface ForgotPasswordResponseData {
+  expires_in_minutes: number
+  email: string
+}
+
+export interface ResendOtpResponseData {
+  expires_in_minutes: number
+}

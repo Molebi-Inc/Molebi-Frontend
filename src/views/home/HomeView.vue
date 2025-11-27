@@ -74,7 +74,7 @@
   <MlbModal v-model:show="showHomeFormModal" class="rounded-3xl!" @close="handleCloseForm">
     <template #header>
       <div>
-        <BackButton icon="vuesax.linear.arrow-left" class="mb-6" />
+        <BackButton icon="vuesax.linear.arrow-left" class="mb-6" :previous-route="false" />
       </div>
     </template>
 

@@ -35,12 +35,14 @@ import { useAuthenticationStore } from '@/stores/authentication.store'
 import { resetPasswordValidation } from '@/validations/authentication.validations'
 import { useForgotPasswordMutation } from '@/services/authentication.services'
 import { handleApiError } from '@/helpers/error.helpers'
+import { useAuthConfig } from '@/config/auth.config'
 
 const message = useMessage()
 const $router = useRouter()
 const { form, rules } = resetPasswordValidation()
 const authenticationStore = useAuthenticationStore()
 const forgotPasswordMutation = useForgotPasswordMutation()
+const authConfig = useAuthConfig()
 
 const formRef = ref<FormInst | null>(null)
 const loading = ref<boolean>(false)
@@ -60,6 +62,10 @@ const onFormSubmit = async () => {
       })
 
       const response = await forgotPasswordMutation.mutateAsync(form.value)
+
+      authConfig.setOtpExpirationInMinutes(response.data.expires_in_minutes)
+      authConfig.setOtpRequestTime(new Date().toISOString())
+
       message.success(response.message || 'Password reset instructions sent to your email')
       $router.push({ name: 'Guests.ForgotPasswordView', params: { module: 'otp' } })
     } catch (error) {

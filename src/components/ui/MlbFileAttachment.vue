@@ -31,8 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import { NUpload, NUploadDragger, NIcon, NText, NP, type UploadFileInfo } from 'naive-ui'
-import MlbIcon from './MlbIcon.vue'
+import { NUpload, NUploadDragger, NIcon, NText, NP, type UploadFileInfo, NFormItem } from 'naive-ui'
+import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { ref } from 'vue'
 
 const emit = defineEmits<{
@@ -50,5 +50,8 @@ const updateFileList = (fileList: UploadFileInfo[]) => {
 <style scoped>
 .n-upload-dragger {
   @reference border-2 border-dashed border-gray-300 rounded-md p-4;
+}
+:deep(.n-form-item-blank div) {
+  width: 100%;
 }
 </style>

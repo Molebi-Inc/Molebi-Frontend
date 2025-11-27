@@ -33,7 +33,7 @@
           <span v-if="countdown > 0">
             resend OTP in
             <span class="text-primary-500 font-medium text-xs line-height-18"
-              >({{ countdown }}s)</span
+              >({{ countdown > 60 ? Math.floor(countdown / 60) + 'mins' : countdown + 's' }})</span
             >
           </span>
           <MlbButton
@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import type { FormInst } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbInputOtp from '@/components/ui/MlbInputOtp.vue'
@@ -79,15 +79,47 @@ const verifyEmailMutation = useVerifyEmailMutation()
 const resendOtpMutation = useResendOtpMutation()
 const authenticationStore = useAuthenticationStore()
 
-const countdown = ref<number>(30)
+const countdown = ref<number>(0)
 const loading = ref<boolean>(false)
 const formRef = ref<FormInst | null>(null)
+let countdownInterval: ReturnType<typeof setInterval> | null = null
+
+const calculateRemainingTime = (): number => {
+  const expirationMinutes = authConfig.getOtpExpirationInMinutes() || 10
+  const requestTimeStr = authConfig.getOtpRequestTime()
+
+  if (!requestTimeStr) {
+    // If no request time is stored, return the full expiration time in seconds
+    return expirationMinutes * 60
+  }
+
+  const requestTime = new Date(requestTimeStr).getTime()
+  const currentTime = new Date().getTime()
+  const elapsedSeconds = Math.floor((currentTime - requestTime) / 1000)
+  const expirationSeconds = expirationMinutes * 60
+  const remainingSeconds = Math.max(0, expirationSeconds - elapsedSeconds)
+
+  return remainingSeconds
+}
 
 const startCountdown = () => {
-  countdown.value = 10
-  setInterval(() => {
+  // Clear any existing interval
+  if (countdownInterval) {
+    clearInterval(countdownInterval)
+  }
+
+  // Calculate remaining time based on request time and expiration
+  countdown.value = calculateRemainingTime()
+
+  countdownInterval = setInterval(() => {
     if (countdown.value > 0) {
       countdown.value--
+    } else {
+      // Clear interval when countdown reaches 0
+      if (countdownInterval) {
+        clearInterval(countdownInterval)
+        countdownInterval = null
+      }
     }
   }, 1000)
 }
@@ -159,15 +191,27 @@ const handleForgotPasswordFunctionality = () => {
 
 const onResendOTP = async () => {
   try {
-    await resendOtpMutation.mutateAsync()
+    const response = await resendOtpMutation.mutateAsync()
+    // Set the request time when OTP is successfully resent
+    authConfig.setOtpExpirationInMinutes(response.data.expires_in_minutes)
+    authConfig.setOtpRequestTime(new Date().toISOString())
+    message.success('OTP resent successfully')
   } catch (error) {
     handleApiError(error, message)
+    return
   }
   startCountdown()
 }
 
 onMounted(() => {
   startCountdown()
+})
+
+onUnmounted(() => {
+  if (countdownInterval) {
+    clearInterval(countdownInterval)
+    countdownInterval = null
+  }
 })
 </script>
 

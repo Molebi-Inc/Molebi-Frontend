@@ -14,7 +14,7 @@ export const signupValidation = () => {
   const form = ref<SignupFormValues>({
     email: '',
     phone: '',
-    code: '',
+    code: null,
     password: '',
     password_confirmation: '',
   })
