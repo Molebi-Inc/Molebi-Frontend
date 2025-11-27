@@ -44,6 +44,7 @@ axiosInstance.interceptors.response.use(
         // Unauthorized - handle authentication errors
         // Clear tokens and redirect to login
         authConfig.removeToken()
+        authConfig.removeToken(true)
         // Use replace to avoid adding to history stack and force navigation
         router.replace({ name: 'Guests.SigninView' }).catch(() => {
           // Fallback to window.location if router fails
