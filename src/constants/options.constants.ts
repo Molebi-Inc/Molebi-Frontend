@@ -62,10 +62,13 @@ export const timeOptions: SelectOption[] = [
   })),
 ]
 
-export const countryOptions: SelectOption[] = Object.values(
-  country.all as Record<string, Country>,
-).map((country) => ({
-  label: `${country.name} (${country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`})`,
-  value:
-    country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`,
-}))
+export const countryOptions = Object.entries(country.all as Record<string, Country>).map(
+  ([countryCode, country]) => {
+    const dialingCode =
+      country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`
+    return {
+      label: `${country.name} (${dialingCode})`,
+      value: `${dialingCode}|${countryCode}`, // Use composite key to ensure uniqueness
+    }
+  },
+)

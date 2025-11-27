@@ -37,8 +37,8 @@
             placeholder="+234"
             :options="countryOptions"
             :style="{ width: '30%' }"
-            :filter="filterCountryOptions"
             :consistent-menu-width="false"
+            @filter="filterCountryOptions"
           />
           <n-input
             v-model:value="form.phone"
@@ -63,6 +63,7 @@
 
 <script setup lang="ts">
 import type { FormInst } from 'naive-ui'
+import type { SelectOption } from 'naive-ui'
 import { ref, computed, onMounted } from 'vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
@@ -74,7 +75,6 @@ import { extractCountryCode } from '@/helpers/general.helpers'
 import { profileValidation } from '@/validations/settings.validations'
 import { useUpdateProfileMutation } from '@/services/authentication.services'
 import { useMessage, NForm, NFormItem, NInput, NSelect, NInputGroup } from 'naive-ui'
-import type { SelectOption } from 'naive-ui'
 
 const message = useMessage()
 const profileStore = useProfileStore()
@@ -101,9 +101,10 @@ const onFormSubmit = async () => {
       return
     }
     try {
+      const dialingCode = form.value.code?.split('|')[0] || form.value.code
       const payload: ProfileFormValues = {
         ...form.value,
-        phone: `${form.value.code}${form.value.phone}`,
+        phone: `${dialingCode}${form.value.phone}`,
       }
       const response = await updateProfileMutation.mutateAsync(payload)
       message.success(
