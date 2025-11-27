@@ -20,9 +20,9 @@
               :style="{ width: '30%' }"
               placeholder="+234"
               filterable
-              :filter="filterCountryOptions"
               :consistent-menu-width="false"
               :options="countryOptions"
+              @filter="filterCountryOptions"
             />
             <n-input
               v-model:value="form.phone"
@@ -95,19 +95,18 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { signupValidation } from '@/validations/authentication.validations'
-import type { FormInst, SelectOption } from 'naive-ui'
-import { NForm, NFormItem, NInput, NSelect, NInputGroup, useMessage } from 'naive-ui'
-import MlbInput from '@/components/ui/MlbInput.vue'
-import MlbButton from '@/components/ui/MlbButton.vue'
 import { useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import { useSignupMutation } from '@/services/authentication.services'
-import { handleApiError } from '@/helpers/error.helpers'
+import MlbInput from '@/components/ui/MlbInput.vue'
 import { useAuthConfig } from '@/config/auth.config'
-import country from 'country-list-js'
-import type { Country } from '@/types/general.types'
+import MlbButton from '@/components/ui/MlbButton.vue'
+import type { FormInst, SelectOption } from 'naive-ui'
+import { handleApiError } from '@/helpers/error.helpers'
+import { countryOptions } from '@/constants/options.constants'
 import { useAuthenticationStore } from '@/stores/authentication.store'
+import { useSignupMutation } from '@/services/authentication.services'
+import { signupValidation } from '@/validations/authentication.validations'
+import { NForm, NFormItem, NInput, NSelect, NInputGroup, useMessage } from 'naive-ui'
 
 const $router = useRouter()
 const message = useMessage()
@@ -118,12 +117,6 @@ const authenticationStore = useAuthenticationStore()
 
 const formRef = ref<FormInst | null>(null)
 const loading = computed(() => signupMutation.isPending.value)
-
-const countryOptions = Object.values(country.all as Record<string, Country>).map((country) => ({
-  label: `${country.name} (${country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`})`,
-  value:
-    country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`,
-}))
 
 const filterCountryOptions = (pattern: string, option: SelectOption): boolean => {
   if (!pattern) return true
@@ -142,9 +135,10 @@ const onFormSubmit = async () => {
       return
     }
     try {
+      const dialingCode = form.value.code?.split('|')[0] || form.value.code
       const response = await signupMutation.mutateAsync({
         ...form.value,
-        phone: `${form.value.code}${form.value.phone}`,
+        phone: `${dialingCode}${form.value.phone}`,
       })
       authenticationStore.setStoreProp('signupForm', {
         ...form.value,
