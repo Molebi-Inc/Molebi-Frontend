@@ -30,7 +30,6 @@ export function useTour(tourName?: string) {
 
   const startTour = (name?: string) => {
     const tourKey = name || tourName || 'myTour'
-    console.log('tourKey', tourKey)
 
     // Use nextTick to ensure DOM is ready and tour is registered
     nextTick(() => {
