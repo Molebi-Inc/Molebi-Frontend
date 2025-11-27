@@ -74,6 +74,7 @@ import { extractCountryCode } from '@/helpers/general.helpers'
 import { profileValidation } from '@/validations/settings.validations'
 import { useUpdateProfileMutation } from '@/services/authentication.services'
 import { useMessage, NForm, NFormItem, NInput, NSelect, NInputGroup } from 'naive-ui'
+import type { SelectOption } from 'naive-ui'
 
 const message = useMessage()
 const profileStore = useProfileStore()
