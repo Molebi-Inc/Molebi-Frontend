@@ -191,8 +191,9 @@ const handleForgotPasswordFunctionality = () => {
 
 const onResendOTP = async () => {
   try {
-    await resendOtpMutation.mutateAsync()
+    const response = await resendOtpMutation.mutateAsync()
     // Set the request time when OTP is successfully resent
+    authConfig.setOtpExpirationInMinutes(response.data.expires_in_minutes)
     authConfig.setOtpRequestTime(new Date().toISOString())
     message.success('OTP resent successfully')
   } catch (error) {

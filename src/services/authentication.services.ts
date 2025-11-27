@@ -10,6 +10,7 @@ import type {
   SigninUser,
   ForgotPasswordResponseData,
   VerifyEmailResponseData,
+  ResendOtpResponseData,
 } from '@/types/authentication.types'
 import type { AxiosError } from 'axios'
 import { useMutation, useQuery } from '@tanstack/vue-query'
@@ -62,9 +63,9 @@ export const useVerifyEmailMutation = () => {
 
 // Resend OTP endpoint (GET request)
 export const useResendOtpMutation = () => {
-  return useMutation<ApiResponse, AxiosError<ValidationErrorResponse>, void>({
+  return useMutation<ApiResponse<ResendOtpResponseData>, AxiosError<ValidationErrorResponse>, void>({
     mutationFn: async () => {
-      const response = await axiosInstance.get<ApiResponse>('/api/user/resend-verification', {
+      const response = await axiosInstance.get<ApiResponse<ResendOtpResponseData>>('/api/user/resend-verification', {
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${authConfig.getToken(true)}`,

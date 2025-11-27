@@ -138,3 +138,7 @@ export interface ForgotPasswordResponseData {
   expires_in_minutes: number
   email: string
 }
+
+export interface ResendOtpResponseData {
+  expires_in_minutes: number
+}
