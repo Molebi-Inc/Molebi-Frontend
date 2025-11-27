@@ -8,6 +8,7 @@ import { timeCapsuleRoutes } from './time-capsule'
 import { settingsRoutes } from './settings'
 
 const AUTH_TOKEN_KEY = 'token'
+const GUEST_TOKEN_KEY = 'guest_token'
 const DEFAULT_AUTH_ROUTE = 'App.HomeView'
 const DEFAULT_GUEST_ROUTE = 'Guests.SigninView'
 
@@ -25,7 +26,10 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) : null
+  const token =
+    typeof window !== 'undefined'
+      ? localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(GUEST_TOKEN_KEY)
+      : null
   const isAuthenticated = Boolean(token)
 
   if (to.meta.requiresAuth && !isAuthenticated) {
