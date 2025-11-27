@@ -16,15 +16,18 @@
           <n-input-group class="w-full">
             <n-select
               v-model:value="form.code"
+              size="large"
               :style="{ width: '30%' }"
               placeholder="+234"
               filterable
+              :filter="filterCountryOptions"
               :consistent-menu-width="false"
               :options="countryOptions"
             />
             <n-input
               v-model:value="form.phone"
-              :style="{ width: '60%' }"
+              class="mlb-input"
+              :style="{ width: '70%' }"
               placeholder="Enter phone number"
             />
           </n-input-group>
@@ -104,12 +107,14 @@ import { handleApiError } from '@/helpers/error.helpers'
 import { useAuthConfig } from '@/config/auth.config'
 import country from 'country-list-js'
 import type { Country } from '@/types/general.types'
+import { useAuthenticationStore } from '@/stores/authentication.store'
 
 const $router = useRouter()
 const message = useMessage()
 const { form, rules } = signupValidation()
 const signupMutation = useSignupMutation()
 const authConfig = useAuthConfig()
+const authenticationStore = useAuthenticationStore()
 
 const formRef = ref<FormInst | null>(null)
 const loading = computed(() => signupMutation.isPending.value)
@@ -119,6 +124,16 @@ const countryOptions = Object.values(country.all as Record<string, Country>).map
   value:
     country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`,
 }))
+
+const filterCountryOptions = (pattern: string, option: SelectOption): boolean => {
+  if (!pattern) return true
+  const searchPattern = pattern.toLowerCase().trim()
+  const label = String(option.label || '').toLowerCase()
+  const value = String(option.value || '').toLowerCase()
+
+  // Check if pattern matches country name, dialing code, or full label exactly
+  return label.includes(searchPattern) || value.includes(searchPattern)
+}
 
 const onFormSubmit = async () => {
   formRef.value?.validate(async (errors) => {
@@ -131,7 +146,13 @@ const onFormSubmit = async () => {
         ...form.value,
         phone: `${form.value.code}${form.value.phone}`,
       })
-      authConfig.setToken(response.data.token)
+      authenticationStore.setStoreProp('signupForm', {
+        ...form.value,
+        email: form.value.email,
+      })
+      authConfig.setToken(response.data.token, true)
+      authConfig.setOtpExpirationInMinutes(response.data.expires_in_minutes)
+      authConfig.setOtpRequestTime(new Date().toISOString())
 
       $router.push({ name: 'Guests.OnboardingView', params: { module: 'verify-email' } })
     } catch (error) {
@@ -155,3 +176,9 @@ const socialSignInOptions = computed(() => [
   },
 ])
 </script>
+
+<style scoped>
+:deep(.n-base-selection) {
+  height: 100% !important;
+}
+</style>

@@ -37,6 +37,7 @@
             placeholder="+234"
             :options="countryOptions"
             :style="{ width: '30%' }"
+            :filter="filterCountryOptions"
             :consistent-menu-width="false"
           />
           <n-input
@@ -81,6 +82,16 @@ const { form, rules } = profileValidation()
 const updateProfileMutation = useUpdateProfileMutation()
 
 const loading = computed(() => updateProfileMutation.isPending.value)
+
+const filterCountryOptions = (pattern: string, option: SelectOption): boolean => {
+  if (!pattern) return true
+  const searchPattern = pattern.toLowerCase().trim()
+  const label = String(option.label || '').toLowerCase()
+  const value = String(option.value || '').toLowerCase()
+
+  // Check if pattern matches country name, dialing code, or full label exactly
+  return label.includes(searchPattern) || value.includes(searchPattern)
+}
 
 const onFormSubmit = async () => {
   formRef.value?.validate(async (errors) => {

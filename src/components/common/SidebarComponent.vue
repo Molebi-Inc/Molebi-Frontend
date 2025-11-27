@@ -51,10 +51,10 @@
       </router-link>
       <!-- </div> -->
     </nav>
-
+    <!-- <div class="relative"> -->
     <div class="absolute bottom-6 left-6 right-6">
       <div>
-        <img src="@/assets/svg/tree-2.svg" alt="tree" class="w-50 h-60" />
+        <img src="@/assets/svg/tree-2.svg" alt="tree" class="w-full max-h-[20vh] object-contain" />
       </div>
       <hr class="mb-4 border-gray-200" />
       <div class="px-4 py-3 rounded-lg cursor-pointer transition-colors">
@@ -77,6 +77,7 @@
         </div>
       </div>
     </div>
+    <!-- </div> -->
   </section>
 </template>
 

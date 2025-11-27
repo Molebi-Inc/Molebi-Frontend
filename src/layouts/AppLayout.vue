@@ -6,40 +6,40 @@
     <header v-if="$route.meta.hasLayoutLogo" class="px-[72px] pt-[40px]">
       <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
     </header>
-    <div class="flex">
-      <aside
-        v-if="isLargeScreen && $route.meta.fullScreen !== 'web'"
-        class="fixed left-0 top-0 h-full z-40"
-      >
-        <SidebarComponent />
-      </aside>
-      <main
-        :class="[
-          'flex-1 h-full relative pb-24 md:pb-0 overflow-y-auto',
-          isLargeScreen && !['web'].includes($route.meta.fullScreen as string) ? 'md:ml-64' : '',
-        ]"
-      >
-        <div :class="['h-full', isLargeScreen ? 'p-6' : '']">
-          <header
-            v-if="
-              (isLargeScreen && !['web'].includes($route.meta.fullScreen as string)) ||
-              (!isLargeScreen && !['mobile'].includes($route.meta.fullScreen as string))
-            "
-          >
-            <HeaderComponent />
-          </header>
-          <section
-            :class="[
-              'h-full',
-              $route.meta.fullScreen === 'web' ? 'flex items-center justify-center' : '',
-            ]"
-          >
-            <router-view />
-          </section>
-        </div>
-        <FooterComponent v-if="!isLargeScreen && $route.meta.fullScreen !== 'mobile'" />
-      </main>
-    </div>
+    <!-- <div class="flex"> -->
+    <aside
+      v-if="isLargeScreen && $route.meta.fullScreen !== 'web'"
+      class="fixed left-0 top-0 h-full z-40"
+    >
+      <SidebarComponent />
+    </aside>
+    <main
+      :class="[
+        'flex-1 h-full relative pb-24 md:pb-0 overflow-y-auto',
+        isLargeScreen && !['web'].includes($route.meta.fullScreen as string) ? 'md:ml-64' : '',
+      ]"
+    >
+      <div :class="['h-full', isLargeScreen ? 'p-6' : '']">
+        <header
+          v-if="
+            (isLargeScreen && !['web'].includes($route.meta.fullScreen as string)) ||
+            (!isLargeScreen && !['mobile'].includes($route.meta.fullScreen as string))
+          "
+        >
+          <HeaderComponent />
+        </header>
+        <section
+          :class="[
+            'h-full',
+            $route.meta.fullScreen === 'web' ? 'flex items-center justify-center' : '',
+          ]"
+        >
+          <router-view />
+        </section>
+      </div>
+      <FooterComponent v-if="!isLargeScreen && $route.meta.fullScreen !== 'mobile'" />
+    </main>
+    <!-- </div> -->
   </div>
   <img
     v-if="$route.meta.hasLayoutLeaf && isLargeScreen"

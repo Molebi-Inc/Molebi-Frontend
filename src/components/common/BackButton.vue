@@ -18,11 +18,13 @@ const props = withDefaults(
     icon?: string
     label?: string
     routeName?: string
+    previousRoute?: boolean
   }>(),
   {
     icon: '',
     label: 'Go back',
     routeName: '',
+    previousRoute: true,
   },
 )
 
@@ -31,7 +33,9 @@ const $emit = defineEmits<{
 }>()
 
 const goBack = () => {
-  props.routeName ? $router.push({ name: props.routeName }) : $router.back()
+  if (props.previousRoute) {
+    props.routeName ? $router.push({ name: props.routeName }) : $router.back()
+  }
   $emit('update:go-back')
 }
 </script>

@@ -16,26 +16,26 @@
 
       <!-- Initial State: Tap to start -->
       <div v-else-if="state === 'idle'" class="bg-gray-100 rounded-3xl p-12 text-center">
-        <!-- <div class="bg-white rounded-2xl w-24 h-24 flex items-center justify-center mx-auto mb-8">
-          <MlbIcon name="vuesax.outline.microphone-2" class="w-10 h-10 text-gray-800" />
-        </div> -->
         <MlbButton
           @click="startRecording"
-          class="bg-white! text-gray-800! rounded-lg font-medium hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          class="bg-white! text-gray-800! rounded-lg font-medium hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed w-12! h-12!"
           :disabled="isRequesting"
         >
           <template #icon>
             <MlbIcon name="vuesax.outline.microphone-2" class="w-7 h-7 text-gray-800" />
           </template>
-          <span v-if="isRequesting">Requesting Permission...</span>
+          <span
+            v-if="isRequesting"
+            class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500!"
+          ></span>
         </MlbButton>
-        <p class="text-sm text-gray-800 font-medium">Tap to start recording</p>
+        <p class="text-sm text-gray-800 font-medium mt-3">Tap to start recording</p>
       </div>
 
       <!-- Recording State -->
       <div v-else-if="state === 'recording'" class="bg-gray-100 rounded-3xl p-8">
         <div class="text-center mb-8">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-3">Recording Title</h2>
+          <h2 class="text-2xl font-semibold text-gray-800 mb-3">Recording</h2>
           <div class="text-3xl font-mono text-gray-600">{{ formatTime(recordingTime) }}</div>
         </div>
 
@@ -56,21 +56,24 @@
         </div>
 
         <!-- Recording Controls -->
-        <div class="flex justify-center gap-6">
+        <div class="flex justify-center gap-3.5">
           <button
+            type="button"
             @click="stopRecording"
-            class="bg-red-500 text-white w-16 h-16 rounded-2xl flex items-center justify-center hover:bg-red-600 transition shadow-lg"
+            class="bg-white w-12 h-12 rounded-2xl flex items-center justify-center transition shadow-lg p-3"
           >
-            <div class="w-6 h-6 bg-white rounded-sm"></div>
+            <div
+              class="w-6 h-6 bg-white rounded-xl border-6 border-red-500 hover:border-red-700"
+            ></div>
           </button>
           <button
+            type="button"
             @click="pauseRecording"
-            class="bg-gray-500 text-white w-16 h-16 rounded-2xl flex items-center justify-center hover:bg-gray-600 transition shadow-lg"
+            class="bg-white w-12 h-12 rounded-2xl flex items-center justify-center transition shadow-lg"
           >
             <MlbIcon
-              name="vuesax.bold.pause-circle"
-              class="w-7 h-7 text-gray-800"
-              v-if="!isPlaying"
+              :name="isRecorderPaused ? 'vuesax.bold.play-circle' : 'vuesax.bold.pause-circle'"
+              class="w-6 h-6 text-gray-600 hover:text-gray-800"
             />
           </button>
         </div>
@@ -84,84 +87,113 @@
             <input
               type="range"
               min="0"
-              max="12.32"
+              :max="Math.max(playbackDuration, 0.1)"
               :value="playbackTime"
+              :disabled="!playbackAudioUrl"
               @input="handlePlaybackTimeChange"
-              class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer"
+              class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer disabled:cursor-not-allowed"
               style="-webkit-appearance: none; appearance: none"
             />
           </div>
           <div class="flex justify-between text-sm text-gray-600 font-mono">
             <span>{{ formatTime(playbackTime) }}</span>
-            <span>12.32</span>
+            <span>{{ formatTime(playbackDuration) }}</span>
           </div>
         </div>
 
         <!-- Playback Controls -->
-        <div class="flex items-center justify-center gap-6 mb-2">
-          <button
-            @click="rewind"
-            class="text-gray-600 hover:text-gray-800 transition flex flex-col items-center"
-          >
-            <div
-              class="border-2 border-gray-600 rounded-full w-12 h-12 flex items-center justify-center mb-1"
+        <div class="grid grid-cols-3 gap-6 mb-2">
+          <div></div>
+          <div class="col-span-1 flex items-center gap-5">
+            <button
+              type="button"
+              @click="rewind"
+              :disabled="!playbackAudioUrl"
+              class="text-gray-600 hover:text-gray-800 transition flex flex-col items-center disabled:opacity-40 disabled:pointer-events-none"
             >
-              <span class="text-sm font-semibold">15</span>
-            </div>
-          </button>
+              <div
+                class="border-2 border-gray-600 rounded-full w-6 h-6 flex items-center justify-center mb-1"
+              >
+                <span class="text-sm font-semibold">15</span>
+              </div>
+            </button>
 
-          <button
-            @click="togglePlayback"
-            class="bg-gray-600 text-white w-16 h-16 rounded-full flex items-center justify-center hover:bg-gray-700 transition shadow-lg"
-          >
-            <MlbIcon
-              name="vuesax.bold.play-circle"
-              class="w-7 h-7 text-gray-800"
-              v-if="!isPlaying"
-            />
-            <MlbIcon name="vuesax.bold.pause-circle" class="w-7 h-7 text-gray-800" v-else />
-          </button>
-
-          <button
-            @click="forward"
-            class="text-gray-600 hover:text-gray-800 transition flex flex-col items-center"
-          >
-            <div
-              class="border-2 border-gray-600 rounded-full w-12 h-12 flex items-center justify-center mb-1"
+            <button
+              type="button"
+              @click="togglePlayback"
+              :disabled="!playbackAudioUrl"
+              class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-900 transition shadow-lg disabled:opacity-40 disabled:pointer-events-none"
             >
-              <span class="text-sm font-semibold">15</span>
-            </div>
-          </button>
-
-          <button
-            @click="deleteRecording"
-            class="text-red-500 hover:text-red-600 transition flex flex-col items-center"
-          >
-            <div
-              class="border-2 border-red-500 rounded-full w-12 h-12 flex items-center justify-center mb-1"
+              <MlbIcon name="vuesax.bold.play-circle" size="32" color="#807F94" v-if="!isPlaying" />
+              <MlbIcon name="vuesax.bold.pause-circle" size="32" color="#807F94" v-else />
+            </button>
+            <button
+              type="button"
+              @click="forward"
+              :disabled="!playbackAudioUrl"
+              class="text-gray-600 hover:text-gray-800 transition flex flex-col items-center disabled:opacity-40 disabled:pointer-events-none"
             >
-              <MlbIcon name="vuesax.bold.close-circle" class="w-7 h-7 text-gray-800" />
-            </div>
-          </button>
+              <div
+                class="border-2 border-gray-600 rounded-full w-6 h-6 flex items-center justify-center mb-1"
+              >
+                <span class="text-sm font-semibold">15</span>
+              </div>
+            </button>
+          </div>
+          <div class="col-span-1 flex items-center justify-end">
+            <button
+              type="button"
+              @click="deleteRecording"
+              class="text-red-500 hover:text-red-600 transition"
+            >
+              <div
+                class="border-2 border-red-500 rounded-full w-6 h-6 flex items-center justify-center mb-1"
+              >
+                x
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </div>
+
+    <audio
+      ref="audioElement"
+      v-show="false"
+      :src="playbackAudioUrl || undefined"
+      preload="auto"
+      @timeupdate="onAudioTimeUpdate"
+      @loadedmetadata="onAudioLoaded"
+      @ended="onAudioEnded"
+      @play="onAudioPlay"
+      @pause="onAudioPause"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
+import type { UploadFileInfo } from 'naive-ui'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
+
 type RecordingState = 'idle' | 'recording' | 'playback'
+
+const emit = defineEmits<{
+  (e: 'update:file-list', fileList: UploadFileInfo[]): void
+}>()
 
 const state = ref<RecordingState>('idle')
 const recordingTime = ref(0)
 const playbackTime = ref(0)
+const playbackDuration = ref(0)
 const isPlaying = ref(false)
 const waveformBars = ref<number[]>([])
 const permissionError = ref<string | null>(null)
 const isRequesting = ref(false)
+const isRecorderPaused = ref(false)
+const playbackAudioUrl = ref<string | null>(null)
+const audioElement = ref<HTMLAudioElement | null>(null)
 
 let mediaRecorder: MediaRecorder | null = null
 let audioContext: AudioContext | null = null
@@ -170,16 +202,95 @@ let gainNode: GainNode | null = null
 let animationFrameId: number | null = null
 let stream: MediaStream | null = null
 let recordingInterval: number | null = null
-let playbackInterval: number | null = null
 let recordedChunks: BlobPart[] = []
 const recordedAudioBlob = ref<Blob | null>(null)
 
+const clearRecordingTimer = () => {
+  if (recordingInterval !== null) {
+    clearInterval(recordingInterval)
+    recordingInterval = null
+  }
+}
+
+const startRecordingTimer = () => {
+  clearRecordingTimer()
+  recordingInterval = window.setInterval(() => {
+    recordingTime.value = +(recordingTime.value + 0.1).toFixed(2)
+  }, 100) as unknown as number
+}
+
+const revokePlaybackUrl = () => {
+  if (playbackAudioUrl.value) {
+    URL.revokeObjectURL(playbackAudioUrl.value)
+    playbackAudioUrl.value = null
+  }
+}
+
+const resetPlaybackState = () => {
+  if (audioElement.value) {
+    audioElement.value.pause()
+    audioElement.value.currentTime = 0
+  }
+  isPlaying.value = false
+  playbackTime.value = 0
+}
+
+const mimeTypeToExtension = (mime: string) => {
+  if (mime.includes('mp4')) return 'mp4'
+  if (mime.includes('ogg')) return 'ogg'
+  if (mime.includes('wav')) return 'wav'
+  return 'webm'
+}
+
+const emitRecordingFile = (blob: Blob) => {
+  const mimeType = blob.type || 'audio/webm'
+  const extension = mimeTypeToExtension(mimeType)
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const fileName = `molebi-recording-${timestamp}.${extension}`
+  const file = new File([blob], fileName, { type: mimeType })
+  const url = URL.createObjectURL(file)
+  playbackAudioUrl.value = url
+  playbackDuration.value = recordingTime.value
+
+  const uploadFile: UploadFileInfo = {
+    id: fileName,
+    name: file.name,
+    status: 'finished',
+    percentage: 100,
+    file,
+    url,
+  }
+
+  emit('update:file-list', [uploadFile])
+}
+
+const preparePlayback = () => {
+  if (!recordedAudioBlob.value) return
+  resetPlaybackState()
+  revokePlaybackUrl()
+  emitRecordingFile(recordedAudioBlob.value)
+  state.value = 'playback'
+}
+
 const startRecording = async () => {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    permissionError.value = 'Audio recording is not supported in this browser.'
+    return
+  }
+
+  if (!window.MediaRecorder) {
+    permissionError.value = 'MediaRecorder API is not available in this browser.'
+    return
+  }
+
   isRequesting.value = true
   permissionError.value = null
+  recordedAudioBlob.value = null
+  emit('update:file-list', [])
+  resetPlaybackState()
+  revokePlaybackUrl()
 
   try {
-    // Request microphone access with constraints
     stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
@@ -188,18 +299,11 @@ const startRecording = async () => {
       },
     })
 
-    // Check if we have an audio track
     const audioTracks = stream.getAudioTracks()
     if (audioTracks.length === 0) {
       throw new Error('No audio tracks found in stream')
     }
 
-    const audioTrack = audioTracks[0]
-    if (audioTrack) {
-      console.log('Audio track:', audioTrack.label, audioTrack.enabled, audioTrack.readyState)
-    }
-
-    // Initialize audio recording with preferred MIME type
     const options: MediaRecorderOptions = {}
     if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
       options.mimeType = 'audio/webm;codecs=opus'
@@ -212,12 +316,9 @@ const startRecording = async () => {
     mediaRecorder = new MediaRecorder(stream, options)
     recordedChunks = []
 
-    console.log('MediaRecorder created with MIME type:', mediaRecorder.mimeType || 'default')
-
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
         recordedChunks.push(e.data)
-        console.log('Data available:', e.data.size, 'bytes')
       }
     }
 
@@ -225,12 +326,7 @@ const startRecording = async () => {
       if (!mediaRecorder) return
       const blobType = mediaRecorder.mimeType || 'audio/webm'
       recordedAudioBlob.value = new Blob(recordedChunks, { type: blobType })
-      console.log(
-        'Recording stopped. Total chunks:',
-        recordedChunks.length,
-        'Blob size:',
-        recordedAudioBlob.value.size,
-      )
+      preparePlayback()
     }
 
     mediaRecorder.onerror = (event) => {
@@ -238,64 +334,36 @@ const startRecording = async () => {
       permissionError.value = 'An error occurred while recording audio.'
     }
 
-    // Initialize Web Audio API for visualizer
     const AudioContextClass =
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
     audioContext = new AudioContextClass({
-      sampleRate: 44100, // Standard sample rate
+      sampleRate: 44100,
     })
 
-    console.log('AudioContext state:', audioContext.state)
-
-    // Resume audio context if suspended (required by modern browsers)
     if (audioContext.state === 'suspended') {
       await audioContext.resume()
-      console.log('AudioContext resumed. New state:', audioContext.state)
-    }
-
-    if (audioContext.state !== 'running') {
-      console.warn('AudioContext is not running:', audioContext.state)
     }
 
     analyser = audioContext.createAnalyser()
-    analyser.fftSize = 2048 // Increased for better frequency resolution
-    analyser.smoothingTimeConstant = 0.3 // Lower value for more responsive visualization
-    analyser.minDecibels = -90
-    analyser.maxDecibels = -10
+    analyser.fftSize = 2048
+    analyser.smoothingTimeConstant = 0.3
 
-    // Create a gain node to amplify the signal for better visualization
-    // Note: This doesn't affect the recording, only the visualization
     gainNode = audioContext.createGain()
-    gainNode.gain.value = 2.0 // Amplify by 2x for visualization
+    gainNode.gain.value = 2
 
     const source = audioContext.createMediaStreamSource(stream)
     source.connect(gainNode)
     gainNode.connect(analyser)
 
-    console.log(
-      'Audio analyser connected. FFT size:',
-      analyser.fftSize,
-      'Frequency bins:',
-      analyser.frequencyBinCount,
-    )
-
-    // Note: We don't connect to destination to avoid audio feedback
-    // The analyser will still process the audio for visualization
-
-    // Start recording with timeslice to ensure data is collected regularly
-    // Timeslice of 100ms ensures we get data chunks frequently for visualization
     mediaRecorder.start(100)
     state.value = 'recording'
+    isRecorderPaused.value = false
     recordingTime.value = 0
-
-    // Update waveform visualization
-    recordingInterval = window.setInterval(() => {
-      recordingTime.value += 0.1
-    }, 100) as unknown as number
-
+    startRecordingTimer()
     updateWaveform()
   } catch (error) {
+    console.error(error)
     if (error instanceof Error) {
       if (error.name === 'NotAllowedError') {
         permissionError.value = 'You denied microphone access. Please allow it to record audio.'
@@ -314,7 +382,6 @@ const startRecording = async () => {
 
 const updateWaveform = () => {
   if (state.value !== 'recording' || !analyser || !audioContext) {
-    // If not recording, stop the animation
     if (animationFrameId !== null) {
       cancelAnimationFrame(animationFrameId)
       animationFrameId = null
@@ -322,46 +389,29 @@ const updateWaveform = () => {
     return
   }
 
-  // Resume audio context if it was suspended (some browsers suspend to save battery)
   if (audioContext.state === 'suspended') {
     audioContext.resume().catch((error) => {
       console.error('Failed to resume AudioContext:', error)
     })
   }
 
-  if (audioContext.state !== 'running') {
-    // If context is not running, still try to continue but log a warning
-    console.warn('AudioContext state is not running:', audioContext.state)
-  }
-
   try {
     const bufferLength = analyser.frequencyBinCount
     const dataArray = new Uint8Array(bufferLength)
-
-    // Get frequency data for visualization
     analyser.getByteFrequencyData(dataArray)
 
-    // Downsample to 100 bars for visualization
     const bars: number[] = []
-    const step = Math.floor(bufferLength / 100)
+    const step = Math.max(1, Math.floor(bufferLength / 100))
 
     for (let i = 0; i < 100; i++) {
       const index = i * step
-      if (index >= 0 && index < bufferLength) {
-        const arrayValue = dataArray[index] ?? 0
-        // Normalize value (0-255) to 0-1
-        // Apply exponential scaling to make quiet sounds more visible
-        const normalizedValue = arrayValue / 255
-        // Use square root scaling to emphasize lower values for better visibility
-        const scaledValue = Math.sqrt(normalizedValue)
-        bars.push(Math.max(scaledValue, 0.05))
-      } else {
-        bars.push(0.05)
-      }
+      const arrayValue = dataArray[index] ?? 0
+      const normalizedValue = arrayValue / 255
+      const scaledValue = Math.sqrt(normalizedValue)
+      bars.push(Math.max(scaledValue, 0.05))
     }
 
     waveformBars.value = bars
-
     animationFrameId = requestAnimationFrame(updateWaveform)
   } catch (error) {
     console.error('Error updating waveform:', error)
@@ -372,15 +422,28 @@ const updateWaveform = () => {
   }
 }
 
+const cleanupAudioGraph = () => {
+  if (gainNode) {
+    gainNode.disconnect()
+    gainNode = null
+  }
+  if (analyser) {
+    analyser.disconnect()
+    analyser = null
+  }
+  if (audioContext) {
+    audioContext.close()
+    audioContext = null
+  }
+}
+
 const stopRecording = () => {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop()
   }
 
-  if (recordingInterval !== null) {
-    clearInterval(recordingInterval)
-    recordingInterval = null
-  }
+  clearRecordingTimer()
+
   if (animationFrameId !== null) {
     cancelAnimationFrame(animationFrameId)
     animationFrameId = null
@@ -391,107 +454,119 @@ const stopRecording = () => {
     stream = null
   }
 
-  if (audioContext) {
-    // Disconnect nodes before closing
-    if (gainNode) {
-      gainNode.disconnect()
-      gainNode = null
-    }
-    if (analyser) {
-      analyser.disconnect()
-    }
-    audioContext.close()
-    audioContext = null
-    analyser = null
-  }
-
-  state.value = 'playback'
-  playbackTime.value = recordingTime.value
+  cleanupAudioGraph()
+  isRecorderPaused.value = false
 }
 
 const pauseRecording = () => {
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.pause()
+  if (!mediaRecorder) {
+    return
   }
-  state.value = 'playback'
+
+  if (mediaRecorder.state === 'recording') {
+    mediaRecorder.pause()
+    clearRecordingTimer()
+    isRecorderPaused.value = true
+  } else if (mediaRecorder.state === 'paused') {
+    mediaRecorder.resume()
+    startRecordingTimer()
+    isRecorderPaused.value = false
+  }
 }
 
-const togglePlayback = () => {
-  isPlaying.value = !isPlaying.value
-  if (isPlaying.value) {
-    playbackInterval = window.setInterval(() => {
-      playbackTime.value += 0.1
-      if (playbackTime.value >= 12.32) {
-        playbackTime.value = 0
-        isPlaying.value = false
-        if (playbackInterval !== null) {
-          clearInterval(playbackInterval)
-        }
-      }
-    }, 100) as unknown as number
-  } else {
-    if (playbackInterval !== null) {
-      clearInterval(playbackInterval)
+const togglePlayback = async () => {
+  if (!audioElement.value || !playbackAudioUrl.value) return
+  try {
+    if (isPlaying.value) {
+      audioElement.value.pause()
+    } else {
+      await audioElement.value.play()
     }
+  } catch (error) {
+    console.error('Error toggling playback:', error)
   }
 }
 
 const rewind = () => {
-  playbackTime.value = Math.max(0, playbackTime.value - 15)
+  if (!audioElement.value) return
+  audioElement.value.currentTime = Math.max(0, audioElement.value.currentTime - 15)
 }
 
 const forward = () => {
-  playbackTime.value = Math.min(12.32, playbackTime.value + 15)
+  if (!audioElement.value) return
+  audioElement.value.currentTime = Math.min(
+    playbackDuration.value,
+    audioElement.value.currentTime + 15,
+  )
 }
 
 const handlePlaybackTimeChange = (e: Event) => {
   const target = e.target as HTMLInputElement
-  if (target) {
-    playbackTime.value = parseFloat(target.value)
+  const value = parseFloat(target.value)
+  playbackTime.value = value
+  if (audioElement.value) {
+    audioElement.value.currentTime = value
   }
 }
 
 const deleteRecording = () => {
-  if (playbackInterval !== null) {
-    clearInterval(playbackInterval)
-    playbackInterval = null
+  resetPlaybackState()
+  revokePlaybackUrl()
+  emit('update:file-list', [])
+  recordedAudioBlob.value = null
+  recordingTime.value = 0
+  playbackDuration.value = 0
+  state.value = 'idle'
+  isRecorderPaused.value = false
+
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop()
   }
-  if (recordingInterval !== null) {
-    clearInterval(recordingInterval)
-    recordingInterval = null
-  }
+
+  clearRecordingTimer()
+
   if (animationFrameId !== null) {
     cancelAnimationFrame(animationFrameId)
     animationFrameId = null
   }
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop()
-  }
+
   if (stream) {
     stream.getTracks().forEach((track: MediaStreamTrack) => track.stop())
     stream = null
   }
-  if (audioContext) {
-    // Disconnect nodes before closing
-    if (gainNode) {
-      gainNode.disconnect()
-      gainNode = null
-    }
-    if (analyser) {
-      analyser.disconnect()
-    }
-    audioContext.close()
-    audioContext = null
-    analyser = null
+
+  cleanupAudioGraph()
+}
+
+const onAudioTimeUpdate = () => {
+  if (!audioElement.value) return
+  playbackTime.value = audioElement.value.currentTime
+}
+
+const onAudioLoaded = () => {
+  if (!audioElement.value) return
+  if (Number.isFinite(audioElement.value.duration)) {
+    playbackDuration.value = audioElement.value.duration
   }
-  state.value = 'idle'
-  recordingTime.value = 0
-  playbackTime.value = 0
+}
+
+const onAudioEnded = () => {
   isPlaying.value = false
-  recordedAudioBlob.value = null
+  playbackTime.value = playbackDuration.value
+}
+
+const onAudioPlay = () => {
+  isPlaying.value = true
+}
+
+const onAudioPause = () => {
+  isPlaying.value = false
 }
 
 const formatTime = (seconds: number): string => {
+  if (!Number.isFinite(seconds)) {
+    return '00:00:00'
+  }
   const mins = Math.floor(seconds / 60)
   const secs = Math.floor(seconds % 60)
   const ms = Math.floor((seconds % 1) * 100)
@@ -499,27 +574,8 @@ const formatTime = (seconds: number): string => {
 }
 
 onUnmounted(() => {
-  if (recordingInterval !== null) {
-    clearInterval(recordingInterval)
-  }
-  if (playbackInterval !== null) {
-    clearInterval(playbackInterval)
-  }
-  if (animationFrameId !== null) {
-    cancelAnimationFrame(animationFrameId)
-  }
-
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop()
-  }
-
-  if (stream) {
-    stream.getTracks().forEach((track: MediaStreamTrack) => track.stop())
-  }
-
-  if (audioContext) {
-    audioContext.close()
-  }
+  deleteRecording()
+  revokePlaybackUrl()
 })
 </script>
 
