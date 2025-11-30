@@ -45,13 +45,8 @@
         <MlbIcon name="question" />
       </div>
       <div v-if="isLargeScreen">
-        <n-dropdown
-          :show="showDropdown"
-          :options="options"
-          @select="handleSelect"
-          class="z-10! profile-dropdown"
-        >
-          <n-button text type="tertiary" @click.stop.prevent="handleShowDropdown">
+        <n-dropdown :options="options" @select="handleSelect" class="z-10! profile-dropdown">
+          <n-button text type="tertiary" @click.stop.prevent="(e) => e?.stopPropagation()">
             <img
               :src="profileStore.userAvatarUrl"
               :alt="
@@ -85,7 +80,6 @@ const profileStore = useProfileStore()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const search = ref<string | null>(null)
-const showDropdown = ref<boolean>(false)
 const options = ref([
   {
     label: 'Logout',
@@ -98,10 +92,6 @@ const handleSelect = async (key: string) => {
   if (key === 'logout') {
     await logout()
   }
-}
-
-const handleShowDropdown = () => {
-  showDropdown.value = !showDropdown.value
 }
 </script>
 

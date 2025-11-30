@@ -75,13 +75,15 @@ import { extractCountryCode } from '@/helpers/general.helpers'
 import { profileValidation } from '@/validations/settings.validations'
 import { useUpdateProfileMutation } from '@/services/authentication.services'
 import { useMessage, NForm, NFormItem, NInput, NSelect, NInputGroup } from 'naive-ui'
+import { useProfile } from '@/composables/useProfile'
 
 const message = useMessage()
+const { getProfile } = useProfile()
 const profileStore = useProfileStore()
-const formRef = ref<FormInst | null>(null)
 const { form, rules } = profileValidation()
 const updateProfileMutation = useUpdateProfileMutation()
 
+const formRef = ref<FormInst | null>(null)
 const loading = computed(() => updateProfileMutation.isPending.value)
 
 const filterCountryOptions = (pattern: string, option: SelectOption): boolean => {
@@ -107,6 +109,7 @@ const onFormSubmit = async () => {
         phone: `${dialingCode}${form.value.phone}`,
       }
       const response = await updateProfileMutation.mutateAsync(payload)
+      await getProfile()
       message.success(
         (response.data as { message?: string })?.message || 'Profile updated successfully',
       )

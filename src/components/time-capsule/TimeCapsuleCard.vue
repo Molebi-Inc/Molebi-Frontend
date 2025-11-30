@@ -8,8 +8,8 @@
       <div class="w-12 h-12 rounded-full flex items-center justify-center">
         <img src="@/assets/svg/capsule-card-icon.svg" alt="Capsule Card Icon" class="w-8 h-8" />
       </div>
-      <n-dropdown :show="showDropdown" :options="options" @select="handleSelect" class="z-10!">
-        <n-button text type="tertiary" @click.stop.prevent="handleShowDropdown">
+      <n-dropdown :options="options" @select="handleSelect" class="z-10!">
+        <n-button text type="tertiary" @click.stop.prevent="(e) => e?.stopPropagation()">
           <MlbIcon name="vuesax.linear.more" :size="20" color="#737373" />
         </n-button>
       </n-dropdown>
@@ -75,16 +75,9 @@ const $emit = defineEmits<{
 
 const $router = useRouter()
 
-const showDropdown = ref<boolean>(false)
 const visibleMembers = computed(() => {
   return props.capsule.family_members!.slice(0, props.maxVisibleMembers)
 })
-
-const handleShowDropdown = (e?: MouseEvent) => {
-  e?.stopPropagation()
-  showDropdown.value = !showDropdown.value
-}
-
 const overflowCount = computed(() => {
   return Math.max(0, props.capsule.family_members!.length - props.maxVisibleMembers!)
 })

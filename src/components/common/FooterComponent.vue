@@ -51,7 +51,7 @@ const footerNavItems: SidebarItem[] = [
     id: 'storage',
     label: 'Storage',
     icon: 'vuesax.outline.folder-open',
-    route: { name: 'App.StorageView' },
+    route: { name: 'App.StorageLayout' },
     main: true,
   },
 ]

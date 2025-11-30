@@ -85,15 +85,15 @@ export interface TreeLayout {
 export interface FamilyTreeInterface {
   userId: string
   familyTree: {
-    self: FamilyMemberInterface
-    parents: FamilyMemberInterface[]
-    siblings: FamilyMemberInterface[]
-    spouse: FamilyMemberInterface[]
-    children: FamilyMemberInterface[]
-    grandparents: FamilyMemberInterface[]
-    grandchildren: FamilyMemberInterface[]
+    self: Partial<FamilyMemberInterface>
+    parents: Partial<FamilyMemberInterface>[]
+    siblings: Partial<FamilyMemberInterface>[]
+    spouse: Partial<FamilyMemberInterface>[]
+    children: Partial<FamilyMemberInterface>[]
+    grandparents: Partial<FamilyMemberInterface>[]
+    grandchildren: Partial<FamilyMemberInterface>[]
     aunts_uncles: FamilyMemberInterface[]
-    nieces_nephews: FamilyMemberInterface[]
-    cousins: FamilyMemberInterface[]
+    nieces_nephews: Partial<FamilyMemberInterface>[]
+    cousins: Partial<FamilyMemberInterface>[]
   }
 }

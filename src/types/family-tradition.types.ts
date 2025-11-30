@@ -13,8 +13,8 @@ export interface FamilyTraditionFormValues {
 
 export interface FamilyMediaFormValues {
   title: string
-  description: string
-  media_type: 'audio' | 'file'
+  description?: string
+  event_date?: string
   media: File[]
 }
 

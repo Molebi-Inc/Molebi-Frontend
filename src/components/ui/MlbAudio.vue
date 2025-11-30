@@ -236,14 +236,16 @@ const resetPlaybackState = () => {
 }
 
 const mimeTypeToExtension = (mime: string) => {
-  if (mime.includes('mp4')) return 'mp4'
+  if (mime.includes('mp3') || mime.includes('mpeg')) return 'mp3'
+  if (mime.includes('mp4')) return 'mp3'
   if (mime.includes('ogg')) return 'ogg'
   if (mime.includes('wav')) return 'wav'
-  return 'webm'
+  if (mime.includes('webm')) return 'mp3'
+  return 'mp3'
 }
 
 const emitRecordingFile = (blob: Blob) => {
-  const mimeType = blob.type || 'audio/webm'
+  const mimeType = 'audio/mpeg'
   const extension = mimeTypeToExtension(mimeType)
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
   const fileName = `molebi-recording-${timestamp}.${extension}`
@@ -305,12 +307,14 @@ const startRecording = async () => {
     }
 
     const options: MediaRecorderOptions = {}
-    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+    if (MediaRecorder.isTypeSupported('audio/mp4')) {
+      options.mimeType = 'audio/mp4'
+    } else if (MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2')) {
+      options.mimeType = 'audio/mp4;codecs=mp4a.40.2'
+    } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
       options.mimeType = 'audio/webm;codecs=opus'
     } else if (MediaRecorder.isTypeSupported('audio/webm')) {
       options.mimeType = 'audio/webm'
-    } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-      options.mimeType = 'audio/mp4'
     }
 
     mediaRecorder = new MediaRecorder(stream, options)
@@ -324,7 +328,7 @@ const startRecording = async () => {
 
     mediaRecorder.onstop = () => {
       if (!mediaRecorder) return
-      const blobType = mediaRecorder.mimeType || 'audio/webm'
+      const blobType = mediaRecorder.mimeType || 'audio/mpeg'
       recordedAudioBlob.value = new Blob(recordedChunks, { type: blobType })
       preparePlayback()
     }

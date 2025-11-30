@@ -4,11 +4,10 @@ import { useRouter } from 'vue-router'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useLogoutMutation } from '@/services/authentication.services'
 
-const $router = useRouter()
-const message = useMessage()
-const authConfig = useAuthConfig()
-
 export const useLogout = () => {
+  const $router = useRouter()
+  const message = useMessage()
+  const authConfig = useAuthConfig()
   const logoutMutation = useLogoutMutation()
 
   const logout = async () => {

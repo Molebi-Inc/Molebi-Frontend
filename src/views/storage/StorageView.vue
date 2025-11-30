@@ -1,47 +1,52 @@
 <template>
-  <section class="h-full overflow-auto">
-    <div class="p-8">
-      <div class="max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl border border-gray-200 p-8">
-          <h1 class="text-2xl font-bold text-gray-900 mb-8">Upload Files to Storage</h1>
+  <section class="h-full">
+    <!-- <div  v-if="$route.name === 'App.StorageFamilyInfoView'">
+      <BackButton icon="vuesax.linear.arrow-left" :previous-route="true" />
+      <h1 class="text-neutral-900 font-semibold text-2xl mb-2 text-center">
+        More Family Information
+      </h1>
+      <p class="text-neutral-600 font-normal text-sm text-center mb-11">
+        Add more family information to your profile
+      </p>
+    </div>
+    <component :is="component" /> -->
 
-          <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6">
-            <n-form-item label="Name" path="name" :show-require-mark="false">
-              <MlbInput
-                v-model="form.name"
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Enter storage name"
-                custom-class="border-gray-300 focus:border-primary-500"
-              />
-            </n-form-item>
-
-            <n-form-item label="Description" path="description" :show-require-mark="false">
-              <n-input
-                v-model:value="form.description"
-                type="textarea"
-                placeholder="Enter description (optional)"
-                :rows="4"
-                class="w-full"
-              />
-            </n-form-item>
-
-            <n-form-item label="Files" path="files" :show-require-mark="false">
-              <MlbFileAttachment @update:file-list="updateFileList" />
-            </n-form-item>
-
-            <MlbButton
-              type="submit"
-              :label="loading ? 'Uploading...' : 'Upload Files'"
-              :loading="loading"
-              :disabled="loading"
-              :primary="true"
-              block
-              class="rounded-2xl! bg-primary-700! h-13! text-white! mt-4"
-              @click="onFormSubmit"
-            />
-          </n-form>
+    <div class="w-full">
+      <div
+        :class="['w-full', { 'md:flex justify-center items-center': !component?.has_full_page }]"
+      >
+        <div
+          :class="[
+            {
+              'md:border border-secondary-200 md:bg-white ': ['App.StorageFamilyInfoView'].includes(
+                $route.name as string,
+              ),
+            },
+            {
+              'px-4 py-8 md:p-12 md:w-[522px] h-full md:rounded-3xl': !component?.has_full_page,
+              'w-full': component?.has_full_page,
+            },
+          ]"
+        >
+          <div class="mb-6">
+            <BackButton v-if="component?.has_back_button" icon="vuesax.linear.arrow-left" />
+          </div>
+          <div
+            :class="[
+              'flex flex-col gap-[45px] h-full',
+              { 'w-full': component?.has_full_page, 'md:px-4': !component?.has_full_page },
+            ]"
+          >
+            <div v-if="!component?.has_full_page">
+              <h1 class="text-neutral-900 font-semibold text-2xl mb-2 text-center">
+                {{ component?.title }}
+              </h1>
+              <p class="text-neutral-600 font-normal text-sm text-center">
+                {{ component?.description }}
+              </p>
+            </div>
+            <component :is="component?.component" :key="String($route.params.module ?? '')" />
+          </div>
         </div>
       </div>
     </div>
@@ -49,53 +54,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { FormInst } from 'naive-ui'
-import { NForm, NFormItem, NInput, useMessage, type UploadFileInfo } from 'naive-ui'
-import MlbInput from '@/components/ui/MlbInput.vue'
-import MlbButton from '@/components/ui/MlbButton.vue'
-import MlbFileAttachment from '@/components/ui/MlbFileAttachment.vue'
-import { storageValidation } from '@/validations/dashboard.validations'
-import { handleApiError } from '@/helpers/error.helpers'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import BackButton from '@/components/common/BackButton.vue'
+import GrowingPhase from '@/components/storage/GrowingPhase.vue'
+import FamilyInfoForm from '@/components/storage/FamilyInfoForm.vue'
 
-const message = useMessage()
-const { form, rules } = storageValidation()
-const formRef = ref<FormInst | null>(null)
-const loading = ref(false)
+const $route = useRoute()
 
-const updateFileList = (fileList: UploadFileInfo[]) => {
-  form.value.files = fileList.map((file) => file.file as File).filter(Boolean)
-}
-
-const onFormSubmit = async () => {
-  formRef.value?.validate(async (errors) => {
-    if (errors) {
-      message.error('Please fill in all required fields.')
-      return
-    }
-
-    loading.value = true
-    try {
-      // TODO: Implement storage upload API call
-      // const response = await storageMutation.mutateAsync(form.value)
-
-      // Simulate API call for now
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      message.success('Files uploaded successfully!')
-
-      // Reset form
-      form.value.name = ''
-      form.value.description = ''
-      form.value.files = []
-      formRef.value?.restoreValidation()
-    } catch (error) {
-      handleApiError(error, message)
-    } finally {
-      loading.value = false
-    }
-  })
-}
+const component = computed(() => {
+  return {
+    'App.StorageWelcomeView': {
+      has_back_button: false,
+      has_full_page: true,
+      component: GrowingPhase,
+    },
+    'App.StorageFamilyInfoView': {
+      title: 'More Family Information',
+      description: 'Add more details about your family',
+      has_back_button: true,
+      component: FamilyInfoForm,
+    },
+  }[$route.name as string]
+})
 </script>
 
 <style scoped>

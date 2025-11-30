@@ -5,7 +5,6 @@
         v-if="!previewFileList.length"
         multiple
         directory-dnd
-        action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f"
         :max="5"
         @update:file-list="updateFileList"
       >
@@ -21,7 +20,6 @@
       </n-upload>
       <n-upload
         v-else
-        action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f"
         :default-file-list="previewFileList"
         list-type="image-card"
         @update:file-list="updateFileList"
@@ -31,9 +29,9 @@
 </template>
 
 <script setup lang="ts">
-import { NUpload, NUploadDragger, NIcon, NText, NP, type UploadFileInfo, NFormItem } from 'naive-ui'
-import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { ref } from 'vue'
+import MlbIcon from '@/components/ui/MlbIcon.vue'
+import { NUpload, NUploadDragger, NIcon, NText, NP, type UploadFileInfo, NFormItem } from 'naive-ui'
 
 const emit = defineEmits<{
   (e: 'update:file-list', fileList: UploadFileInfo[]): void

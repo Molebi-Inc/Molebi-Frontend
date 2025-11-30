@@ -1,4 +1,4 @@
-import type { ApiResponse } from '@/types/general.types'
+import type { ApiResponse, StateInterface } from '@/types/general.types'
 import type { AxiosError } from 'axios'
 import type { ValidationErrorResponse } from '@/types/general.types'
 import { useQuery } from '@tanstack/vue-query'
@@ -48,6 +48,21 @@ export const useSkipTourMutation = () => {
           },
         },
       )
+      return response.data
+    },
+  })
+}
+
+export const useGetStatesQuery = ({ enabled = true }: { enabled?: boolean } = {}) => {
+  return useQuery<ApiResponse<StateInterface[]>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['states'],
+    enabled,
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<StateInterface[]>>('/api/user/states', {
+        headers: {
+          Authorization: `Bearer ${authConfig.getToken()}`,
+        },
+      })
       return response.data
     },
   })

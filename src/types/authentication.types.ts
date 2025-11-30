@@ -97,6 +97,7 @@ export interface SigninUser {
   is_tour_skipped: boolean
   email_verified_at: string
   avatar: string | null
+  state_id: number | null
   profile_picture: string | null
   community_name: string | null
   num_of_children: number | null
