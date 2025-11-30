@@ -12,6 +12,7 @@ import type {
   VerifyEmailResponseData,
   ResendOtpResponseData,
 } from '@/types/authentication.types'
+import type { FamilyInfoFormValues } from '@/types/profile.types'
 import type { AxiosError } from 'axios'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/config/axios.config'
@@ -63,18 +64,23 @@ export const useVerifyEmailMutation = () => {
 
 // Resend OTP endpoint (GET request)
 export const useResendOtpMutation = () => {
-  return useMutation<ApiResponse<ResendOtpResponseData>, AxiosError<ValidationErrorResponse>, void>({
-    mutationFn: async () => {
-      const response = await axiosInstance.get<ApiResponse<ResendOtpResponseData>>('/api/user/resend-verification', {
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${authConfig.getToken(true)}`,
-        },
-      })
-      return response.data
+  return useMutation<ApiResponse<ResendOtpResponseData>, AxiosError<ValidationErrorResponse>, void>(
+    {
+      mutationFn: async () => {
+        const response = await axiosInstance.get<ApiResponse<ResendOtpResponseData>>(
+          '/api/user/resend-verification',
+          {
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${authConfig.getToken(true)}`,
+            },
+          },
+        )
+        return response.data
+      },
+      retry: false, // Don't retry on failure for this endpoint
     },
-    retry: false, // Don't retry on failure for this endpoint
-  })
+  )
 }
 
 // Verify Email endpoint
@@ -82,9 +88,11 @@ export const useUpdateProfileMutation = () => {
   return useMutation<
     ApiResponse,
     AxiosError<ValidationErrorResponse>,
-    PersonalInformationFormValues | ProfileFormValues
+    PersonalInformationFormValues | ProfileFormValues | FamilyInfoFormValues
   >({
-    mutationFn: async (data: PersonalInformationFormValues | ProfileFormValues) => {
+    mutationFn: async (
+      data: PersonalInformationFormValues | ProfileFormValues | FamilyInfoFormValues,
+    ) => {
       const response = await axiosInstance.post<ApiResponse>(
         '/api/user/profile',
         {

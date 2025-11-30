@@ -14,11 +14,12 @@
         :key="item.id"
         :to="item.route"
         :id="item.elId"
+        v-slot="{ isActive }"
       >
         <div
           :class="[
             'px-4 py-3 rounded-lg cursor-pointer transition-colors',
-            activeNav === item.id
+            isActive
               ? 'bg-primary-50 text-primary-800 font-medium rounded-full'
               : 'text-gray-600 hover:bg-gray-50',
           ]"
@@ -34,11 +35,12 @@
         v-for="item in sidebarItems.filter((item) => !item.main)"
         :key="item.id"
         :to="item.route"
+        v-slot="{ isActive }"
       >
         <div
           :class="[
             'px-4 py-3 rounded-lg cursor-pointer transition-colors',
-            activeNav === item.id
+            isActive
               ? 'bg-primary-50 text-primary-800 font-medium rounded-full'
               : 'text-gray-600 hover:bg-gray-50',
           ]"
@@ -49,9 +51,7 @@
           </div>
         </div>
       </router-link>
-      <!-- </div> -->
     </nav>
-    <!-- <div class="relative"> -->
     <div class="absolute bottom-6 left-6 right-6">
       <div>
         <img src="@/assets/svg/tree-2.svg" alt="tree" class="w-full max-h-[20vh] object-contain" />
@@ -77,21 +77,17 @@
         </div>
       </div>
     </div>
-    <!-- </div> -->
   </section>
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import type { SidebarItem } from '@/types/layout.types'
 import { useProfileStore } from '@/stores/profile.store'
 
-const $route = useRoute()
 const profileStore = useProfileStore()
 
-const activeNav = ref('home')
 const sidebarCollapsed = ref(false)
 const sidebarItems: SidebarItem[] = [
   {
@@ -113,7 +109,7 @@ const sidebarItems: SidebarItem[] = [
     id: 'storage',
     label: 'Storage',
     icon: 'vuesax.outline.folder-open',
-    route: { name: 'App.StorageView' },
+    route: { name: 'App.StorageLayout' },
     main: true,
   },
   {
@@ -138,15 +134,4 @@ const sidebarItems: SidebarItem[] = [
     main: false,
   },
 ]
-
-watch(
-  () => $route.name,
-  (newVal) => {
-    if (newVal) {
-      const item = sidebarItems.find((item) => item.route.name === newVal)
-      activeNav.value = item?.id || 'home'
-    }
-  },
-  { immediate: true },
-)
 </script>

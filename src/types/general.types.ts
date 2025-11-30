@@ -44,3 +44,8 @@ export interface HomeFormConfig {
 export interface GeneralStoreInterface {
   familyMembers: FamilyMemberInterface[]
 }
+
+export interface StateInterface {
+  id: number
+  name: string
+}

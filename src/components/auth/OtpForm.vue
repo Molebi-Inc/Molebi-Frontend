@@ -67,7 +67,10 @@ import { useAuthConfig } from '@/config/auth.config'
 import { otpValidation } from '@/validations/authentication.validations'
 import { AlertService } from '@/services/alert.service'
 import { handleApiError } from '@/helpers/error.helpers'
-import { useVerifyEmailMutation, useResendOtpMutation } from '@/services/authentication.services'
+import {
+  useVerifyEmailMutation,
+  useForgotPasswordMutation,
+} from '@/services/authentication.services'
 import { useAuthenticationStore } from '@/stores/authentication.store'
 
 const $router = useRouter()
@@ -76,7 +79,7 @@ const message = useMessage()
 const authConfig = useAuthConfig()
 const { form, rules } = otpValidation()
 const verifyEmailMutation = useVerifyEmailMutation()
-const resendOtpMutation = useResendOtpMutation()
+const forgotPasswordMutation = useForgotPasswordMutation()
 const authenticationStore = useAuthenticationStore()
 
 const countdown = ref<number>(0)
@@ -191,7 +194,11 @@ const handleForgotPasswordFunctionality = () => {
 
 const onResendOTP = async () => {
   try {
-    const response = await resendOtpMutation.mutateAsync()
+    const storeResetPassword = authenticationStore.resetPasswordForm
+
+    const response = await forgotPasswordMutation.mutateAsync({
+      email: storeResetPassword.email,
+    })
     // Set the request time when OTP is successfully resent
     authConfig.setOtpExpirationInMinutes(response.data.expires_in_minutes)
     authConfig.setOtpRequestTime(new Date().toISOString())

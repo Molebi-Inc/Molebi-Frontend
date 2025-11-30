@@ -198,14 +198,14 @@ export const familyMediaValidation = () => {
   const form = ref<FamilyMediaFormValues>({
     title: '',
     description: '',
-    media_type: 'file',
+    event_date: new Date().toISOString().split('T')[0],
     media: [],
   })
 
   const schema = z.object({
     title: z.string().min(1, { message: 'Title is required.' }),
     description: z.string().min(1, { message: 'Description is required.' }),
-    media_type: z.enum(['audio', 'file'], { message: 'Media type is required.' }),
+    event_date: z.string().optional(),
     media: z.array(z.any()).min(0),
   })
 
@@ -238,12 +238,12 @@ export const familyMediaValidation = () => {
         }
       },
     },
-    media_type: {
-      required: true,
-      trigger: 'change',
+    event_date: {
+      required: false,
+      trigger: 'input',
       validator: async (_rule: FormItemRule, value: string) => {
         try {
-          schema.pick({ media_type: true }).parse({ media_type: value })
+          schema.pick({ event_date: true }).parse({ event_date: value })
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText =

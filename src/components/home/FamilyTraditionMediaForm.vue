@@ -1,15 +1,15 @@
 <template>
-  <n-tabs
-    type="line"
-    justify-content="space-evenly"
-    animated
-    v-model:value="activeTab"
-    @update:value="onTabUpdate"
-  >
-    <n-tab-pane v-for="tab in tabs" :key="tab.name" :name="tab.name" :tab="tab.label">
-      <div class="flex flex-col gap-6">
-        <!-- Form -->
-        <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-10">
+  <div class="flex flex-col gap-6">
+    <!-- Form -->
+    <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-10">
+      <n-tabs
+        type="line"
+        justify-content="space-evenly"
+        animated
+        v-model:value="activeTab"
+        @update:value="onTabUpdate"
+      >
+        <n-tab-pane v-for="tab in tabs" :key="tab.name" :name="tab.name" :tab="tab.label">
           <div>
             <n-form-item path="title" :show-require-mark="false" :show-feedback="false">
               <MlbInput
@@ -42,22 +42,38 @@
             <component :is="tab.component" class="w-full" @update:file-list="updateFileList" />
           </n-form-item>
 
-          <!-- Create Button -->
-          <MlbButton
-            type="submit"
-            label="Create"
-            :primary="true"
-            class="w-full rounded-2xl! h-13!"
-            @click="onFormSubmit"
-          />
-        </n-form>
-      </div>
-    </n-tab-pane>
-  </n-tabs>
+          <n-form-item
+            v-if="$route.name === 'App.StorageFolderView'"
+            path="event_date"
+            :show-require-mark="false"
+            :show-feedback="false"
+          >
+            <n-date-picker
+              v-model:formatted-value="form.event_date"
+              value-format="yyyy-MM-dd"
+              type="date"
+              class="w-full rounded-2xl!"
+            />
+          </n-form-item>
+        </n-tab-pane>
+      </n-tabs>
+
+      <!-- Create Button -->
+      <MlbButton
+        type="submit"
+        :label="loading ? 'Uploading...' : 'Create'"
+        :loading="loading"
+        :disabled="loading"
+        :primary="true"
+        class="w-full rounded-2xl! h-13!"
+        @click="onFormSubmit"
+      />
+    </n-form>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, markRaw, computed } from 'vue'
 import {
   useMessage,
   NForm,
@@ -65,6 +81,7 @@ import {
   NInput,
   NTabs,
   NTabPane,
+  NDatePicker,
   type UploadFileInfo,
 } from 'naive-ui'
 import type { FormInst } from 'naive-ui'
@@ -74,21 +91,29 @@ import { familyMediaValidation } from '@/validations/dashboard.validations'
 import MlbFileAttachment from '@/components/ui/MlbFileAttachment.vue'
 import MlbAudio from '@/components/ui/MlbAudio.vue'
 import { useRoute, useRouter } from 'vue-router'
+import { handleApiError } from '@/helpers/error.helpers'
+import { useArchive } from '@/composables/useArchive'
+import { useStorage } from '@/composables/useStorage'
 
-const { form, rules } = familyMediaValidation()
 const message = useMessage()
+const { form, rules } = familyMediaValidation()
+const { handleFileCreation } = useArchive()
+const { fileUploading } = useStorage()
+
 const formRef = ref<FormInst | null>(null)
+
+const loading = computed(() => fileUploading.value)
 
 const tabs = ref([
   {
     name: 'file',
     label: 'Upload File',
-    component: MlbFileAttachment,
+    component: markRaw(MlbFileAttachment),
   },
   {
     name: 'audio',
-    label: 'Upload Audio',
-    component: MlbAudio,
+    label: 'Record Audio',
+    component: markRaw(MlbAudio),
   },
 ])
 
@@ -120,15 +145,29 @@ const updateFileList = (fileList: UploadFileInfo[]) => {
 }
 
 const onFormSubmit = () => {
-  formRef.value?.validate((errors) => {
+  formRef.value?.validate(async (errors) => {
     if (errors) {
       message.error('Please fill in all required fields.')
       return
     }
-
-    emit('submit', form.value)
-    message.success('Announcement created successfully!')
+    try {
+      const response = await handleFileCreation(form.value)
+      message.success(response?.message || 'File uploaded successfully')
+      clearForm()
+      emit('submit', form.value)
+    } catch (error) {
+      handleApiError(error, message)
+    }
   })
+}
+
+const clearForm = () => {
+  form.value = {
+    title: '',
+    description: '',
+    media: [],
+    event_date: new Date().toISOString().split('T')[0],
+  }
 }
 
 watch(

@@ -22,3 +22,10 @@ export interface ProfileFormErrors {
   code?: { message: string }[]
   phone?: { message: string }[]
 }
+
+export interface FamilyInfoFormValues {
+  state_id: number | null
+  community_name: string
+  num_of_children: string
+  mother_family_name: string
+}

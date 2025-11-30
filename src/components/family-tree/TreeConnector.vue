@@ -19,17 +19,29 @@
       </linearGradient>
     </defs>
 
-    <!-- Render all connections -->
+    <!-- Render all connections with enhanced visual quality -->
     <g v-for="(connection, index) in connections" :key="`connection-${index}`">
+      <!-- Subtle shadow layer for depth (rendered first, behind main line) -->
+      <path
+        :d="getConnectionPath(connection)"
+        :stroke="connection.type === 'parent-child' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)'"
+        :stroke-width="getStrokeWidth(connection.type) + 1.5"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        :opacity="0.4"
+      />
+      <!-- Main connection line with enhanced rendering -->
       <path
         :d="getConnectionPath(connection)"
         :stroke="connection.color"
         :stroke-width="getStrokeWidth(connection.type)"
         fill="none"
-        :stroke-linecap="connection.type === 'spouse' ? 'round' : 'butt'"
-        :stroke-dasharray="connection.type === 'spouse' ? '5,5' : '0'"
-        :opacity="connection.type === 'spouse' ? 0.6 : 0.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        :opacity="getOpacity(connection.type)"
         class="transition-opacity duration-300"
+        vector-effect="non-scaling-stroke"
       />
     </g>
   </svg>
@@ -57,11 +69,20 @@ const getConnectionPath = (connection: TreeConnection): string => {
 
 const getStrokeWidth = (type: 'parent-child' | 'spouse' | 'sibling'): number => {
   const widths = {
-    'parent-child': 3,
-    spouse: 2,
-    sibling: 2,
+    'parent-child': 4, // Thicker for dark green parent-child lines for better visibility
+    spouse: 3, // Medium width for beige spouse connections
+    sibling: 3, // Medium width for beige sibling connections
   }
-  return widths[type] || 2
+  return widths[type] || 3
+}
+
+const getOpacity = (type: 'parent-child' | 'spouse' | 'sibling'): number => {
+  const opacities = {
+    'parent-child': 0.9, // More opaque for dark green lines for better visibility
+    spouse: 0.8, // Good opacity for beige lines
+    sibling: 0.8, // Good opacity for beige lines
+  }
+  return opacities[type] || 0.8
 }
 
 const gradients = computed(() => {

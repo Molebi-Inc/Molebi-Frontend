@@ -1,36 +1,52 @@
 <template>
   <div class="h-full flex flex-col relative overflow-hidden" :class="backgroundClass">
     <!-- Background Pattern - Paper texture -->
-    <div class="absolute inset-0 pointer-events-none" :class="backgroundPatternClass">
+    <!-- <div class="absolute inset-0 pointer-events-none" :class="backgroundPatternClass">
       <div
-        class="absolute inset-0 opacity-30"
+        class="absolute inset-0"
         style="
           background-image:
-            radial-gradient(circle at 2px 2px, rgba(139, 115, 85, 0.15) 1px, transparent 0),
+            radial-gradient(circle at 2px 2px, rgba(139, 115, 85, 0.08) 1px, transparent 0),
             repeating-linear-gradient(
               0deg,
               transparent,
               transparent 2px,
-              rgba(139, 115, 85, 0.03) 2px,
-              rgba(139, 115, 85, 0.03) 4px
+              rgba(139, 115, 85, 0.015) 2px,
+              rgba(139, 115, 85, 0.015) 4px
+            ),
+            repeating-linear-gradient(
+              90deg,
+              transparent,
+              transparent 2px,
+              rgba(139, 115, 85, 0.01) 2px,
+              rgba(139, 115, 85, 0.01) 4px
+            ),
+            linear-gradient(
+              180deg,
+              rgba(245, 241, 232, 0.4) 0%,
+              rgba(250, 248, 243, 0.3) 50%,
+              rgba(245, 241, 232, 0.4) 100%
             );
           background-size:
             40px 40px,
+            100% 100%,
+            100% 100%,
             100% 100%;
+          opacity: 0.5;
         "
       />
-    </div>
+    </div> -->
 
     <!-- Controls -->
-    <TreeControls
+    <!-- <TreeControls
       @zoom-in="handleZoomIn"
       @zoom-out="handleZoomOut"
       @zoom-reset="handleZoomReset"
       @share="handleShare"
-    />
+    /> -->
 
     <!-- Tree Container -->
-    <div
+    <!-- <div
       ref="treeContainerRef"
       class="flex-1 overflow-auto flex items-center justify-center cursor-grab active:cursor-grabbing"
       :class="containerClass"
@@ -50,25 +66,25 @@
           transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})`,
           transformOrigin: 'center center',
         }"
-      >
-        <!-- Generation Labels -->
-        <GenerationLabel
+      > -->
+    <!-- Generation Labels -->
+    <!-- <GenerationLabel
           v-for="generation in treeLayout.generations"
           :key="`gen-${generation.level}`"
           :label="generation.label"
           :y="getGenerationY(generation)"
-        />
+        /> -->
 
-        <!-- Connections (SVG) -->
-        <TreeConnector
+    <!-- Connections (SVG) -->
+    <!-- <TreeConnector
           v-if="treeLayout.connections.length > 0"
           :connections="treeLayout.connections"
           :svg-width="svgWidth"
           :svg-height="svgHeight"
-        />
+        /> -->
 
-        <!-- Tree Nodes -->
-        <TreeNode
+    <!-- Tree Nodes -->
+    <!-- <TreeNode
           v-for="node in treeLayout.nodes"
           :key="`node-${node.id}`"
           :node="node"
@@ -81,10 +97,10 @@
           @add-child="handleAddChild"
           @add-spouse="handleAddSpouse"
           @click="handleNodeClick"
-        />
+        /> -->
 
-        <!-- Empty State -->
-        <div
+    <!-- Empty State -->
+    <!-- <div
           v-if="treeLayout.nodes.length === 0 && !isLoading"
           class="absolute inset-0 flex items-center justify-center"
         >
@@ -92,10 +108,10 @@
             <p class="text-gray-500 text-lg mb-4">No family members found</p>
             <MlbButton label="Add First Member" primary @click="handleAddFirstMember" />
           </div>
-        </div>
+        </div> -->
 
-        <!-- Loading State -->
-        <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center">
+    <!-- Loading State -->
+    <!-- <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center">
           <div class="text-center">
             <div
               class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"
@@ -104,7 +120,9 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
+
+    <TreeView />
 
     <!-- Mobile Floating Action Button -->
     <!-- v-if="isMobile" -->
@@ -140,6 +158,7 @@ import type {
   TreeLayout,
   FamilyTreeInterface,
 } from '@/types/family-tree.types'
+import TreeView from '@/views/family-tree/TreeView.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import BackButton from '@/components/common/BackButton.vue'
 import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
@@ -153,8 +172,6 @@ import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useMessage } from 'naive-ui'
 import { useRouter, useRoute } from 'vue-router'
 import { handleApiError } from '@/helpers/error.helpers'
-// import NewMemberForm from '@/components/family-tree/NewMemberForm.vue'
-// import ExistingFamilyForm from '@/components/family-tree/ExistingFamilyForm.vue'
 import FamilyMemberForm from '@/components/family-tree/FamilyMemberForm.vue'
 
 const message = useMessage()

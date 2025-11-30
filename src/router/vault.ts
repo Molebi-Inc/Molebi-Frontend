@@ -1,17 +1,29 @@
+import AppLayout from '@/layouts/AppLayout.vue'
+import VaultView from '@/views/vault/VaultView.vue'
+
 export const vaultRoutes = [
   {
     path: '/vaults',
     name: 'App.VaultLayout',
-    component: () => import('@/layouts/AppLayout.vue'),
+    component: () => AppLayout,
     meta: {
       layout: 'app',
       requiresAuth: true,
+      flow: 'vault',
     },
     children: [
       {
         path: '',
         name: 'App.VaultView',
-        component: () => import('@/views/vault/VaultView.vue'),
+        component: VaultView,
+        meta: {
+          pageTitle: 'Vault',
+        },
+      },
+      {
+        path: 'folders/:id?',
+        name: 'App.VaultFolderView',
+        component: VaultView,
         meta: {
           pageTitle: 'Vault',
         },

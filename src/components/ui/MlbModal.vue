@@ -1,9 +1,10 @@
 <template>
-  <n-modal v-model:show="localShow" @on-update:show="emit('close')">
+  <n-modal v-model:show="localShow" v-bind="attrs" @on-update:show="emit('close')">
     <n-card
-      :style="{ width: '90%', maxWidth: '600px' }"
+      :style="cardStyle"
       :bordered="false"
-      size="huge"
+      :size="fullPage ? undefined : 'huge'"
+      :class="{ 'full-page-card': fullPage }"
       role="dialog"
       aria-modal="true"
     >
@@ -19,11 +20,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useAttrs } from 'vue'
 import { NModal, NCard } from 'naive-ui'
 
 const props = defineProps<{
   show?: boolean
+  fullPage?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -31,8 +33,33 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+const attrs = useAttrs()
 const localShow = computed({
   get: () => props.show ?? false,
   set: (value: boolean) => emit('update:show', value),
 })
+
+const cardStyle = computed(() => {
+  if (props.fullPage) {
+    return { width: '100vw', maxWidth: '100vw', height: '100vh' }
+  }
+  return { width: '90%', maxWidth: '600px' }
+})
 </script>
+
+<style scoped>
+.full-page-card {
+  border-radius: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 !important;
+}
+
+:deep(.full-page-card .n-card__content) {
+  flex: 1 !important;
+  overflow: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+</style>

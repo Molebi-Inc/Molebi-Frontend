@@ -119,7 +119,7 @@ import { useAnnouncementStore } from '@/stores/announcement.store'
 import GrowthStageCard from '@/components/home/GrowthStageCard.vue'
 import HomeCardWrapper from '@/components/home/HomeCardWrapper.vue'
 import AnnouncementForm from '@/components/home/AnnoucementForm.vue'
-import type { FormType, HomeFormConfig } from '@/types/general.types'
+import type { FormType, HomeFormConfig, StateInterface } from '@/types/general.types'
 import type { FamilyTradition } from '@/types/family-tradition.types'
 import ReminderContainer from '@/components/home/ReminderContainer.vue'
 import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
@@ -127,6 +127,7 @@ import FamilyTraditionForm from '@/components/home/FamilyTraditionForm.vue'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
 import { useTourStore } from '@/stores/tour'
 import { useProfileStore } from '@/stores/profile.store'
+import { useGetStatesQuery } from '@/services/general.service'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -136,6 +137,19 @@ const { startTour: startTourAction } = useTour()
 const announcementStore = useAnnouncementStore()
 const familyTraditionStore = useFamilyTraditionStore()
 const { fetchAnnouncements, fetchFamilyTraditions } = useHome()
+const { refetch: refetchStates } = useGetStatesQuery()
+
+const states = ref<{ label: string; value: number }[]>([])
+
+onMounted(() => {
+  refetchStates().then((response) => {
+    states.value =
+      response.data?.data?.map((state: StateInterface) => ({
+        label: state.name,
+        value: state.id,
+      })) ?? []
+  })
+})
 
 const showHomeFormModal = ref<boolean>(false)
 const showStartTourModal = ref<boolean>(false)
