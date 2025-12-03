@@ -82,7 +82,9 @@
             :show-require-mark="input.required"
           >
             <MlbInput
-              v-if="input.type !== 'textarea' && input.type !== 'number'"
+              v-if="
+                input.type !== 'textarea' && input.type !== 'number' && input.type !== 'password'
+              "
               v-model="inputValues[input.name]"
               :id="input.name"
               :name="input.name"
@@ -98,6 +100,14 @@
               :name="input.name"
               :placeholder="input.placeholder"
               class="w-full"
+            />
+            <MlbPassword
+              v-else-if="input.type === 'password'"
+              v-model="inputValues[input.name]"
+              :id="input.name"
+              :name="input.name"
+              :placeholder="input.placeholder"
+              custom-class="border-gray-300 focus:border-primary-500"
             />
             <MlbInput
               v-else
@@ -156,6 +166,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import MlbPassword from '@/components/ui/MlbPassword.vue'
 import { NForm, NFormItem, NInputNumber, useNotification } from 'naive-ui'
 import type { FormInst, FormRules } from 'naive-ui'
 import { useAlertState, closeAlert, resolveAlert, rejectAlert } from '@/services/alert.service'

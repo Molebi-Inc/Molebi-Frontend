@@ -10,7 +10,10 @@ import { toValue } from 'vue'
 
 const authConfig = useAuthConfig()
 
-export const useGetAnnouncementsQuery = (params: MaybeRef<{ page: number; per_page: number }>) => {
+export const useGetAnnouncementsQuery = (
+  params: MaybeRef<{ page: number; per_page: number }>,
+  enabled?: boolean,
+) => {
   return useQuery<ApiResponse<{ data: Announcement[] }>, AxiosError<ValidationErrorResponse>>({
     queryKey: ['announcements', params],
     queryFn: async () => {
@@ -26,6 +29,7 @@ export const useGetAnnouncementsQuery = (params: MaybeRef<{ page: number; per_pa
       )
       return response.data
     },
+    enabled: enabled ?? true,
   })
 }
 

@@ -39,13 +39,17 @@ export const useHome = () => {
   const familyTraditionPath = computed<FamilyTraditionTab>(() => familyTraditionStore.path)
 
   const { refetch: refetchTraditions, isLoading: isLoadingTraditions } =
-    useGetFamilyTraditionsQuery(familyTraditionParams, familyTraditionPath)
+    useGetFamilyTraditionsQuery(
+      familyTraditionParams,
+      familyTraditionPath,
+      $route.name === 'App.HomeView',
+    )
   const createFamilyTraditionMutation = useAddFamilyTraditionMutation()
   const updateFamilyTraditionMutation = useUpdateFamilyTraditionMutation()
   const deleteFamilyTraditionMutation = useDeleteFamilyTraditionMutation()
 
   const { refetch: refetchAnnouncements, isLoading: isLoadingAnnouncements } =
-    useGetAnnouncementsQuery(announcementParams)
+    useGetAnnouncementsQuery(announcementParams, $route.name === 'App.HomeView')
   const createAnnouncementMutation = useAddAnnouncementMutation()
   const updateAnnouncementMutation = useUpdateAnnouncementMutation()
   const deleteAnnouncementMutation = useDeleteAnnouncementMutation()

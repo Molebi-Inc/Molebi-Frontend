@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full max-w-md bg-white rounded-lg px-3 py-4 shadow-sm border border-gray-100 cursor-pointer"
+    class="w-full max-w-md bg-white rounded-lg px-3 py-4 hover:shadow-sm border border-gray-100 cursor-pointer"
     @click="handleClick"
   >
     <!-- Header with logo and menu -->
@@ -21,12 +21,12 @@
     <!-- Date and Members Section -->
     <div class="flex justify-end mt-3">
       <!-- Date -->
-      <span class="text-gray-600 text-xs font-medium">{{ formatDate(capsule.open_date) }}</span>
+      <span class="text-gray-600 text-xs font-medium">{{ formatDate(capsule.open_at) }}</span>
     </div>
-    <hr class="my-3 border-gray-200" />
+    <!-- <hr class="my-3 border-gray-200" /> -->
 
     <!-- Avatars with overflow -->
-    <div class="flex justify-end items-center gap-2">
+    <!-- <div class="flex justify-end items-center gap-2">
       <div class="flex -space-x-2">
         <div
           v-for="(member, index) in visibleMembers"
@@ -42,45 +42,43 @@
         </div>
       </div>
 
-      <!-- Overflow indicator -->
       <div
         v-if="overflowCount > 0"
         class="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-xs font-semibold text-gray-700"
       >
         +{{ overflowCount }}
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script setup lang="ts">
+import { h, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { NButton, NDropdown } from 'naive-ui'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import { computed, h, ref } from 'vue'
-import type { TimeCapsule } from '@/types/time-capsule.types'
+import type { TimeCapsuleInterface } from '@/types/time-capsule.types'
+import { AlertService } from '@/services/alert.service'
+import { useDeleteTimeCapsuleMutation } from '@/services/time-capsule.services'
+import { handleApiError } from '@/helpers/error.helpers'
+import { useMessage } from 'naive-ui'
 
 interface Props {
-  capsule: TimeCapsule
+  capsule: TimeCapsuleInterface
   maxVisibleMembers?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   maxVisibleMembers: 5,
 })
-
+const deleteTimeCapsuleMutation = useDeleteTimeCapsuleMutation()
 const $emit = defineEmits<{
-  (e: 'select:option', value: { capsule: TimeCapsule; key: string }): void
+  (e: 'select:option', value: { capsule: TimeCapsuleInterface; key: string }): void
 }>()
 
 const $router = useRouter()
-
-const visibleMembers = computed(() => {
-  return props.capsule.family_members!.slice(0, props.maxVisibleMembers)
-})
-const overflowCount = computed(() => {
-  return Math.max(0, props.capsule.family_members!.length - props.maxVisibleMembers!)
-})
+const message = useMessage()
+const loading = ref(false)
 
 const options = [
   {
@@ -98,14 +96,59 @@ const options = [
 const handleSelect = (key: string) => {
   const action = {
     edit: () => $router.push({ name: 'App.TimeCapsules.Edit', params: { id: props.capsule.id } }),
-    delete: () =>
-      $router.push({ name: 'App.TimeCapsules.Delete', params: { id: props.capsule.id } }),
+    delete: async () => await handleDelete(),
   }
   action[key as keyof typeof action]()
   $emit('select:option', { capsule: props.capsule, key })
 }
 
-const formatDate = (date: Date) => {
+const handleDelete = async () => {
+  AlertService.confirm({
+    subject: `Confirm you want delete "${props.capsule.title}"?`,
+    showIcon: true,
+    iconName: 'delete',
+    iconColor: '#C20000',
+    iconWrapperClass:
+      'bg-[#FFECEC]! rounded-full! p-3! w-[79px]! h-[79px]! flex items-center justify-center!',
+    iconSize: 34,
+    closable: true,
+    closablePosition: 'left',
+    showCancelButton: false,
+    confirmButtonText: 'Delete',
+    buttonConfig: {
+      confirm: {
+        text: 'Delete',
+        primary: false,
+        loading: loading.value,
+        action: async () => {
+          loading.value = true
+          await deleteTimeCapsule()
+        },
+      },
+    },
+    customClass: {
+      confirmButton:
+        'bg-red-200! text-red-500! hover:bg-red-300! hover:text-red-700! h-13! rounded-2xl! hover:border-transparent!',
+    },
+  })
+}
+
+const deleteTimeCapsule = async () => {
+  try {
+    const response = await deleteTimeCapsuleMutation.mutateAsync(Number(props.capsule.id))
+    message.success(response?.message || 'Time capsule deleted successfully')
+    $emit('select:option', { capsule: props.capsule, key: 'delete' })
+  } catch (error) {
+    handleApiError(error, message)
+  } finally {
+    loading.value = false
+  }
+}
+
+const formatDate = (date: string | Date) => {
+  if (typeof date === 'string') {
+    date = new Date(date)
+  }
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',

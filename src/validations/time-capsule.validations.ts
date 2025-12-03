@@ -5,21 +5,21 @@ import type { FormItemRule } from 'naive-ui'
 
 export const timeCapsuleValidation = () => {
   const form = ref<TimeCapsuleFormValues>({
+    // family_tree_id: 0,
     title: '',
     description: '',
-    body: '',
-    open_date: new Date().toISOString().split('T')[0],
-    family_members: [],
-    media: [],
+    open_at: new Date().toISOString().split('T')[0],
+    family_member_ids: [],
+    files: [],
   })
   const schema = z.object({
     title: z.string().min(1, { message: 'Title is required.' }),
     description: z.string().min(1, { message: 'Description is required.' }),
-    body: z.string().min(1, { message: 'Body is required.' }),
     open_date: z.string().min(1, { message: 'Open date is required.' }),
-    family_members: z.array(z.number()).min(1, { message: 'Family members are required.' }),
-    media: z.array(z.instanceof(File)).min(1, { message: 'Media is required.' }),
+    family_member_ids: z.array(z.number()).min(1, { message: 'Family members are required.' }),
+    files: z.array(z.instanceof(File)).min(1, { message: 'Files are required.' }),
   })
+
   const rules = {
     title: {
       required: true,
@@ -49,20 +49,6 @@ export const timeCapsuleValidation = () => {
         }
       },
     },
-    body: {
-      required: true,
-      trigger: 'input',
-      validator: async (_rule: FormItemRule, value: string) => {
-        try {
-          schema.pick({ body: true }).parse({ body: value })
-          return Promise.resolve()
-        } catch (err: unknown) {
-          const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Body is required.'
-          return Promise.reject(messageText)
-        }
-      },
-    },
     open_date: {
       required: true,
       trigger: 'input',
@@ -77,12 +63,12 @@ export const timeCapsuleValidation = () => {
         }
       },
     },
-    family_members: {
+    family_member_ids: {
       required: true,
       trigger: 'input',
       validator: async (_rule: FormItemRule, value: number[] | string[]) => {
         try {
-          schema.pick({ family_members: true }).parse({ family_members: value })
+          schema.pick({ family_member_ids: true }).parse({ family_member_ids: value })
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText =
@@ -91,16 +77,16 @@ export const timeCapsuleValidation = () => {
         }
       },
     },
-    media: {
+    files: {
       required: true,
       trigger: 'input',
       validator: async (_rule: FormItemRule, value: File[]) => {
         try {
-          schema.pick({ media: true }).parse({ media: value })
+          schema.pick({ files: true }).parse({ files: value })
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Media is required.'
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Files are required.'
           return Promise.reject(messageText)
         }
       },

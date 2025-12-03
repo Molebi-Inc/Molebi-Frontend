@@ -75,6 +75,7 @@ export const useDeleteFamilyTraditionMutation = () => {
 export const useGetFamilyTraditionsQuery = (
   params: MaybeRef<PaginationParams>,
   path: MaybeRef<FamilyTraditionTab>,
+  enabled?: boolean,
 ) => {
   return useQuery<ApiResponse<FamilyTradition[]>, AxiosError<ValidationErrorResponse>>({
     queryKey: ['family-traditions', params, path],
@@ -90,6 +91,7 @@ export const useGetFamilyTraditionsQuery = (
       )
       return response.data
     },
+    enabled: enabled ?? true,
   })
 }
 

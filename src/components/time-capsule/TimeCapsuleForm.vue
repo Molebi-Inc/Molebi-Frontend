@@ -28,14 +28,13 @@
       <!-- Upload Media -->
       <div>
         <n-upload
-          action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f"
           list-type="image-card"
           :file-list="uploadFileList"
           @update:file-list="handleFileListUpdate"
         />
       </div>
 
-      <div>
+      <!-- <div>
         <n-form-item path="body" :show-require-mark="false" :show-feedback="false">
           <n-input
             v-model:value="form.body"
@@ -45,19 +44,19 @@
             class="w-full borderless"
           />
         </n-form-item>
-      </div>
+      </div> -->
       <div>
         <n-form-item
-          path="open_date"
+          path="open_at"
           :show-require-mark="false"
           :show-feedback="false"
           class="w-full"
         >
           <template #label>
-            <label for="open_date" class="text-sm font-medium text-gray-500">Open Date</label>
+            <label for="open_at" class="text-sm font-medium text-gray-500">Open Date</label>
           </template>
           <n-date-picker
-            v-model:formatted-value="form.open_date"
+            v-model:formatted-value="form.open_at"
             value-format="yyyy-MM-dd"
             type="date"
             class="w-full"
@@ -66,91 +65,20 @@
       </div>
 
       <!-- Family Member Selection -->
-      <div class="flex flex-col gap-2">
-        <label class="text-sm font-medium text-gray-500">Add Family Member</label>
-
-        <!-- Search Input -->
-        <div class="relative">
-          <NInput
-            v-model:value="familyMemberSearch"
-            placeholder="Select Family"
-            class="w-full"
-            size="large"
-            @focus="showFamilyMemberDropdown = true"
-            @blur="handleFamilyMemberBlur"
-          >
-            <template #suffix>
-              <MlbIcon name="vuesax.linear.add" :size="16" />
-            </template>
-          </NInput>
-
-          <!-- Family Member Dropdown -->
-          <div
-            v-if="showFamilyMemberDropdown"
-            class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto py-3 px-2"
-          >
-            <NInput
-              v-model:value="familyMemberSearch"
-              placeholder="Search Name"
-              class="w-full"
-              size="large"
-              @focus="showFamilyMemberDropdown = true"
-              @blur="handleFamilyMemberBlur"
-            >
-              <template #prefix>
-                <MlbIcon name="vuesax.linear.search-normal" :size="20" class="text-gray-400" />
-              </template>
-            </NInput>
-            <div v-if="filteredFamilyMembers.length > 0" class="mt-3 flex flex-col gap-3">
-              <div
-                v-for="member in filteredFamilyMembers"
-                :key="member.id"
-                class="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 bg-gray-50 rounded-lg"
-                @click="addFamilyMember(member)"
-              >
-                <NAvatar
-                  :src="
-                    member.profile_picture_url ||
-                    `https://ui-avatars.com/api/?name=${member.first_name} ${member.family_name}&background=random`
-                  "
-                  round
-                  :size="40"
-                />
-                <div class="flex-1">
-                  <p class="font-semibold text-gray-900">
-                    {{ member?.first_name }} {{ member?.family_name }}
-                  </p>
-                </div>
-                <MlbIcon name="vuesax.broke.add-square" :size="20" class="text-gray-400" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Selected Family Members Avatars -->
-        <div v-if="form.family_members.length > 0" class="flex items-center gap-2 flex-wrap mt-2">
-          <div v-for="member in form.family_members" :key="member.id" class="relative">
-            <NAvatar
-              :src="String(member.profile_picture_url)"
-              :fallback-src="`https://ui-avatars.com/api/?name=${member.first_name} ${member.family_name}&background=random`"
-              round
-              :size="40"
-              class="border-2 border-white"
-            />
-            <button
-              @click="removeFamilyMember(member.id as number)"
-              class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-600"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      </div>
+      <UserSelector
+        label="Family Members"
+        :form="form"
+        :users="familyMembers"
+        :options="userSelectorOptions"
+        @update:selected-users="updateForm"
+      />
 
       <!-- Create Button -->
       <MlbButton
         type="submit"
-        label="Create"
+        :label="loading ? 'Creating...' : 'Create'"
+        :loading="loading"
+        :disabled="loading"
         :primary="true"
         class="w-full rounded-2xl! h-13!"
         @click="onFormSubmit"
@@ -160,13 +88,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   useMessage,
   NForm,
   NFormItem,
   NInput,
-  NAvatar,
   NUpload,
   NDatePicker,
   type UploadFileInfo,
@@ -174,74 +101,54 @@ import {
 import type { FormInst } from 'naive-ui'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
-import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { timeCapsuleValidation } from '@/validations/time-capsule.validations'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
+import { useHome } from '@/composables/useHome'
+import { useGeneralStore } from '@/stores/general.store'
+import type { UserSelectorOptions } from '@/components/common/UserSelector.vue'
+import UserSelector from '@/components/common/UserSelector.vue'
+import { useCreateTimeCapsuleMutation } from '@/services/time-capsule.services'
+import { handleApiError } from '@/helpers/error.helpers'
+import {
+  useGetTimeCapsuleByIdQuery,
+  useUpdateTimeCapsuleMutation,
+} from '@/services/time-capsule.services'
+import { useRoute } from 'vue-router'
+import type { TimeCapsuleInterface } from '@/types/time-capsule.types'
+import { AlertService } from '@/services/alert.service'
 
-const { form, rules } = timeCapsuleValidation()
+const $route = useRoute()
 const message = useMessage()
+const generalStore = useGeneralStore()
+const { fetchFamilyMembers } = useHome()
+const { form, rules } = timeCapsuleValidation()
+const createTimeCapsuleMutation = useCreateTimeCapsuleMutation()
+const updateTimeCapsuleMutation = useUpdateTimeCapsuleMutation()
+const getTimeCapsuleDetails = useGetTimeCapsuleByIdQuery(
+  Number($route.params.id),
+  !!Number($route.params.id),
+)
+
+const loading = ref<boolean>(false)
 const formRef = ref<FormInst | null>(null)
-const familyMemberSearch = ref<string>('')
-const showFamilyMemberDropdown = ref<boolean>(false)
 const uploadFileList = ref<UploadFileInfo[]>([])
+const capsule = ref<TimeCapsuleInterface | null>(null)
 
-// Mock family members data - replace with actual API call
-const allFamilyMembers = ref<Partial<FamilyMemberInterface>[]>([
-  {
-    id: 1,
-    first_name: 'Tim',
-    family_name: 'Agbabiaka',
-    profile_picture_url:
-      'https://fastly.picsum.photos/id/451/200/300.jpg?grayscale&hmac=mvgdXy82l2LHVTEXKHEDRa0bNKiXleNaU0SKKugv1jU',
-  },
-  {
-    id: 2,
-    first_name: 'James',
-    family_name: 'Agbabiaka',
-    profile_picture_url:
-      'https://fastly.picsum.photos/id/451/200/300.jpg?grayscale&hmac=mvgdXy82l2LHVTEXKHEDRa0bNKiXleNaU0SKKugv1jU',
-  },
-])
-
-const filteredFamilyMembers = computed<Partial<FamilyMemberInterface>[]>(() => {
-  if (!familyMemberSearch.value) {
-    return allFamilyMembers.value.filter(
-      (member) => !form.value.family_members.some((selected) => selected.id === member.id),
-    )
-  }
-  return allFamilyMembers.value.filter(
-    (member) =>
-      !form.value.family_members.some((selected) => selected.id === member.id) &&
-      (member.first_name?.toLowerCase().includes(familyMemberSearch.value.toLowerCase()) ||
-        member.family_name?.toLowerCase().includes(familyMemberSearch.value.toLowerCase())),
-  )
-})
-
-const addFamilyMember = (member: Partial<FamilyMemberInterface>) => {
-  if (!form.value.family_members.some((m) => m.id === member.id)) {
-    form.value.family_members.push(member)
-    familyMemberSearch.value = ''
-    showFamilyMemberDropdown.value = false
-  }
+const userSelectorOptions: UserSelectorOptions = {
+  form_user_ids_field: 'family_member_ids',
+  search_fields: ['first_name', 'middle_name', 'family_name'],
+  avatar_field: 'profile_picture_url',
+  name_fields: ['first_name', 'middle_name', 'family_name'],
 }
 
-const removeFamilyMember = (memberId: number) => {
-  form.value.family_members = form.value.family_members.filter((m) => m.id !== memberId)
-}
-
-const handleFamilyMemberBlur = () => {
-  // Delay to allow click events to fire first
-  setTimeout(() => {
-    showFamilyMemberDropdown.value = false
-  }, 200)
-}
+const familyMembers = computed<FamilyMemberInterface[]>(() => generalStore.familyMembers)
 
 const toValidFiles = (fileList: UploadFileInfo[]) =>
   fileList.map((file) => file.file).filter((item): item is File => item instanceof File)
 
 const handleFileListUpdate = (fileList: UploadFileInfo[]) => {
   uploadFileList.value = fileList
-  form.value.media = toValidFiles(fileList)
+  form.value.files = toValidFiles(fileList)
 }
 
 const emit = defineEmits<{
@@ -249,17 +156,147 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const onFormSubmit = () => {
-  formRef.value?.validate((errors) => {
+const updateForm = (value: number[]) => {
+  form.value.family_member_ids = value
+}
+
+const onFormSubmit = async () => {
+  formRef.value?.validate(async (errors) => {
     if (errors) {
       message.error('Please fill in all required fields.')
       return
     }
-
-    emit('submit', form.value)
-    message.success('Announcement created successfully!')
+    Number($route.params.id) ? await updateTimeCapsule() : await handleCreation()
   })
 }
+
+const handleCreation = async () => {
+  loading.value = true
+  try {
+    const response = await createTimeCapsuleMutation.mutateAsync(form.value)
+    message.success(response?.message || 'Time capsule created successfully')
+    emit('submit', form.value)
+    emit('close')
+  } catch (error) {
+    handleApiError(error, message)
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleUpdate = async (password?: string) => {
+  loading.value = true
+  try {
+    const response = await updateTimeCapsuleMutation.mutateAsync({
+      ...form.value,
+      password,
+      id: Number($route.params.id),
+    })
+    message.success(response?.message || 'Time capsule updated successfully')
+    emit('submit', form.value)
+    emit('close')
+  } catch (error) {
+    handleApiError(error, message)
+  } finally {
+    loading.value = false
+  }
+}
+
+type AlertInputValues = Record<string, string>
+
+const updateTimeCapsule = async () => {
+  const result = (await AlertService.alert({
+    subject: 'Enter Password to Edit',
+    message:
+      'We know that many things may happen but we hope that you always remember your new password',
+    closable: true,
+    showIcon: false,
+    closablePosition: 'left',
+    inputs: [
+      {
+        type: 'password',
+        name: 'password',
+        label: 'Password',
+        placeholder: 'Enter Password',
+        required: true,
+        validation: (value: string) => {
+          if (!value) return 'Password is required'
+          return null
+        },
+      },
+    ],
+    showCancelButton: false,
+    showConfirmButton: true,
+    confirmButtonText: 'Edit Details',
+    customClass: {
+      confirmButton: 'rounded-2xl! bg-primary-700! h-13! text-white!',
+    },
+  })) as AlertInputValues | undefined
+
+  const password = result?.password
+  if (password) {
+    await handleUpdate(password)
+  }
+}
+
+const fetchTimeCapsuleDetails = async () => {
+  loading.value = true
+  const response = await getTimeCapsuleDetails.refetch()
+  capsule.value = response.data?.data as TimeCapsuleInterface | null
+  loading.value = false
+}
+
+const formatDateForPicker = (dateString: string | undefined): string | undefined => {
+  if (!dateString) return undefined
+  try {
+    // Parse the date string (handles ISO format, yyyy-MM-dd, etc.)
+    const date = new Date(dateString)
+    // Check if date is valid
+    if (isNaN(date.getTime())) return undefined
+    // Format as yyyy-MM-dd
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } catch {
+    return undefined
+  }
+}
+
+const getEditData = () => {
+  const selectedTimeCapsule = capsule.value
+  if (selectedTimeCapsule) {
+    form.value = {
+      title: selectedTimeCapsule.title,
+      description: selectedTimeCapsule.description,
+      open_at: formatDateForPicker(selectedTimeCapsule.open_at),
+      family_member_ids:
+        selectedTimeCapsule.family_members
+          ?.filter(
+            (member): member is Partial<FamilyMemberInterface> & { id: number } =>
+              typeof member.id === 'number',
+          )
+          .map((member) => member.id) ?? [],
+      files: [], // Existing attachments are already on server, files array is for new uploads only
+    }
+    // Convert existing attachments to UploadFileInfo format for display
+    uploadFileList.value = selectedTimeCapsule.attachments.map((attachment) => ({
+      id: String(attachment.id),
+      name: attachment.name,
+      status: 'finished' as const,
+      url: attachment.url,
+      thumbnail: attachment.thumbnail || attachment.url,
+    }))
+  }
+}
+
+onMounted(async () => {
+  fetchFamilyMembers()
+  if (Number($route.params.id)) {
+    await fetchTimeCapsuleDetails()
+    getEditData()
+  }
+})
 </script>
 
 <style scoped>
