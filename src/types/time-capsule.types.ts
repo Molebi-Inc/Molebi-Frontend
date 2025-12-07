@@ -22,7 +22,7 @@ export interface TimeCapsuleInterface {
   description: string
   open_at: string
   attachments: AttachmentInterface[]
-  family_members: Partial<FamilyMemberInterface>[]
+  family_members?: Partial<FamilyMemberInterface>[] | null
 }
 
 export interface TimeCapsuleFormValues {

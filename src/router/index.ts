@@ -6,6 +6,7 @@ import { storageRoutes } from './storage'
 import { vaultRoutes } from './vault'
 import { timeCapsuleRoutes } from './time-capsule'
 import { settingsRoutes } from './settings'
+import { heritageRoutes } from './heritage'
 
 const AUTH_TOKEN_KEY = 'token'
 const GUEST_TOKEN_KEY = 'guest_token'
@@ -22,6 +23,7 @@ const router = createRouter({
     ...vaultRoutes,
     ...timeCapsuleRoutes,
     ...settingsRoutes,
+    ...heritageRoutes,
   ],
 })
 

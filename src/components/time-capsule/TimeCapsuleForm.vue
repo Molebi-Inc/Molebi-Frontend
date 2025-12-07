@@ -33,18 +33,6 @@
           @update:file-list="handleFileListUpdate"
         />
       </div>
-
-      <!-- <div>
-        <n-form-item path="body" :show-require-mark="false" :show-feedback="false">
-          <n-input
-            v-model:value="form.body"
-            type="textarea"
-            placeholder="Add a Body..."
-            rows="5"
-            class="w-full borderless"
-          />
-        </n-form-item>
-      </div> -->
       <div>
         <n-form-item
           path="open_at"
@@ -76,7 +64,7 @@
       <!-- Create Button -->
       <MlbButton
         type="submit"
-        :label="loading ? 'Creating...' : 'Create'"
+        :label="$route.params.id ? 'Update' : 'Create'"
         :loading="loading"
         :disabled="loading"
         :primary="true"
@@ -113,11 +101,12 @@ import {
   useGetTimeCapsuleByIdQuery,
   useUpdateTimeCapsuleMutation,
 } from '@/services/time-capsule.services'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import type { TimeCapsuleInterface } from '@/types/time-capsule.types'
 import { AlertService } from '@/services/alert.service'
 
 const $route = useRoute()
+const $router = useRouter()
 const message = useMessage()
 const generalStore = useGeneralStore()
 const { fetchFamilyMembers } = useHome()
@@ -177,6 +166,7 @@ const handleCreation = async () => {
     message.success(response?.message || 'Time capsule created successfully')
     emit('submit', form.value)
     emit('close')
+    $router.replace({ name: 'App.TimeCapsules.View' })
   } catch (error) {
     handleApiError(error, message)
   } finally {
@@ -195,6 +185,7 @@ const handleUpdate = async (password?: string) => {
     message.success(response?.message || 'Time capsule updated successfully')
     emit('submit', form.value)
     emit('close')
+    $router.replace({ name: 'App.TimeCapsules.View' })
   } catch (error) {
     handleApiError(error, message)
   } finally {

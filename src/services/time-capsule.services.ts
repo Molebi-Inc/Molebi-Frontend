@@ -79,7 +79,7 @@ export const useUpdateTimeCapsuleMutation = () => {
     TimeCapsuleFormValues & { id: number }
   >({
     mutationFn: async (data: TimeCapsuleFormValues & { id: number }) => {
-      const response = await axiosInstance.put<ApiResponse<TimeCapsuleInterface>>(
+      const response = await axiosInstance.post<ApiResponse<TimeCapsuleInterface>>(
         `/api/user/time-capsules/${data.id}`,
         {
           ...data,

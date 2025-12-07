@@ -127,6 +127,13 @@ const sidebarItems: SidebarItem[] = [
     main: true,
   },
   {
+    id: 'heritage',
+    label: 'Cultural Heritage',
+    icon: 'vuesax.outline.bank',
+    route: { name: 'App.HeritageView' },
+    main: true,
+  },
+  {
     id: 'settings',
     label: 'Settings',
     icon: 'gear',

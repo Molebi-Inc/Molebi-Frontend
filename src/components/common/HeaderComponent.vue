@@ -20,17 +20,7 @@
         </span>
       </span>
     </div>
-    <div v-if="isLargeScreen" class="col-span-3">
-      <MlbInput
-        v-model="search"
-        placeholder="Search for something"
-        customClass="rounded-full! bg-gray-100!"
-      >
-        <template #prefix>
-          <MlbIcon name="vuesax.linear.search-normal.svg" :size="18" class="bg-[#807F94]! mr-1" />
-        </template>
-      </MlbInput>
-    </div>
+    <div v-if="isLargeScreen" class="col-span-3"></div>
     <div class="flex items-center gap-4 md:col-span-4 justify-end">
       <div
         class="cursor-pointer h-12 w-12 bg-gray-50 flex justify-center items-center rounded-full"

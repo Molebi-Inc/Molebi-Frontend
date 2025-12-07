@@ -30,7 +30,7 @@
       </template>
     </n-button>
   </div>
-  <MlbModal v-model:show="showTimeCapsuleModal" class="rounded-3xl!">
+  <MlbModal v-model:show="showTimeCapsuleModal" class="rounded-3xl!" @mask-click="handleMaskClick">
     <template #header>
       <div>
         <BackButton icon="vuesax.linear.arrow-left" class="mb-6" />
@@ -129,6 +129,11 @@ const fetchTimeCapsules = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleMaskClick = () => {
+  showTimeCapsuleModal.value = false
+  $router.replace({ name: 'App.TimeCapsules.View' })
 }
 
 onMounted(async () => {
