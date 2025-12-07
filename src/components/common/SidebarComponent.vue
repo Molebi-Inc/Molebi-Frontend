@@ -115,6 +115,7 @@ const sidebarItems: SidebarItem[] = [
   {
     id: 'time-capsules',
     label: 'Time capsules',
+    elId: 'time-capsules-tour-step-1',
     icon: 'time-capsule',
     route: { name: 'App.TimeCapsules.View' },
     main: true,

@@ -22,6 +22,7 @@
   </div>
   <div class="absolute bottom-10 right-10">
     <n-button
+      id="time-capsules-tour-step-2"
       class="rounded-full! bg-primary-500! text-white! w-20! h-20! shadow-[0px_6.33px_31.67px_0px_#16C4504D]!"
       @click="handleCreateCapsule"
     >
@@ -69,12 +70,14 @@ import { useGetTimeCapsulesQuery } from '@/services/time-capsule.services'
 import SkeletalLoader from '@/components/common/SkeletalLoader.vue'
 import { useMediaQuery } from '@vueuse/core'
 import { handleApiError } from '@/helpers/error.helpers'
+import { useTour } from '@/composables/useTour'
 
 const $route = useRoute()
 const $router = useRouter()
 const message = useMessage()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const getTimeCapsules = useGetTimeCapsulesQuery()
+const { startTour } = useTour()
 
 const loading = ref<boolean>(false)
 const showTimeCapsuleModal = ref<boolean>(false)
@@ -138,6 +141,7 @@ const handleMaskClick = () => {
 
 onMounted(async () => {
   await fetchTimeCapsules()
+  startTour('time-capsules')
 })
 
 watch(
