@@ -32,6 +32,12 @@ export interface PaginationParams {
   per_page: number
 }
 
+export interface ApiRequestParams extends PaginationParams {
+  sort_by: string
+  sort_dir: 'asc' | 'desc'
+  search: string
+}
+
 export type FormType = 'announcement' | 'family_tradition' | 'family_tradition_media'
 
 export interface HomeFormConfig {

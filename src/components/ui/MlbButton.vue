@@ -9,6 +9,7 @@ interface Props {
   secondary?: boolean
   loading?: boolean
   primary?: boolean
+  text?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
@@ -16,6 +17,7 @@ withDefaults(defineProps<Props>(), {
   size: 'medium',
   loading: false,
   primary: false,
+  text: false,
 })
 </script>
 
@@ -25,6 +27,7 @@ withDefaults(defineProps<Props>(), {
     :disabled="disabled"
     :size="size"
     :tertiary="secondary"
+    :text="text"
     :loading="loading"
     :class="[primary ? 'bg-primary-700! text-white! hover:bg-primary-800' : '']"
   >

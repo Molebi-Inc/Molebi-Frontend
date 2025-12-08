@@ -1,5 +1,11 @@
 <template>
-  <n-modal v-model:show="localShow" v-bind="attrs" @on-update:show="emit('close')">
+  <!-- @on-mask-click="emit('on-mask-click')" -->
+  <n-modal
+    v-model:show="localShow"
+    v-bind="attrs"
+    @update:show="emit('close')"
+    @mask-click="emit('mask-click')"
+  >
     <n-card
       :style="cardStyle"
       :bordered="false"
@@ -31,6 +37,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
   (e: 'close'): void
+  (e: 'mask-click'): void
 }>()
 
 const attrs = useAttrs()

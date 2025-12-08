@@ -59,6 +59,27 @@ export const useTourStore = defineStore('tour', () => {
         },
       ],
     },
+    'time-capsules': {
+      tour_name: 'time-capsules',
+      tour_steps: [
+        {
+          target: '#time-capsules-tour-step-1',
+          header: {
+            title: '🕰️ Your Family Time Machine',
+          },
+          content:
+            'Write letters, record moments, or save secrets that unlock on a future date. Perfect for birthdays, anniversaries, or future generations to discover.',
+        },
+        {
+          target: '#time-capsules-tour-step-2',
+          header: {
+            title: '⏳ Create a message for the future.',
+          },
+          content:
+            'Time Capsules let you store notes, photos, or audio to be revealed on a chosen date for your loved ones or yourself.',
+        },
+      ],
+    },
   }
 
   const currentTourKey = computed<string | undefined>(() => {
