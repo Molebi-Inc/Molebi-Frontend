@@ -1,11 +1,10 @@
-import AppLayout from '@/layouts/AppLayout.vue'
 import VaultView from '@/views/vault/VaultView.vue'
 
 export const vaultRoutes = [
   {
     path: '/vaults',
     name: 'App.VaultLayout',
-    component: () => AppLayout,
+    component: () => import('@/layouts/AppLayout.vue'),
     meta: {
       layout: 'app',
       requiresAuth: true,

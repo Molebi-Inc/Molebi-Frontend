@@ -27,13 +27,12 @@
       </n-form-item>
     </div>
     <MlbButton
-      type="submit"
       label="Submit"
       block
       :loading="loading"
       :disabled="loading"
       class="rounded-2xl! bg-primary-700! h-13! text-white!"
-      @click="onFormSubmit"
+      @click.prevent="onFormSubmit"
     />
   </n-form>
 </template>
@@ -41,26 +40,26 @@
 <script setup lang="ts">
 import type { FormInst } from 'naive-ui'
 import { ref } from 'vue'
-// import { useRouter } from 'vue-router'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { useMessage, NForm, NFormItem } from 'naive-ui'
 import MlbInputOtp from '@/components/ui/MlbInputOtp.vue'
 import { pinValidation } from '@/validations/vault.validations'
-import { handleApiError } from '@/helpers/error.helpers'
-import { useVerifyPinMutation } from '@/services/vault.services'
-import { useVaultStore } from '@/stores/vault.store'
 
-// const $router = useRouter()
 const message = useMessage()
-const vaultStore = useVaultStore()
 const { form, rules } = pinValidation()
-const verifyPinMutation = useVerifyPinMutation()
 
+withDefaults(
+  defineProps<{
+    loading: boolean
+  }>(),
+  {
+    loading: false,
+  },
+)
 const emit = defineEmits<{
-  (e: 'pinVerified', value: boolean): void
+  (e: 'pinSubmitted', value: string): void
 }>()
 
-const loading = ref<boolean>(false)
 const formRef = ref<FormInst | null>(null)
 
 const onFormSubmit = () => {
@@ -69,19 +68,7 @@ const onFormSubmit = () => {
       message.error('Invalid form')
       return
     }
-    try {
-      loading.value = true
-      await verifyPinMutation.mutateAsync({
-        pin: form.value.pin.join('') as string,
-        id: vaultStore.selectedFolder?.id as number,
-      })
-      // $router.push({ name: 'App.VaultFolderView' })
-      emit('pinVerified', true)
-    } catch (error) {
-      handleApiError(error, message)
-    } finally {
-      loading.value = false
-    }
+    emit('pinSubmitted', form.value.pin.join('') as string)
   })
 }
 </script>

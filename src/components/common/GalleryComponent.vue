@@ -1,123 +1,76 @@
 <template>
-  <div class="gallery-component">
-    <!-- Grid Layout -->
-    <div v-if="layout === 'grid'" :class="['grid gap-4', getGridColsClass]">
-      <div
-        v-for="item in filteredMedia"
-        :key="item.id"
-        class="relative group cursor-pointer bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow active:scale-95"
-        @click="openMediaPreview(item)"
-      >
-        <!-- Image Thumbnail -->
-        <div
-          v-if="getMediaType(item.mime_type) === 'image'"
-          class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden"
+  <div class="gallery-component relative">
+    <!-- Batch Action Bar -->
+    <div
+      v-if="allowBatchAction && selectedMediaIds.size > 0"
+      class="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-4">
+        <span class="text-sm font-medium text-gray-700">
+          {{ selectedMediaIds.size }} {{ selectedMediaIds.size === 1 ? 'item' : 'items' }} selected
+        </span>
+        <MlbButton
+          @click="clearSelection"
+          text
+          class="text-sm text-gray-600 hover:text-gray-900 transition-colors cursor-pointer :hover:text-underline!"
         >
-          <img
-            :src="item.thumbnail || item.url"
-            :alt="item.name || 'Image'"
-            class="w-full h-full object-cover"
-            loading="lazy"
-          />
-          <div
-            class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity flex items-center justify-center"
-          >
-            <MlbIcon
-              name="vuesax.linear.eye"
-              :size="32"
-              color="white"
-              class="opacity-0 group-hover:opacity-100 transition-opacity"
-            />
-          </div>
-        </div>
-
-        <!-- Video Thumbnail -->
-        <div
-          v-else-if="getMediaType(item.mime_type) === 'video'"
-          class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative"
+          Clear selection
+        </MlbButton>
+      </div>
+      <div class="flex items-center gap-3">
+        <MlbButton
+          @click="handleBatchDownload"
+          class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
         >
-          <img
-            v-if="getVideoThumbnail(item)"
-            :src="getVideoThumbnail(item)"
-            :alt="item.name || 'Video'"
-            class="w-full h-full object-cover"
-            loading="lazy"
-            @error="handleThumbnailError(item)"
-          />
-          <div
-            v-else-if="!isGeneratingThumbnail(item.id)"
-            class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center"
-          >
-            <MlbIcon name="vuesax.linear.video" :size="48" color="#6B7280" />
-          </div>
-          <div
-            v-else
-            class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center"
-          >
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
-          </div>
-          <div
-            class="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity flex items-center justify-center"
-          >
-            <div
-              class="w-16 h-16 bg-white opacity-90 rounded-full flex items-center justify-center group-hover:opacity-100 transition-opacity"
-            >
-              <MlbIcon name="vuesax.linear.play" :size="24" color="#02BF83" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Audio Thumbnail -->
-        <div
-          v-else-if="getMediaType(item.mime_type) === 'audio'"
-          class="aspect-square bg-gray-50 flex items-center justify-center"
+          <MlbIcon name="vuesax.broken.document-download" :size="18" color="#374151" />
+          Download
+        </MlbButton>
+        <MlbButton
+          @click="handleBatchDelete"
+          class="flex items-center gap-2 px-4 py-2 bg-red-50! border border-red-200! rounded-lg hover:bg-red-100! transition-colors text-sm font-medium text-red-700!"
         >
-          <img
-            src="@/assets/images/audio-thumbnail.png"
-            alt="Audio"
-            class="w-48 h-48 object-contain"
-          />
-          <!-- <div class="text-center">
-            <MlbIcon name="vuesax.linear.music" :size="48" color="#02BF83" />
-          </div> -->
-          <div
-            class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity flex items-center justify-center"
-          >
-            <MlbIcon
-              name="vuesax.linear.play"
-              :size="32"
-              color="white"
-              class="opacity-0 group-hover:opacity-100 transition-opacity"
-            />
-          </div>
-        </div>
-
-        <!-- Media Info -->
-        <div v-if="showInfo" class="p-3">
-          <h4 class="text-sm font-medium text-gray-900 truncate mb-1">
-            {{ item.name || 'Untitled' }}
-          </h4>
-          <p v-if="item.date" class="text-xs text-gray-500 truncate">
-            {{ formatDate(item.date) }}
-          </p>
-        </div>
+          <MlbIcon name="delete" :size="18" color="#C20000" />
+          Delete
+        </MlbButton>
       </div>
     </div>
 
-    <!-- Horizontal Scroll Layout -->
-    <div
-      v-else-if="layout === 'horizontal'"
-      class="overflow-x-auto scrollbar-hide"
-      :style="{ scrollbarWidth: 'none', msOverflowStyle: 'none' }"
-    >
-      <div class="flex gap-4 pb-2" :style="{ minWidth: 'max-content' }">
+    <div v-if="isLoading">
+      <SkeletalLoader :rows="2" :columns="isLargeScreen ? itemsPerRow : 2" height="174px" />
+    </div>
+    <div v-else>
+      <!-- Grid Layout -->
+      <div v-if="layout === 'grid'" :class="['grid gap-4', getGridColsClass]">
         <div
           v-for="item in filteredMedia"
           :key="item.id"
-          class="relative group cursor-pointer bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow shrink-0"
-          :style="{ width: `${itemSize}px` }"
-          @click="openMediaPreview(item)"
+          class="relative group cursor-pointer bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow active:scale-95"
+          :class="{ 'ring-2 ring-primary-500': allowBatchAction && isSelected(item.id) }"
+          @click="allowBatchAction ? handleItemClick(item, $event) : openMediaPreview(item)"
         >
+          <!-- Selection Checkbox -->
+          <div
+            v-if="allowBatchAction"
+            class="selection-checkbox absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+            :class="{ 'opacity-100': isSelected(item.id) }"
+            @click.stop="toggleSelection(item.id)"
+          >
+            <div
+              class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all"
+              :class="
+                isSelected(item.id)
+                  ? 'bg-primary-500 border-primary-500'
+                  : 'bg-white border-gray-300 hover:border-primary-400'
+              "
+            >
+              <MlbIcon
+                v-if="isSelected(item.id)"
+                name="vuesax.linear.tick-circle"
+                :size="18"
+                color="white"
+              />
+            </div>
+          </div>
           <!-- Image Thumbnail -->
           <div
             v-if="getMediaType(item.mime_type) === 'image'"
@@ -170,7 +123,7 @@
               class="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity flex items-center justify-center"
             >
               <div
-                class="w-16 h-16 bg-white opacity-90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="w-16 h-16 bg-white opacity-90 rounded-full flex items-center justify-center group-hover:opacity-100 transition-opacity"
               >
                 <MlbIcon name="vuesax.linear.play" :size="24" color="#02BF83" />
               </div>
@@ -213,6 +166,141 @@
           </div>
         </div>
       </div>
+
+      <!-- Horizontal Scroll Layout -->
+      <div
+        v-else-if="layout === 'horizontal'"
+        class="overflow-x-auto scrollbar-hide"
+        :style="{ scrollbarWidth: 'none', msOverflowStyle: 'none' }"
+      >
+        <div class="flex gap-4 pb-2" :style="{ minWidth: 'max-content' }">
+          <div
+            v-for="item in filteredMedia"
+            :key="item.id"
+            class="relative group cursor-pointer bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow shrink-0"
+            :style="{ width: `${itemSize}px` }"
+            :class="{ 'ring-2 ring-primary-500': allowBatchAction && isSelected(item.id) }"
+            @click="allowBatchAction ? handleItemClick(item, $event) : openMediaPreview(item)"
+          >
+            <!-- Selection Checkbox -->
+            <div
+              v-if="allowBatchAction"
+              class="selection-checkbox absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+              :class="{ 'opacity-100': isSelected(item.id) }"
+              @click.stop="toggleSelection(item.id)"
+            >
+              <div
+                class="w-6 h-6 rounded border-2 flex items-center justify-center transition-all"
+                :class="
+                  isSelected(item.id)
+                    ? 'bg-primary-500 border-primary-500'
+                    : 'bg-white border-gray-300 hover:border-primary-400'
+                "
+              >
+                <MlbIcon
+                  v-if="isSelected(item.id)"
+                  name="vuesax.linear.tick-circle"
+                  :size="18"
+                  color="white"
+                />
+              </div>
+            </div>
+            <!-- Image Thumbnail -->
+            <div
+              v-if="getMediaType(item.mime_type) === 'image'"
+              class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden"
+            >
+              <img
+                :src="item.thumbnail || item.url"
+                :alt="item.name || 'Image'"
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div
+                class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity flex items-center justify-center"
+              >
+                <MlbIcon
+                  name="vuesax.linear.eye"
+                  :size="32"
+                  color="white"
+                  class="opacity-0 group-hover:opacity-100 transition-opacity"
+                />
+              </div>
+            </div>
+
+            <!-- Video Thumbnail -->
+            <div
+              v-else-if="getMediaType(item.mime_type) === 'video'"
+              class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative"
+            >
+              <img
+                v-if="getVideoThumbnail(item)"
+                :src="getVideoThumbnail(item)"
+                :alt="item.name || 'Video'"
+                class="w-full h-full object-cover"
+                loading="lazy"
+                @error="handleThumbnailError(item)"
+              />
+              <div
+                v-else-if="!isGeneratingThumbnail(item.id)"
+                class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center"
+              >
+                <MlbIcon name="vuesax.linear.video" :size="48" color="#6B7280" />
+              </div>
+              <div
+                v-else
+                class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center"
+              >
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
+              </div>
+              <div
+                class="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity flex items-center justify-center"
+              >
+                <div
+                  class="w-16 h-16 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <MlbIcon name="vuesax.linear.play" :size="24" color="#02BF83" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Audio Thumbnail -->
+            <div
+              v-else-if="getMediaType(item.mime_type) === 'audio'"
+              class="aspect-square bg-gray-50 flex items-center justify-center"
+            >
+              <img
+                src="@/assets/images/audio-thumbnail.png"
+                alt="Audio"
+                class="w-48 h-48 object-contain"
+              />
+              <!-- <div class="text-center">
+                <MlbIcon name="vuesax.linear.music" :size="48" color="#02BF83" />
+              </div> -->
+              <div
+                class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity flex items-center justify-center"
+              >
+                <MlbIcon
+                  name="vuesax.linear.play"
+                  :size="32"
+                  color="white"
+                  class="opacity-0 group-hover:opacity-100 transition-opacity"
+                />
+              </div>
+            </div>
+
+            <!-- Media Info -->
+            <div v-if="showInfo" class="p-3">
+              <h4 class="text-sm font-medium text-gray-900 truncate mb-1">
+                {{ item.name || 'Untitled' }}
+              </h4>
+              <p v-if="item.date" class="text-xs text-gray-500 truncate">
+                {{ formatDate(item.date) }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Media Preview Modal -->
@@ -223,6 +311,11 @@
       @close="closePreview"
       @update:show-preview-modal="closePreview"
     />
+
+    <!-- Create Button Slot (positioned at bottom) -->
+    <div class="absolute bottom-10 right-10 z-20">
+      <slot name="create-button" />
+    </div>
   </div>
 </template>
 
@@ -232,6 +325,9 @@ import { computed, ref, watch, onMounted } from 'vue'
 import { useGallery } from '@/composables/useGallery'
 import type { AttachmentInterface } from '@/types/vault.types'
 import MediaPreviewModal from '@/components/common/MediaPreviewModal.vue'
+import SkeletalLoader from '@/components/common/SkeletalLoader.vue'
+import { useMediaQuery } from '@vueuse/core'
+import MlbButton from '@/components/ui/MlbButton.vue'
 
 // Props
 interface Props {
@@ -242,6 +338,8 @@ interface Props {
   layout?: 'grid' | 'horizontal'
   itemSize?: number // For horizontal layout
   showInfo?: boolean // Show title and date below thumbnail
+  allowBatchAction?: boolean // Enable batch selection and actions
+  isLoading?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -250,13 +348,23 @@ const props = withDefaults(defineProps<Props>(), {
   layout: 'grid',
   itemSize: 200,
   showInfo: true,
+  allowBatchAction: false,
+  isLoading: false,
 })
 
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const { getMediaType } = useGallery()
+
+// Emits
+const emit = defineEmits<{
+  (e: 'batch-download', mediaIds: (string | number)[]): void
+  (e: 'batch-delete', mediaIds: (string | number)[]): void
+}>()
 
 // State
 const showPreviewModal = ref(false)
 const selectedMedia = ref<AttachmentInterface | null>(null)
+const selectedMediaIds = ref<Set<string | number>>(new Set())
 const videoThumbnails = ref<Map<string | number, string>>(new Map())
 const generatingThumbnails = ref<Set<string | number>>(new Set())
 const thumbnailErrors = ref<Set<string | number>>(new Set())
@@ -286,6 +394,41 @@ const getGridColsClass = computed(() => {
 const openMediaPreview = (item: AttachmentInterface) => {
   selectedMedia.value = item
   showPreviewModal.value = true
+}
+
+const handleItemClick = (item: AttachmentInterface, event: MouseEvent) => {
+  // Only open preview if checkbox wasn't clicked
+  const target = event.target as HTMLElement
+  if (!target.closest('.selection-checkbox')) {
+    openMediaPreview(item)
+  }
+}
+
+const isSelected = (id: string | number): boolean => {
+  return selectedMediaIds.value.has(id)
+}
+
+const toggleSelection = (id: string | number) => {
+  if (selectedMediaIds.value.has(id)) {
+    selectedMediaIds.value.delete(id)
+  } else {
+    selectedMediaIds.value.add(id)
+  }
+}
+
+const clearSelection = () => {
+  selectedMediaIds.value.clear()
+}
+
+const handleBatchDownload = () => {
+  const ids = Array.from(selectedMediaIds.value)
+  emit('batch-download', ids)
+}
+
+const handleBatchDelete = () => {
+  const ids = Array.from(selectedMediaIds.value)
+  emit('batch-delete', ids)
+  clearSelection()
 }
 
 const closePreview = () => {

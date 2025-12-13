@@ -63,7 +63,7 @@
         type="submit"
         :label="loading ? 'Uploading...' : 'Create'"
         :loading="loading"
-        :disabled="loading"
+        :disabled="loading || form.media.length === 0"
         :primary="true"
         class="w-full rounded-2xl! h-13!"
         @click="onFormSubmit"
@@ -201,3 +201,5 @@ watch(
   font-family: General Sans;
 }
 </style>
+
+

@@ -39,3 +39,9 @@ export interface StorageStoreInterface {
   folders: StorageFolderInterface[]
   foldersLoading: boolean
 }
+
+
+export interface ShareFolderFormValues {
+  family_member_id: number[]
+  permission: 'view' | 'edit' | 'manage'
+}

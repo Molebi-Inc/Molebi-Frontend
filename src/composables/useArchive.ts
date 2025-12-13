@@ -26,6 +26,10 @@ export const useArchive = () => {
     currentFlow.value === 'vault' ? false : storageStore.folderMediaLoading,
   )
 
+  const foldersLoading = computed(() =>
+    currentFlow.value === 'vault' ? vaultStore.foldersLoading : storageStore.foldersLoading,
+  )
+
   const archiveExist = computed(() =>
     currentFlow.value === 'vault' ? vaultStore.selectedFolder : storageStore.selectedFolder,
   )
@@ -60,22 +64,29 @@ export const useArchive = () => {
     return response
   }
 
-  const handleFileCreation = async (data: FamilyMediaFormValues) => {
+  const handleFileCreation = async (data: FamilyMediaFormValues | CreateFolderValues) => {
     // let response
     switch ($route.name) {
-      // case 'App.VaultFolderView':
-      //   return await vault.handleCreateFile(data)
+      case 'App.VaultFolderView':
+        return await vault.handleCreateFolder(data as CreateFolderValues)
       case 'App.StorageFolderView':
-        return await storage.handleCreateFile(data)
+        return await storage.handleCreateFile(data as FamilyMediaFormValues)
       default:
         throw new Error('Invalid route name')
     }
   }
 
   const fetchFolderMedia = async () => {
-    return currentFlow.value === 'vault'
-      ? null //await vault.fetchFolderMedia()
-      : await storage.fetchFolderMedia()
+    const media =
+      currentFlow.value === 'vault'
+        ? //  ? await vault.fetchFolderMedia()
+          vaultStore.selectedFolder?.attachments || []
+        : await storage.fetchFolderMedia()
+    return media
+  }
+
+  const clearFolderMedia = () => {
+    currentFlow.value === 'storage' ? storageStore.setStoreProp('folderMedia', []) : null
   }
 
   const fetchFolderDetails = async () => {
@@ -86,6 +97,7 @@ export const useArchive = () => {
     loading,
     currentFlow,
     archiveExist,
+    foldersLoading,
     folderMediaLoading,
     handleFileCreation,
     setSelectedFolder,
@@ -93,6 +105,7 @@ export const useArchive = () => {
     deleteArchiveFolder,
     handleArchiveMutation,
     fetchFolderMedia,
+    clearFolderMedia,
     fetchFolderDetails,
   }
 }

@@ -6,6 +6,8 @@
         ($route.name === 'App.StorageFolderView' && $route.params.id)
       "
       icon="vuesax.linear.arrow-left"
+      :previous-route="false"
+      @update:go-back="handleVaultBackButtonClick"
     />
     <div
       v-if="emptyState"
@@ -26,6 +28,8 @@
         v-bind="viewComponent?.props"
         @update:vaultClick="$router.push({ name: 'App.VaultFolderView' })"
         @select:option="handleSelectOption"
+        @click:folder="handleClickFolder"
+        @batch-delete="handleDeleteMedia"
       />
     </div>
 
@@ -51,7 +55,13 @@
           <h1 class="text-2xl font-bold text-center mt-6">{{ modalComponent?.title }}</h1>
         </div>
       </template>
-      <component :is="modalComponent?.component" @update:folder="handleUpdateFolder" />
+      <component
+        :is="modalComponent?.component"
+        v-bind="modalComponent?.props"
+        @update:folder="handleUpdateFolder"
+        @submit="postSubmitActions()"
+        @pin-submitted="handlePinSubmitted"
+      />
     </MlbModal>
   </div>
 </template>
@@ -62,11 +72,11 @@ import { useRoute, useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import { useVaultStore } from '@/stores/vault.store'
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useArchive } from '@/composables/useArchive'
 import { useStorageStore } from '@/stores/storage.store'
 import BackButton from '@/components/common/BackButton.vue'
-// import VaultPinForm from '@/components/vault/VaultPinForm.vue'
+import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 import FolderWrapper from '@/components/vault/FolderWrapper.vue'
 import VaultContainer from '@/components/vault/VaultContainer.vue'
 import type { StorageFolderInterface } from '@/types/storage.types'
@@ -75,18 +85,27 @@ import GalleryComponent from '@/components/common/GalleryComponent.vue'
 import CreateFolderForm from '@/components/vault/CreateFolderForm.vue'
 import type { FolderInterface, AttachmentInterface } from '@/types/vault.types'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
+import { useDeleteFolderMediaMutation } from '@/services/storage.services'
+import { useMessage } from 'naive-ui'
+import { handleApiError } from '@/helpers/error.helpers'
+import { useVault } from '@/composables/useVault'
 
 const $route = useRoute()
 const $router = useRouter()
+const message = useMessage()
 const vaultStore = useVaultStore()
 const storageStore = useStorageStore()
+const deleteFolderMediaMutation = useDeleteFolderMediaMutation()
 const {
   currentFlow,
+  foldersLoading,
   folderMediaLoading,
   fetchArchiveFolders,
   fetchFolderMedia,
   fetchFolderDetails,
+  clearFolderMedia,
 } = useArchive()
+const { loading: vaultLoading, fetchVaultFolder } = useVault()
 
 const folders = computed<FolderInterface[] | StorageFolderInterface[]>(() =>
   currentFlow.value === 'vault' ? vaultStore.folders : storageStore.folders,
@@ -106,13 +125,17 @@ const emptyState = computed(() => {
     case !folders.value.length &&
       routeNames.includes(String($route.name)) &&
       !$route.params.id &&
-      !storageStore.foldersLoading &&
-      !vaultStore.foldersLoading:
+      !foldersLoading.value:
+      // !storageStore.foldersLoading &&
+      // !vaultStore.foldersLoading:
       return {
         message: 'Nothing to see here yet',
         image: 'images/empty-vault.png',
       }
-    case !gallery.value.length && routeNames.includes(String($route.name)) && !!$route.params.id:
+    case !gallery.value.length &&
+      routeNames.includes(String($route.name)) &&
+      !!$route.params.id &&
+      !folderMediaLoading.value:
       return {
         message: 'No media files uploaded yet! <br /> Use the “+” button to upload media files',
         image: 'images/empty-gallery.png',
@@ -134,7 +157,8 @@ const viewComponent = computed(() => {
           ),
         },
       }
-    case (folders.value.length || storageStore.foldersLoading || vaultStore.foldersLoading) &&
+    // case (folders.value.length || storageStore.foldersLoading || vaultStore.foldersLoading) &&
+    case (folders.value.length || foldersLoading.value) &&
       routeNames.includes(String($route.name)) &&
       !$route.params.id:
       return {
@@ -155,6 +179,8 @@ const viewComponent = computed(() => {
           layout: 'grid',
           itemSize: 165,
           showInfo: false,
+          isLoading: folderMediaLoading.value,
+          allowBatchAction: true,
         },
       }
     default:
@@ -183,16 +209,50 @@ const modalComponent = computed(() => {
       $route.query.action === 'share':
       return {
         component: ShareFolderForm,
-        title: 'Share Folder',
+        props: {
+          folder: storageStore.selectedFolder,
+        },
+      }
+    case routeNames.includes(String($route.name)) &&
+      !$route.params.id &&
+      $route.query.action === 'verify-pin':
+      return {
+        component: VaultPinForm,
+        props: {
+          loading: vaultLoading.value,
+        },
+        title: 'Enter Vault PIN',
       }
     default:
       return null
-    // {
-    //   component: VaultPinForm,
-    //   title: 'Enter Vault PIN',
-    // }
   }
 })
+
+const postSubmitActions = () => {
+  if ($route.query.tab) {
+    fetchFolderDetails()
+  }
+}
+
+const handleClickFolder = (event: { flow: string }) => {
+  console.log(event)
+  console.log($route.query.action)
+  console.log(event.flow === 'vault' && $route.query.action === 'verify-pin')
+  if (event.flow === 'vault' && $route.query.action === 'verify-pin') {
+    showVaultModal.value = true
+  }
+}
+
+const handleVaultBackButtonClick = () => {
+  if ($route.params.id) {
+    clearFolderMedia()
+  }
+  if ($route.params.id && $route.name === 'App.VaultFolderView') {
+    $router.push({ name: 'App.VaultFolderView' })
+    return
+  }
+  $router.back()
+}
 
 const handleSelectOption = (value: {
   key: string
@@ -207,6 +267,18 @@ const handleUpdateFolder = (key: string) => {
   if (['edit', 'create'].includes(key)) {
     showVaultModal.value = false
   }
+}
+
+const handlePinSubmitted = async (value: string) => {
+  await fetchVaultFolder(vaultStore.selectedFolder?.id as number, value)
+  showVaultModal.value = false
+  const query = { ...$route.query }
+  delete query.action
+  $router.push({
+    name: $route.name,
+    params: { ...$route.params, id: vaultStore.selectedFolder?.id as number },
+    query,
+  })
 }
 
 const handleModalAction = () => {
@@ -235,22 +307,63 @@ const handleBackButtonClick = () => {
       query,
     })
   }
+  if ($route.query.tab) {
+    const query = { ...$route.query }
+    delete query.tab
+    $router.push({
+      name: $route.name,
+      params: $route.params,
+      query,
+    })
+  }
+}
+
+const handleDeleteMedia = async (mediaIds: number[]) => {
+  try {
+    const results = await Promise.allSettled(
+      mediaIds.map((id) => deleteFolderMediaMutation.mutateAsync(id)),
+    )
+
+    const successful = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.filter((r) => r.status === 'rejected').length
+
+    if (successful > 0) {
+      message.success(`${successful} ${successful === 1 ? 'item' : 'items'} deleted successfully`)
+    }
+
+    if (failed > 0) {
+      message.error(`Failed to delete ${failed} ${failed === 1 ? 'item' : 'items'}`)
+    }
+
+    await fetchFolderMedia()
+  } catch (error) {
+    handleApiError(error, message)
+  }
 }
 
 watch(
   () => $route.query.action,
   (newVal) => {
-    if (newVal && newVal === 'share') {
+    if (
+      (newVal &&
+        newVal === 'share' &&
+        !!storageStore.selectedFolder &&
+        currentFlow.value === 'storage') ||
+      (newVal === 'verify-pin' && !!vaultStore.selectedFolder && currentFlow.value === 'vault')
+    ) {
       showVaultModal.value = true
+    } else {
+      const query = { ...$route.query }
+      delete query.action
+      $router.push({
+        name: $route.name,
+        params: $route.params,
+        query,
+      })
     }
   },
   { immediate: true },
 )
-onMounted(async () => {
-  if (routeNames.includes(String($route.name)) && !$route.params.id) {
-    await fetchArchiveFolders()
-  }
-})
 
 watch(
   () => $route.params.id,
@@ -258,6 +371,26 @@ watch(
     if (newVal) {
       await fetchFolderDetails()
       await fetchFolderMedia()
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  [() => routeNames.includes(String($route.name)), () => $route.params.id],
+  async ([routeName, id]) => {
+    if (routeName && !id) {
+      await fetchArchiveFolders()
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  [() => String($route.name), () => $route.params.id],
+  async ([routeName, id]) => {
+    if (routeName === 'App.VaultFolderView' && !!id && !vaultStore.selectedFolder) {
+      $router.push({ name: 'App.VaultFolderView' })
     }
   },
   { immediate: true },

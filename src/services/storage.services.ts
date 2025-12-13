@@ -3,7 +3,7 @@ import axiosInstance from '@/config/axios.config'
 import { useAuthConfig } from '@/config/auth.config'
 import type { AttachmentInterface, CreateFolderValues } from '@/types/vault.types'
 import type { ApiResponse, ValidationErrorResponse } from '@/types/general.types'
-import type { StorageFolderInterface } from '@/types/storage.types'
+import type { ShareFolderFormValues, StorageFolderInterface } from '@/types/storage.types'
 import type { AxiosError } from 'axios'
 import { toValue, type MaybeRefOrGetter } from 'vue'
 import type { FamilyMediaFormValues } from '@/types/family-tradition.types'
@@ -148,5 +148,38 @@ export const useGetFolderMediaQuery = (
       return response.data
     },
     enabled,
+  })
+}
+
+export const useDeleteFolderMediaMutation = () => {
+  return useMutation<ApiResponse, AxiosError<ValidationErrorResponse>, number>({
+    mutationFn: async (mediaId) => {
+      const response = await axiosInstance.delete<ApiResponse>(
+        `/api/user/storage/media/${mediaId}`,
+        {
+          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+        },
+      )
+      return response.data
+    },
+  })
+}
+
+export const useShareFolderMutation = () => {
+  return useMutation<
+    ApiResponse,
+    AxiosError<ValidationErrorResponse>,
+    { id: number; data: ShareFolderFormValues }
+  >({
+    mutationFn: async ({ id, data }: { id: number; data: ShareFolderFormValues }) => {
+      const response = await axiosInstance.post<ApiResponse>(
+        `/api/user/storage/folders/${id}/share`,
+        data,
+        {
+          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+        },
+      )
+      return response.data
+    },
   })
 }

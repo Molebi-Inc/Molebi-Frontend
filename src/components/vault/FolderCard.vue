@@ -64,6 +64,7 @@ import type { FolderInterface } from '@/types/vault.types'
 import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
+import { useVault } from '@/composables/useVault'
 
 interface Props {
   folder: FolderInterface | StorageFolderInterface | null
@@ -76,7 +77,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const $emit = defineEmits<{
-  (e: 'click'): void
+  (e: 'click:folder', value: { flow: string }): void
   (
     e: 'select:option',
     value: { key: string; folder: FolderInterface | StorageFolderInterface | null },
@@ -87,6 +88,7 @@ const $emit = defineEmits<{
 const $route = useRoute()
 const $router = useRouter()
 const { currentFlow, setSelectedFolder, deleteArchiveFolder } = useArchive()
+const { loading, fetchVaultFolder } = useVault()
 
 const pinVerified = ref<boolean>(false)
 
@@ -148,8 +150,16 @@ const _folder = computed<{
 const handleClick = () => {
   setSelectedFolder(props.folder as FolderInterface | StorageFolderInterface)
   const routeName = currentFlow.value === 'vault' ? 'App.VaultFolderView' : 'App.StorageFolderView'
-  $router.push({ name: routeName, params: { id: props.folder?.id } })
-  $emit('click')
+  if (currentFlow.value === 'vault') {
+    $router.push({
+      name: routeName,
+      // params: { id: props.folder?.id },
+      query: { action: 'verify-pin' },
+    })
+  } else {
+    $router.push({ name: routeName, params: { id: props.folder?.id } })
+  }
+  $emit('click:folder', { flow: currentFlow.value })
   if (props.onClick) {
     props.onClick()
   }
@@ -198,16 +208,18 @@ const verifyPin = (postVerificationAction: () => void) => {
     showIcon: false,
     closablePosition: 'left',
     html: h(VaultPinForm, {
-      onPinVerified: (value: boolean) => handlePinVerification(value, postVerificationAction),
+      loading: loading.value,
+      onPinSubmitted: async (value: string) =>
+        await handlePinVerification(value, postVerificationAction),
     }),
     showCancelButton: false,
     showConfirmButton: false,
   })
 }
 
-const handlePinVerification = (value: boolean, postVerificationAction: () => void) => {
+const handlePinVerification = async (value: string, postVerificationAction: () => void) => {
   if (!value) return
-  pinVerified.value = value
+  await fetchVaultFolder(props.folder?.id as number, value)
   AlertService.close()
   postVerificationAction()
 }

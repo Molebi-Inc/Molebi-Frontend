@@ -9,28 +9,25 @@
         :key="folder.id"
         :folder="folder"
         @select:option="$emit('select:option', $event)"
-        @click="$emit('click')"
+        @click:folder="$emit('click:folder', $event)"
       />
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { FolderInterface } from '@/types/vault.types'
-import type { StorageFolderInterface } from '@/types/storage.types'
-import FolderCard from '@/components/vault/FolderCard.vue'
-import SkeletalLoader from '@/components/common/SkeletalLoader.vue'
-import { useStorageStore } from '@/stores/storage.store'
 import { useMediaQuery } from '@vueuse/core'
+import { useArchive } from '@/composables/useArchive'
+import type { FolderInterface } from '@/types/vault.types'
+import FolderCard from '@/components/vault/FolderCard.vue'
+import type { StorageFolderInterface } from '@/types/storage.types'
+import SkeletalLoader from '@/components/common/SkeletalLoader.vue'
 
-const storageStore = useStorageStore()
+const { foldersLoading } = useArchive()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
-const foldersLoading = computed(() => storageStore.foldersLoading)
-
 defineProps<{
-  folders: FolderInterface[]
+  folders: FolderInterface[] | StorageFolderInterface[]
 }>()
 
 const $emit = defineEmits<{
@@ -38,6 +35,6 @@ const $emit = defineEmits<{
     e: 'select:option',
     value: { key: string; folder: FolderInterface | StorageFolderInterface | null },
   ): void
-  (e: 'click'): void
+  (e: 'click:folder', value: { flow: string }): void
 }>()
 </script>
