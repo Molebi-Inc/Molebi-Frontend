@@ -80,12 +80,17 @@ import { familyMemberValidation } from '@/validations/family-tree.validations'
 import { useAddFamilyMemberMutation } from '@/services/family-tree.service'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useProfileStore } from '@/stores/profile.store'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 defineProps<{
   relationshipOptions: { label: string; value: string }[]
 }>()
 
+const $emit = defineEmits<{
+  (e: 'close'): void
+}>()
+
+const $route = useRoute()
 const $router = useRouter()
 const message = useMessage()
 const profileStore = useProfileStore()
@@ -113,7 +118,11 @@ const handleAddMemberSubmit = async () => {
     try {
       const response = await addFamilyMemberMutation.mutateAsync(form.value)
       message.success(response.message || 'Family member added successfully')
-      $router.push({ name: 'App.FamilyTreeOnboardingView', params: { module: 'complete' } })
+      if ($route.name === 'App.FamilyTreeOnboardingView') {
+        $router.push({ name: 'App.FamilyTreeOnboardingView', params: { module: 'complete' } })
+      } else {
+        $emit('close')
+      }
     } catch (error) {
       handleApiError(error, message)
     }

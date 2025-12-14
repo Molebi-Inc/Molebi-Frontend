@@ -1,3 +1,4 @@
+import type { Component } from 'vue'
 import type { FamilyMemberInterface } from './family-tree.types'
 export interface Media {
   id: string
@@ -44,14 +45,22 @@ export interface HomeFormConfig {
   id: number
   name: FormType
   title: string
-  component: any
+  component: Component
 }
 
 export interface GeneralStoreInterface {
   familyMembers: FamilyMemberInterface[]
+  flow: string
 }
 
 export interface StateInterface {
   id: number
   name: string
+}
+
+export interface TabInterface {
+  name: string
+  label: string
+  component: Component
+  props?: Record<string, unknown>
 }

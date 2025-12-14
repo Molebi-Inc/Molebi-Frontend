@@ -1,154 +1,45 @@
 <template>
-  <div class="h-full flex flex-col relative overflow-hidden" :class="backgroundClass">
-    <!-- Background Pattern - Paper texture -->
-    <!-- <div class="absolute inset-0 pointer-events-none" :class="backgroundPatternClass">
-      <div
-        class="absolute inset-0"
-        style="
-          background-image:
-            radial-gradient(circle at 2px 2px, rgba(139, 115, 85, 0.08) 1px, transparent 0),
-            repeating-linear-gradient(
-              0deg,
-              transparent,
-              transparent 2px,
-              rgba(139, 115, 85, 0.015) 2px,
-              rgba(139, 115, 85, 0.015) 4px
-            ),
-            repeating-linear-gradient(
-              90deg,
-              transparent,
-              transparent 2px,
-              rgba(139, 115, 85, 0.01) 2px,
-              rgba(139, 115, 85, 0.01) 4px
-            ),
-            linear-gradient(
-              180deg,
-              rgba(245, 241, 232, 0.4) 0%,
-              rgba(250, 248, 243, 0.3) 50%,
-              rgba(245, 241, 232, 0.4) 100%
-            );
-          background-size:
-            40px 40px,
-            100% 100%,
-            100% 100%,
-            100% 100%;
-          opacity: 0.5;
-        "
-      />
-    </div> -->
+  <section class="h-full pt-5">
+    <div class="grid grid-cols-12">
+      <div class="hidden md:block col-span-3">
+        <FamilyTreeSidebar />
+      </div>
+      <div class="col-span-12 md:col-span-9">
+        <div class="h-full flex flex-col relative overflow-hidden" :class="backgroundClass">
+          <TreeView v-if="treePayload" :payload="treePayload" />
 
-    <!-- Controls -->
-    <!-- <TreeControls
-      @zoom-in="handleZoomIn"
-      @zoom-out="handleZoomOut"
-      @zoom-reset="handleZoomReset"
-      @share="handleShare"
-    /> -->
+          <!-- Mobile Floating Action Button -->
+          <!-- v-if="isMobile" -->
+          <button
+            class="fixed bottom-20 right-4 w-14 h-14 cursor-pointer bg-primary-700 rounded-full shadow-lg flex items-center justify-center text-white z-20 hover:bg-primary-800 transition-colors"
+            @click="handleAddFirstMember"
+            title="Add Family Member"
+          >
+            <MlbIcon name="vuesax.linear.add" :size="24" />
+          </button>
+          <MlbModal v-model:show="showFamilyTreeModal" class="rounded-3xl!">
+            <template #header>
+              <div>
+                <BackButton
+                  icon="vuesax.linear.arrow-left"
+                  class="mb-6"
+                  @update:go-back="handleCloseModal"
+                />
+              </div>
+            </template>
 
-    <!-- Tree Container -->
-    <!-- <div
-      ref="treeContainerRef"
-      class="flex-1 overflow-auto flex items-center justify-center cursor-grab active:cursor-grabbing"
-      :class="containerClass"
-      @mousedown="handleMouseDown"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
-      @mouseleave="handleMouseUp"
-      @touchstart="handleTouchStart"
-      @touchmove="handleTouchMove"
-      @touchend="handleTouchEnd"
-      @wheel.prevent="handleWheel"
-    >
-      <div
-        ref="treeWrapperRef"
-        class="tree-wrapper relative"
-        :style="{
-          transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})`,
-          transformOrigin: 'center center',
-        }"
-      > -->
-    <!-- Generation Labels -->
-    <!-- <GenerationLabel
-          v-for="generation in treeLayout.generations"
-          :key="`gen-${generation.level}`"
-          :label="generation.label"
-          :y="getGenerationY(generation)"
-        /> -->
-
-    <!-- Connections (SVG) -->
-    <!-- <TreeConnector
-          v-if="treeLayout.connections.length > 0"
-          :connections="treeLayout.connections"
-          :svg-width="svgWidth"
-          :svg-height="svgHeight"
-        /> -->
-
-    <!-- Tree Nodes -->
-    <!-- <TreeNode
-          v-for="node in treeLayout.nodes"
-          :key="`node-${node.id}`"
-          :node="node"
-          :size="getNodeSize(node)"
-          :is-selected="selectedNodeId === node.id"
-          :show-add-parent="node.generation > 0"
-          :show-add-child="true"
-          :show-add-spouse="!node.spouse"
-          @add-parent="handleAddParent"
-          @add-child="handleAddChild"
-          @add-spouse="handleAddSpouse"
-          @click="handleNodeClick"
-        /> -->
-
-    <!-- Empty State -->
-    <!-- <div
-          v-if="treeLayout.nodes.length === 0 && !isLoading"
-          class="absolute inset-0 flex items-center justify-center"
-        >
-          <div class="text-center">
-            <p class="text-gray-500 text-lg mb-4">No family members found</p>
-            <MlbButton label="Add First Member" primary @click="handleAddFirstMember" />
-          </div>
-        </div> -->
-
-    <!-- Loading State -->
-    <!-- <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center">
-          <div class="text-center">
-            <div
-              class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"
-            />
-            <p class="text-gray-500">Loading family tree...</p>
-          </div>
+            <h1 class="text-neutral-900 font-semibold text-2xl mb-2 text-center">
+              {{ familyTreeComponent?.title }}
+            </h1>
+            <p class="text-neutral-600 font-normal text-sm text-center mb-11">
+              {{ familyTreeComponent?.description }}
+            </p>
+            <FamilyMemberForm @close="handleCloseModal" />
+          </MlbModal>
         </div>
       </div>
-    </div> -->
-
-    <TreeView />
-
-    <!-- Mobile Floating Action Button -->
-    <!-- v-if="isMobile" -->
-    <button
-      class="fixed bottom-20 right-4 w-14 h-14 cursor-pointer bg-primary-700 rounded-full shadow-lg flex items-center justify-center text-white z-20 hover:bg-primary-800 transition-colors"
-      @click="handleAddFirstMember"
-      title="Add Family Member"
-    >
-      <MlbIcon name="vuesax.linear.add" :size="24" />
-    </button>
-    <MlbModal v-model:show="showFamilyTreeModal" class="rounded-3xl!" @close="handleCloseModal">
-      <template #header>
-        <div>
-          <BackButton icon="vuesax.linear.arrow-left" class="mb-6" />
-        </div>
-      </template>
-
-      <h1 class="text-neutral-900 font-semibold text-2xl mb-2 text-center">
-        {{ familyTreeComponent?.title }}
-      </h1>
-      <p class="text-neutral-600 font-normal text-sm text-center mb-11">
-        {{ familyTreeComponent?.description }}
-      </p>
-      <FamilyMemberForm />
-    </MlbModal>
-  </div>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -158,7 +49,7 @@ import type {
   TreeLayout,
   FamilyTreeInterface,
 } from '@/types/family-tree.types'
-import TreeView from '@/views/family-tree/TreeView.vue'
+import TreeView, { type Payload } from '@/views/family-tree/TreeView.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import BackButton from '@/components/common/BackButton.vue'
 import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
@@ -173,6 +64,7 @@ import { useMessage } from 'naive-ui'
 import { useRouter, useRoute } from 'vue-router'
 import { handleApiError } from '@/helpers/error.helpers'
 import FamilyMemberForm from '@/components/family-tree/FamilyMemberForm.vue'
+import FamilyTreeSidebar from '@/components/family-tree/FamilyTreeSidebar.vue'
 
 const message = useMessage()
 const $router = useRouter()
@@ -218,11 +110,11 @@ const isMobile = computed(() => {
 const backgroundClass = computed(() => {
   return isMobile.value
     ? 'bg-[#F5F1E8]' // Light beige for mobile
-    : 'bg-gray-50' // Gray for desktop
+    : 'bg-[#F4CBA9]' // Gray for desktop
 })
 
 const backgroundPatternClass = computed(() => {
-  return isMobile.value ? 'bg-[#F5F1E8]' : 'bg-[#F5F1E8]'
+  return isMobile.value ? 'bg-[#F5F1E8]' : 'bg-[#F7F2EA]'
 })
 
 const containerClass = computed(() => {
@@ -247,11 +139,13 @@ const calculateSvgDimensions = () => {
   svgHeight.value = Math.max(2000, maxY - minY)
 }
 
-const handleCloseModal = () => {
+const handleCloseModal = async () => {
+  console.log('handleCloseModal before', showFamilyTreeModal.value)
   showFamilyTreeModal.value = false
   const params = { ...$route.params }
   delete params.create
   $router.push({ name: 'App.FamilyTreeView', params })
+  await fetchFamilyTrees()
 }
 
 const centerTree = () => {
@@ -304,9 +198,42 @@ watch(
   (data) => {
     if (data) {
       familyTreeData.value = data as FamilyTreeInterface
+    } else {
+      familyTreeData.value = null
     }
   },
   { immediate: true },
+)
+
+const formatFamilyTreeData = (data: FamilyTreeInterface['familyTree']): Payload => {
+  const mapMember = (member: Partial<FamilyTreeInterface['familyTree']['self']>) => ({
+    id: String(member.id ?? ''),
+    first_name: member.first_name,
+    full_name: member.full_name ?? member.name,
+    profile_picture_url: member.profile_picture_url,
+  })
+
+  return {
+    self: {
+      ...mapMember(data.self),
+      spouse: data.spouse?.[0]
+        ? mapMember(data.spouse[0] as Partial<FamilyTreeInterface['familyTree']['self']>)
+        : null,
+    },
+    parents: data.parents.map((p) => mapMember(p)),
+    siblings: data.siblings.map((s) => mapMember(s)),
+    children: data.children.map((c) => mapMember(c)),
+    grandparents: data.grandparents.map((g) => mapMember(g)),
+    grandchildren: data.grandchildren.map((gc) => mapMember(gc)),
+    aunts_uncles: data.aunts_uncles.map((au) => mapMember(au)),
+    cousins: data.cousins.map((co) => mapMember(co)),
+    nieces_nephews: data.nieces_nephews.map((nn) => mapMember(nn)),
+    spouse: data.spouse.map((sp) => mapMember(sp)),
+  }
+}
+
+const treePayload = computed<Payload | undefined>(() =>
+  familyTreeData.value ? formatFamilyTreeData(familyTreeData.value.familyTree) : undefined,
 )
 
 const getNodeSize = (node: TreeNodeType): 'small' | 'medium' | 'large' => {

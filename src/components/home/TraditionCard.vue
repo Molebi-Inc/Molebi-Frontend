@@ -109,11 +109,11 @@ const options = [
     key: 'edit',
     icon: () => h(MlbIcon, { name: 'vuesax.linear.edit-2', size: 12, color: '#737373' }),
   },
-  {
-    label: 'Add Media',
-    key: 'media',
-    icon: () => h(MlbIcon, { name: 'vuesax.broke.add-square', size: 12, color: '#737373' }),
-  },
+  // {
+  //   label: 'Add Media',
+  //   key: 'media',
+  //   icon: () => h(MlbIcon, { name: 'vuesax.broke.add-square', size: 12, color: '#737373' }),
+  // },
   {
     label: 'Delete',
     key: 'delete',

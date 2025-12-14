@@ -21,3 +21,24 @@ app.use(Vue3Tour)
 ;(window as { __VUE_APP__?: VueApp }).__VUE_APP__ = app
 
 app.mount('#app')
+
+// Register service worker for PWA functionality
+if ('serviceWorker' in navigator) {
+  import('virtual:pwa-register/vue').then(({ useRegisterSW }) => {
+    useRegisterSW({
+      immediate: true,
+      onNeedRefresh() {
+        console.log('[PWA] New content available, please refresh.')
+      },
+      onOfflineReady() {
+        console.log('[PWA] App ready to work offline.')
+      },
+      onRegistered(registration) {
+        console.log('[PWA] Service worker registered:', registration)
+      },
+      onRegisterError(error) {
+        console.error('[PWA] Service worker registration error:', error)
+      },
+    })
+  })
+}

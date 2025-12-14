@@ -18,11 +18,15 @@ const severityToClasses: Record<string, string> = {
 </script>
 
 <template>
-  <p :class="['font-normal', size === 'small' ? 'text-sm' : 'text-base', severityToClasses[severity]]">
+  <p
+    :class="[
+      'font-normal',
+      size === 'small' ? 'text-sm' : 'text-base',
+      severityToClasses[severity],
+    ]"
+  >
     <slot />
   </p>
 </template>
 
 <style scoped></style>
-
-

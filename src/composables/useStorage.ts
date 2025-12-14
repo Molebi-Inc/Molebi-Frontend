@@ -1,5 +1,5 @@
+import { computed } from 'vue'
 import { useMessage } from 'naive-ui'
-import { useStorageStore } from '@/stores/storage.store'
 import {
   useCreateFolderMutation,
   useUpdateFolderMutation,
@@ -9,18 +9,17 @@ import {
   useGetFolderMediaQuery,
   useGetStorageFolderQuery,
 } from '@/services/storage.services'
-import type { CreateFolderValues } from '@/types/vault.types'
-import { handleApiError } from '@/helpers/error.helpers'
-import { computed } from 'vue'
-import { AlertService } from '@/services/alert.service'
-import type { MaybeRefOrGetter } from 'vue'
-import type { FamilyMediaFormValues } from '@/types/family-tradition.types'
 import { useRoute } from 'vue-router'
+import type { MaybeRefOrGetter } from 'vue'
+import { AlertService } from '@/services/alert.service'
+import { useStorageStore } from '@/stores/storage.store'
+import { handleApiError } from '@/helpers/error.helpers'
+import type { CreateFolderValues } from '@/types/vault.types'
+import type { FamilyMediaFormValues } from '@/types/family-tradition.types'
 
 export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   const $route = useRoute()
   const message = useMessage()
-
   const storageStore = useStorageStore()
   const addFilesMutation = useAddFilesMutation()
   const createFolderMutation = useCreateFolderMutation()
@@ -37,12 +36,16 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
 
   // Query for storage folder - reactive to route changes
   const getStorageFolderQuery = useGetStorageFolderQuery(
-    computed(() => queryEnabled && !!routeFolderId.value),
+    computed(
+      () => queryEnabled && !!routeFolderId.value && $route.name === 'App.StorageFolderView',
+    ),
     routeFolderId,
   )
 
   const getFolderMediaQuery = useGetFolderMediaQuery(
-    computed(() => queryEnabled && !!routeFolderId.value),
+    computed(
+      () => queryEnabled && !!routeFolderId.value && $route.name === 'App.StorageFolderView',
+    ),
     routeFolderId,
   )
 

@@ -237,15 +237,15 @@ const resetPlaybackState = () => {
 
 const mimeTypeToExtension = (mime: string) => {
   if (mime.includes('mp3') || mime.includes('mpeg')) return 'mp3'
-  if (mime.includes('mp4')) return 'mp3'
+  if (mime.includes('mp4')) return 'mp4'
   if (mime.includes('ogg')) return 'ogg'
   if (mime.includes('wav')) return 'wav'
-  if (mime.includes('webm')) return 'mp3'
+  if (mime.includes('webm')) return 'webm'
   return 'mp3'
 }
 
 const emitRecordingFile = (blob: Blob) => {
-  const mimeType = 'audio/mpeg'
+  const mimeType = blob.type || 'audio/mpeg'
   const extension = mimeTypeToExtension(mimeType)
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
   const fileName = `molebi-recording-${timestamp}.${extension}`
@@ -307,10 +307,23 @@ const startRecording = async () => {
     }
 
     const options: MediaRecorderOptions = {}
-    if (MediaRecorder.isTypeSupported('audio/mp4')) {
+    // if (MediaRecorder.isTypeSupported('audio/mp4')) {
+    //   options.mimeType = 'audio/mp4'
+    // } else if (MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2')) {
+    //   options.mimeType = 'audio/mp4;codecs=mp4a.40.2'
+    // } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+    //   options.mimeType = 'audio/webm;codecs=opus'
+    // } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+    //   options.mimeType = 'audio/webm'
+    // }
+    if (MediaRecorder.isTypeSupported('audio/mpeg')) {
+      // Most common MP3 MIME type
+      options.mimeType = 'audio/mpeg'
+    } else if (MediaRecorder.isTypeSupported('audio/mpeg;codecs=mp3')) {
+      // Alternative MP3 declaration, if supported
+      options.mimeType = 'audio/mpeg;codecs=mp3'
+    } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
       options.mimeType = 'audio/mp4'
-    } else if (MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2')) {
-      options.mimeType = 'audio/mp4;codecs=mp4a.40.2'
     } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
       options.mimeType = 'audio/webm;codecs=opus'
     } else if (MediaRecorder.isTypeSupported('audio/webm')) {

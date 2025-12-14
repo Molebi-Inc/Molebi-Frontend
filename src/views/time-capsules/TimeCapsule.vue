@@ -11,7 +11,7 @@
     <div v-else-if="loading && !capsules.length">
       <SkeletalLoader :rows="2" :columns="isLargeScreen ? 5 : 2" :gap="4" height="160px" />
     </div>
-    <div v-else class="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-5 gap-4">
+    <div v-else class="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
       <TimeCapsuleCard
         v-for="capsule in capsules"
         :key="capsule.id"
@@ -20,7 +20,7 @@
       />
     </div>
   </div>
-  <div class="absolute bottom-10 right-10">
+  <div class="hidden md:block absolute bottom-10 right-10">
     <n-button
       id="time-capsules-tour-step-2"
       class="rounded-full! bg-primary-500! text-white! w-20! h-20! shadow-[0px_6.33px_31.67px_0px_#16C4504D]!"

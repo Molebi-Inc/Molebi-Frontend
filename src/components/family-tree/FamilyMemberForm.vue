@@ -14,7 +14,12 @@
       :tab="tab.label"
       :tab-style="getTabStyle(tab.name)"
     >
-      <component :is="component" class="w-full mt-6" :relationship-options="relationshipOptions" />
+      <component
+        :is="component"
+        class="w-full mt-6"
+        :relationship-options="relationshipOptions"
+        @close="$emit('close')"
+      />
     </n-tab-pane>
   </n-tabs>
 </template>
@@ -27,9 +32,12 @@ import NewMemberForm from '@/components/family-tree/NewMemberForm.vue'
 import ExistingFamilyForm from '@/components/family-tree/ExistingFamilyForm.vue'
 import { useGetRelationshipsQuery } from '@/services/general.service'
 
-const getRelationshipsQuery = useGetRelationshipsQuery({ enabled: false })
 const $route = useRoute()
 const $router = useRouter()
+const $emit = defineEmits<{
+  (e: 'close'): void
+}>()
+const getRelationshipsQuery = useGetRelationshipsQuery({ enabled: false })
 
 const tabs = ref([
   {

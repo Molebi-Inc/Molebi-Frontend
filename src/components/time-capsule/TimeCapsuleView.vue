@@ -1,6 +1,6 @@
 <template>
-  <div v-if="!loading" class="mx-20">
-    <!-- <div
+  <div v-if="!loading" class="md:mx-20">
+    <div
       v-if="capsule?.open_at && new Date(capsule.open_at) > new Date()"
       class="flex flex-col items-center mb-12"
     >
@@ -9,8 +9,8 @@
       </div>
       <p class="text-gray-800 font-semibold">Time capsule is not yet available for preview</p>
     </div>
-    <div v-else> -->
-    <div>
+    <div v-else>
+      <!-- <div> -->
       <div class="flex justify-center items-center mb-11">
         <h1 class="text-2xl font-bold text-gray-800 text-center">{{ capsule?.title }}</h1>
       </div>
@@ -34,12 +34,13 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import MlbIcon from '@/components/ui/MlbIcon.vue'
+import PageLoader from '@/components/common/PageLoader.vue'
 import type { TimeCapsuleInterface } from '@/types/time-capsule.types'
 import GalleryComponent from '@/components/common/GalleryComponent.vue'
-import { ref, onMounted } from 'vue'
 import { useGetTimeCapsuleByIdQuery } from '@/services/time-capsule.services'
-import { useRoute } from 'vue-router'
-import PageLoader from '@/components/common/PageLoader.vue'
 
 const $route = useRoute()
 

@@ -1,18 +1,20 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useVault } from '@/composables/useVault'
-import { useStorage } from '@/composables/useStorage'
 import { useVaultStore } from '@/stores/vault.store'
+import { useStorage } from '@/composables/useStorage'
 import { useStorageStore } from '@/stores/storage.store'
-import type { CreateFolderValues, FolderInterface } from '@/types/vault.types'
+import { useGeneralStore } from '@/stores/general.store'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import type { FamilyMediaFormValues } from '@/types/family-tradition.types'
+import type { CreateFolderValues, FolderInterface } from '@/types/vault.types'
 
 export const useArchive = () => {
   const $route = useRoute()
   const vaultStore = useVaultStore()
   const storageStore = useStorageStore()
-  const currentFlow = computed(() => $route.meta.flow as 'vault' | 'storage')
+  const generalStore = useGeneralStore()
+  const currentFlow = computed(() => ($route.meta.flow as 'vault' | 'storage') || generalStore.flow)
 
   // Initialize both composables, but only enable queries for the current flow
   const vault = useVault(computed(() => currentFlow.value === 'vault'))
@@ -26,14 +28,20 @@ export const useArchive = () => {
     currentFlow.value === 'vault' ? false : storageStore.folderMediaLoading,
   )
 
+  const foldersLoading = computed(() =>
+    currentFlow.value === 'vault' ? vaultStore.foldersLoading : storageStore.foldersLoading,
+  )
+
   const archiveExist = computed(() =>
     currentFlow.value === 'vault' ? vaultStore.selectedFolder : storageStore.selectedFolder,
   )
 
   const setSelectedFolder = (folder: FolderInterface | StorageFolderInterface | null) => {
-    currentFlow.value === 'vault'
-      ? vaultStore.setStoreProp('selectedFolder', folder)
-      : storageStore.setStoreProp('selectedFolder', folder)
+    if (currentFlow.value === 'vault') {
+      vaultStore.setStoreProp('selectedFolder', folder)
+    } else {
+      storageStore.setStoreProp('selectedFolder', folder)
+    }
   }
 
   const handleArchiveMutation = async (data: CreateFolderValues) => {
@@ -60,22 +68,29 @@ export const useArchive = () => {
     return response
   }
 
-  const handleFileCreation = async (data: FamilyMediaFormValues) => {
+  const handleFileCreation = async (data: FamilyMediaFormValues | CreateFolderValues) => {
     // let response
     switch ($route.name) {
-      // case 'App.VaultFolderView':
-      //   return await vault.handleCreateFile(data)
+      case 'App.VaultFolderView':
+        return await vault.handleCreateFolder(data as CreateFolderValues)
       case 'App.StorageFolderView':
-        return await storage.handleCreateFile(data)
+        return await storage.handleCreateFile(data as FamilyMediaFormValues)
       default:
         throw new Error('Invalid route name')
     }
   }
 
   const fetchFolderMedia = async () => {
-    return currentFlow.value === 'vault'
-      ? null //await vault.fetchFolderMedia()
-      : await storage.fetchFolderMedia()
+    const media =
+      currentFlow.value === 'vault'
+        ? //  ? await vault.fetchFolderMedia()
+          vaultStore.selectedFolder?.attachments || []
+        : await storage.fetchFolderMedia()
+    return media
+  }
+
+  const clearFolderMedia = () => {
+    currentFlow.value === 'storage' ? storageStore.setStoreProp('folderMedia', []) : null
   }
 
   const fetchFolderDetails = async () => {
@@ -86,6 +101,7 @@ export const useArchive = () => {
     loading,
     currentFlow,
     archiveExist,
+    foldersLoading,
     folderMediaLoading,
     handleFileCreation,
     setSelectedFolder,
@@ -93,6 +109,7 @@ export const useArchive = () => {
     deleteArchiveFolder,
     handleArchiveMutation,
     fetchFolderMedia,
+    clearFolderMedia,
     fetchFolderDetails,
   }
 }

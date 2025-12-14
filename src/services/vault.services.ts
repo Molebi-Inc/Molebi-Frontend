@@ -9,23 +9,6 @@ import type { MaybeRefOrGetter } from 'vue'
 
 const authConfig = useAuthConfig()
 
-export const useVerifyPinMutation = () => {
-  return useMutation<
-    ApiResponse<{ success: boolean; message: string }>,
-    AxiosError<ValidationErrorResponse>,
-    { pin: string; id: number }
-  >({
-    mutationFn: async ({ pin, id }: { pin: string; id: number }) => {
-      const response = await axiosInstance.post<ApiResponse<{ success: boolean; message: string }>>(
-        `/api/user/memory-vaults/${id}/access`,
-        { pin_code: pin },
-        { headers: { Authorization: `Bearer ${authConfig.getToken()}` } },
-      )
-      return response.data
-    },
-  })
-}
-
 export const useUpdateFolderMutation = () => {
   const updateFolderMutation = useMutation<
     ApiResponse<FolderInterface>,
@@ -88,6 +71,48 @@ export const useCreateVaultFolderMutation = () => {
       const response = await axiosInstance.post<ApiResponse<FolderInterface>>(
         '/api/user/memory-vaults',
         folder,
+        { headers: { Authorization: `Bearer ${authConfig.getToken()}` } },
+      )
+      return response.data
+    },
+  })
+}
+
+export const useUpdateVaultPinMutation = () => {
+  return useMutation<
+    ApiResponse<FolderInterface>,
+    AxiosError<ValidationErrorResponse>,
+    { current_pin: string; new_pin: string; id: number }
+  >({
+    mutationFn: async ({
+      current_pin,
+      new_pin,
+      id,
+    }: {
+      current_pin: string
+      new_pin: string
+      id: number
+    }) => {
+      const response = await axiosInstance.post<ApiResponse<FolderInterface>>(
+        `/api/user/memory-vaults/${id}/pin`,
+        { current_pin, new_pin, _method: 'PUT' },
+        { headers: { Authorization: `Bearer ${authConfig.getToken()}` } },
+      )
+      return response.data
+    },
+  })
+}
+
+export const useGetVaultFolderMutation = () => {
+  return useMutation<
+    ApiResponse<FolderInterface>,
+    AxiosError<ValidationErrorResponse>,
+    { id: number; pin: string }
+  >({
+    mutationFn: async ({ id, pin }: { id: number; pin: string }) => {
+      const response = await axiosInstance.post<ApiResponse<FolderInterface>>(
+        `/api/user/memory-vaults/${id}`,
+        { pin: pin },
         { headers: { Authorization: `Bearer ${authConfig.getToken()}` } },
       )
       return response.data

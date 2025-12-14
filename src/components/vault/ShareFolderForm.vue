@@ -18,26 +18,26 @@
       </div>
       <div class="flex-1 min-w-0">
         <h2 class="text-base font-semibold text-gray-900 truncate">
-          {{ folder?.title || 'Folder' }}
+          {{ folder?.name || 'Folder' }}
         </h2>
         <div class="flex items-center gap-2 text-sm text-gray-500 mt-1">
-          <span>{{ (folder?.attachments?.length ?? 0) }} Media</span>
-          <span v-if="props.folderSize > 0" class="flex items-center gap-2">
+          <span>{{ folder?.total_files ?? 0 }} Media</span>
+          <span v-if="(folder?.total_size ?? 0) > 0" class="flex items-center gap-2">
             <span class="w-1 h-1 bg-red-500 rounded-full"></span>
-            <span>{{ formatFileSize(props.folderSize ?? 0) }}</span>
+            <span>{{ formatFileSize(folder?.total_size ?? 0) }}</span>
           </span>
         </div>
       </div>
     </div>
 
     <!-- Sharable Link Option -->
-    <div class="bg-orange-50 rounded-xl p-4 mb-6">
+    <div class="bg-secondary-50 rounded-xl p-4 mb-6">
       <h3 class="text-sm font-semibold text-gray-900 mb-1">Invite members via a sharable link</h3>
       <p class="text-xs text-gray-600">Anyone with the link can view</p>
     </div>
 
     <!-- Tabs -->
-    <div class="flex gap-6 mb-4 border-b border-gray-200">
+    <!-- <div class="flex gap-6 mb-4 border-b border-gray-200">
       <button
         @click="activeTab = 'individual'"
         :class="[
@@ -58,10 +58,34 @@
       >
         Family
       </button>
-    </div>
+    </div> -->
 
-    <!-- Search Input -->
-    <div class="mb-4">
+    <n-form ref="formRef" :model="form" :rules="rules">
+      <!-- Search Input -->
+      <UserSelector
+        label="Family Members"
+        :form="form"
+        :users="familyMembers"
+        :options="userSelectorOptions"
+        @update:selected-users="updateForm"
+      />
+      <div v-if="form.family_member_id.length > 0" class="mt-3 grid grid-cols-3 items-center gap-2">
+        <div class="col-span-2 text-sm font-medium text-gray-500">
+          {{
+            form.family_member_id.length > 1
+              ? `${form.family_member_id.length} members`
+              : `${form.family_member_id.length} member`
+          }}
+        </div>
+        <n-select
+          v-model:value="form.permission"
+          :options="permissions"
+          size="tiny"
+          class="col-span-1 justify-self-end"
+        />
+      </div>
+    </n-form>
+    <!-- <div class="mb-4">
       <MlbInput
         v-model="searchQuery"
         type="text"
@@ -70,7 +94,6 @@
       />
     </div>
 
-    <!-- Members List -->
     <div class="mb-6 max-h-[300px] overflow-y-auto">
       <div
         v-for="member in filteredMembers"
@@ -114,21 +137,23 @@
       <div v-if="filteredMembers.length === 0" class="text-center py-8 text-gray-500 text-sm">
         No members found
       </div>
-    </div>
+    </div> -->
 
     <!-- Action Buttons -->
-    <div class="flex gap-3">
+    <div class="flex gap-3 mt-6">
       <MlbButton
-        @click="handleShare"
-        :loading="loading"
-        :disabled="selectedMembers.size === 0"
         class="flex-1 rounded-xl! bg-primary-700! h-12! text-white! font-medium!"
+        :loading="loading"
+        :disabled="form.family_member_id.length === 0 || loading"
+        @click="handleShare"
       >
         Share
       </MlbButton>
       <MlbButton
-        @click="handleCopyLink"
         class="rounded-xl! bg-primary-50! h-12! text-primary-700! font-medium! px-4!"
+        :loading="loading"
+        :disabled="loading"
+        @click="handleCopyLink"
       >
         <template #icon>
           <MlbIcon name="link" :size="20" color="#0F4C3F" />
@@ -140,99 +165,101 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import MlbInput from '@/components/ui/MlbInput.vue'
+import UserSelector from '@/components/common/UserSelector.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
 import type { FolderInterface } from '@/types/vault.types'
-import { useMessage } from 'naive-ui'
+import type { StorageFolderInterface } from '@/types/storage.types'
+import { useMessage, type FormInst } from 'naive-ui'
+import { shareFolderFormValidation } from '@/validations/storage.validations'
+import { useHome } from '@/composables/useHome'
+import type { UserSelectorOptions } from '@/components/common/UserSelector.vue'
+import { useShareFolderMutation } from '@/services/storage.services'
+import { handleApiError } from '@/helpers/error.helpers'
+import { formatFileSize } from '@/helpers/general.helpers'
+import { useGeneralStore } from '@/stores/general.store'
+import type { SelectOption } from 'naive-ui'
+import { NForm, NSelect } from 'naive-ui'
 
 interface Props {
-  folder?: FolderInterface | null
-  familyMembers?: FamilyMemberInterface[]
-  individualMembers?: FamilyMemberInterface[]
+  folder?: StorageFolderInterface | null
+  // folder?: FolderInterface | StorageFolderInterface | null
   shareableLink?: string
   folderSize?: number // Folder size in bytes
 }
 
 const props = withDefaults(defineProps<Props>(), {
   folder: null,
-  familyMembers: () => [],
-  individualMembers: () => [],
   shareableLink: '',
   folderSize: 0,
 })
 
 const emit = defineEmits<{
-  (e: 'share', members: number[]): void
+  (e: 'share'): void
   (e: 'copy-link'): void
 }>()
 
 const message = useMessage()
-const activeTab = ref<'individual' | 'family'>('individual')
-const searchQuery = ref('')
-const selectedMembers = ref<Set<number>>(new Set())
-const loading = ref(false)
+const generalStore = useGeneralStore()
+const { fetchFamilyMembers } = useHome()
+const { form, rules } = shareFolderFormValidation()
+const shareFolderMutation = useShareFolderMutation()
 
-// Get members based on active tab
-const currentMembers = computed(() => {
-  return activeTab.value === 'family' ? props.familyMembers : props.individualMembers
-})
+const loading = ref<boolean>(false)
+// const activeTab = ref<'individual' | 'family'>('individual')
 
-// Filter members based on search query
-const filteredMembers = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return currentMembers.value
-  }
-
-  const query = searchQuery.value.toLowerCase()
-  return currentMembers.value.filter((member) => {
-    const name = getMemberName(member).toLowerCase()
-    const email = (member.email || '').toLowerCase()
-    return name.includes(query) || email.includes(query)
-  })
-})
-
-// Get member display name
-const getMemberName = (member: FamilyMemberInterface): string => {
-  if (member.name) return member.name
-  if (member.full_name) return member.full_name
-  return `${member.first_name} ${member.family_name}`.trim()
+const formRef = ref<FormInst | null>(null)
+const userSelectorOptions: UserSelectorOptions = {
+  form_user_ids_field: 'family_member_id',
+  search_fields: ['first_name', 'middle_name', 'family_name'],
+  avatar_field: 'profile_picture_url',
+  name_fields: ['first_name', 'middle_name', 'family_name'],
 }
 
-// Get member initials for avatar fallback
-const getMemberInitials = (member: FamilyMemberInterface): string => {
-  const firstName = member.first_name?.[0] || ''
-  const familyName = member.family_name?.[0] || ''
-  return `${firstName}${familyName}`.toUpperCase() || '?'
-}
+const familyMembers = computed<FamilyMemberInterface[]>(() => generalStore.familyMembers)
 
-// Toggle member selection
-const toggleMemberSelection = (memberId: number) => {
-  if (selectedMembers.value.has(memberId)) {
-    selectedMembers.value.delete(memberId)
-  } else {
-    selectedMembers.value.add(memberId)
-  }
-}
+const permissions = ref<SelectOption[]>([
+  {
+    label: 'Can View',
+    value: 'view',
+  },
+  {
+    label: 'Can Edit',
+    value: 'edit',
+  },
+  {
+    label: 'Can Delete',
+    value: 'delete',
+  },
+])
 
-// Handle share action
 const handleShare = async () => {
-  if (selectedMembers.value.size === 0) {
-    message.warning('Please select at least one member to share with')
-    return
-  }
+  formRef.value?.validate(async (errors) => {
+    if (errors) {
+      message.error('Please fill in all required fields.')
+      return
+    }
+    loading.value = true
+    try {
+      const response = await shareFolderMutation.mutateAsync({
+        id: props.folder?.id ?? 0,
+        data: form.value,
+      })
 
-  loading.value = true
-  try {
-    emit('share', Array.from(selectedMembers.value))
-    message.success('Folder shared successfully')
-  } catch {
-    message.error('Failed to share folder')
-  } finally {
-    loading.value = false
-  }
+      message.success(response.message ?? 'Folder shared successfully')
+      emit('share')
+    } catch (error) {
+      handleApiError(error, message)
+    } finally {
+      loading.value = false
+    }
+  })
+}
+
+const updateForm = (value: number[]) => {
+  form.value.family_member_id = value
 }
 
 // Handle copy link action
@@ -262,14 +289,9 @@ const handleCopyLink = async () => {
   }
 }
 
-// Format file size
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
-}
+onMounted(() => {
+  fetchFamilyMembers()
+})
 </script>
 
 <style scoped>

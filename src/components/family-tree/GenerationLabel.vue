@@ -34,7 +34,6 @@ const lineWidthClass = computed(() => {
 })
 </script>
 
-
 <style scoped>
 .generation-label {
   pointer-events: none;

@@ -1,3 +1,4 @@
+import { h, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useVaultStore } from '@/stores/vault.store'
 import {
@@ -5,12 +6,14 @@ import {
   useDeleteFolderMutation,
   useGetVaultFoldersQuery,
   useCreateVaultFolderMutation,
+  useUpdateVaultPinMutation,
+  useGetVaultFolderMutation,
 } from '@/services/vault.services'
-import type { CreateFolderValues } from '@/types/vault.types'
-import { handleApiError } from '@/helpers/error.helpers'
-import { computed } from 'vue'
-import { AlertService } from '@/services/alert.service'
 import type { MaybeRefOrGetter } from 'vue'
+import { AlertService } from '@/services/alert.service'
+import { handleApiError } from '@/helpers/error.helpers'
+import type { CreateFolderValues } from '@/types/vault.types'
+import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 
 export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   const message = useMessage()
@@ -18,24 +21,59 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   const updateFolderMutation = useUpdateFolderMutation()
   const deleteFolderMutation = useDeleteFolderMutation()
   const createFolderMutation = useCreateVaultFolderMutation()
-  const { refetch: refetchVaultFolders } = useGetVaultFoldersQuery(queryEnabled)
+  const getVaultFolderMutation = useGetVaultFolderMutation()
+  const updateVaultPinMutation = useUpdateVaultPinMutation()
+  const getVaultFoldersQuery = useGetVaultFoldersQuery(queryEnabled)
 
   const loading = computed(
-    () => createFolderMutation.isPending.value || updateFolderMutation.isPending.value,
+    () =>
+      createFolderMutation.isPending.value ||
+      updateFolderMutation.isPending.value ||
+      getVaultFolderMutation.isPending.value,
   )
 
   const vaultFolderCreation = async (data: CreateFolderValues) => {
     try {
-      return await createFolderMutation.mutateAsync(data)
+      const response = await createFolderMutation.mutateAsync(data)
+      AlertService.alert({
+        subject: 'Set Vault PIN',
+        closable: true,
+        showIcon: false,
+        closablePosition: 'left',
+        html: h(VaultPinForm, {
+          loading: updateVaultPinMutation.isPending.value,
+          onPinSubmitted: (value: string) =>
+            updateVaultPinMutation.mutateAsync({
+              current_pin: '0000',
+              new_pin: value,
+              id: response.data?.id as number,
+            }),
+        }),
+        showCancelButton: false,
+        showConfirmButton: false,
+      })
+      return response
     } catch (error) {
       handleApiError(error, message)
     }
   }
 
   const fetchVaultFolders = async () => {
+    vaultStore.setStoreProp('foldersLoading', true)
     try {
-      const response = await refetchVaultFolders()
+      const response = await getVaultFoldersQuery.refetch()
       vaultStore.setStoreProp('folders', response.data?.data || [])
+    } catch (error) {
+      handleApiError(error, message)
+    } finally {
+      vaultStore.setStoreProp('foldersLoading', false)
+    }
+  }
+
+  const fetchVaultFolder = async (id: number, pin: string) => {
+    try {
+      const response = await getVaultFolderMutation.mutateAsync({ id, pin })
+      vaultStore.setStoreProp('selectedFolder', response.data || null)
     } catch (error) {
       handleApiError(error, message)
     }
@@ -105,6 +143,7 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   return {
     loading,
     vaultStore,
+    fetchVaultFolder,
     deleteVaultFolder,
     handleCreateFolder,
     fetchVaultFolders,

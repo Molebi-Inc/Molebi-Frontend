@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MlbAlert from '@/components/ui/MlbAlert.vue'
+import MlbPwaNotifications from '@/components/ui/MlbPwaNotifications.vue'
 import { NConfigProvider, NMessageProvider, NNotificationProvider, NDialogProvider } from 'naive-ui'
 
 const themeOverrides = {}
@@ -12,6 +13,7 @@ const themeOverrides = {}
         <NNotificationProvider>
           <RouterView />
           <MlbAlert />
+          <MlbPwaNotifications />
         </NNotificationProvider>
       </NMessageProvider>
     </NDialogProvider>
