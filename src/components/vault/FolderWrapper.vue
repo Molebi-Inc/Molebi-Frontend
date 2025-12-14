@@ -1,13 +1,14 @@
 <template>
   <section>
     <div v-if="foldersLoading">
-      <SkeletalLoader :rows="2" :columns="isLargeScreen ? 5 : 2" :gap="4" height="160px" />
+      <SkeletalLoader :rows="2" :columns="isLargeScreen ? 5 : 1" :gap="4" height="160px" />
     </div>
-    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div v-else class="grid grid-cols-1 md:grid-cols-5 gap-4">
       <FolderCard
         v-for="folder in folders"
         :key="folder.id"
         :folder="folder"
+        :heritageVault="heritageVault"
         @select:option="$emit('select:option', $event)"
         @click:folder="$emit('click:folder', $event)"
       />
@@ -28,6 +29,7 @@ const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 defineProps<{
   folders: FolderInterface[] | StorageFolderInterface[]
+  heritageVault?: boolean
 }>()
 
 const $emit = defineEmits<{
@@ -35,6 +37,6 @@ const $emit = defineEmits<{
     e: 'select:option',
     value: { key: string; folder: FolderInterface | StorageFolderInterface | null },
   ): void
-  (e: 'click:folder', value: { flow: string }): void
+  (e: 'click:folder', value: { flow: string; id?: number }): void
 }>()
 </script>

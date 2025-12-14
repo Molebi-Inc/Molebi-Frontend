@@ -19,6 +19,7 @@ export const familyTreeRoutes = [
             component: () => import('@/views/family-tree/FamilyTree.vue'),
             meta: {
               pageTitle: 'Family Tree',
+              fullScreen: 'web',
             },
           },
           {

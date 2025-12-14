@@ -78,7 +78,6 @@ export const getUserAvatar = (
   return `https://ui-avatars.com/api/?name=${first_name} ${last_name}&background=random`
 }
 
-
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 B'
   const k = 1024

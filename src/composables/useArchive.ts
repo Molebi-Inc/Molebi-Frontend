@@ -1,18 +1,20 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useVault } from '@/composables/useVault'
-import { useStorage } from '@/composables/useStorage'
 import { useVaultStore } from '@/stores/vault.store'
+import { useStorage } from '@/composables/useStorage'
 import { useStorageStore } from '@/stores/storage.store'
-import type { CreateFolderValues, FolderInterface } from '@/types/vault.types'
+import { useGeneralStore } from '@/stores/general.store'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import type { FamilyMediaFormValues } from '@/types/family-tradition.types'
+import type { CreateFolderValues, FolderInterface } from '@/types/vault.types'
 
 export const useArchive = () => {
   const $route = useRoute()
   const vaultStore = useVaultStore()
   const storageStore = useStorageStore()
-  const currentFlow = computed(() => $route.meta.flow as 'vault' | 'storage')
+  const generalStore = useGeneralStore()
+  const currentFlow = computed(() => ($route.meta.flow as 'vault' | 'storage') || generalStore.flow)
 
   // Initialize both composables, but only enable queries for the current flow
   const vault = useVault(computed(() => currentFlow.value === 'vault'))
@@ -35,9 +37,11 @@ export const useArchive = () => {
   )
 
   const setSelectedFolder = (folder: FolderInterface | StorageFolderInterface | null) => {
-    currentFlow.value === 'vault'
-      ? vaultStore.setStoreProp('selectedFolder', folder)
-      : storageStore.setStoreProp('selectedFolder', folder)
+    if (currentFlow.value === 'vault') {
+      vaultStore.setStoreProp('selectedFolder', folder)
+    } else {
+      storageStore.setStoreProp('selectedFolder', folder)
+    }
   }
 
   const handleArchiveMutation = async (data: CreateFolderValues) => {

@@ -4,6 +4,7 @@ import type { GeneralStoreInterface } from '@/types/general.types'
 export const useGeneralStore = defineStore('general', {
   state: (): GeneralStoreInterface => ({
     familyMembers: [],
+    flow: '',
   }),
 
   actions: {

@@ -52,5 +52,3 @@ function onUpdate(value: string | null) {
 </template>
 
 <style scoped></style>
-
-

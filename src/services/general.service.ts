@@ -1,10 +1,10 @@
-import type { ApiResponse, StateInterface } from '@/types/general.types'
 import type { AxiosError } from 'axios'
-import type { ValidationErrorResponse } from '@/types/general.types'
 import { useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/config/axios.config'
-import { useAuthConfig } from '@/config/auth.config'
 import { useMutation } from '@tanstack/vue-query'
+import { useAuthConfig } from '@/config/auth.config'
+import type { ValidationErrorResponse } from '@/types/general.types'
+import type { ApiResponse, StateInterface } from '@/types/general.types'
 
 const authConfig = useAuthConfig()
 

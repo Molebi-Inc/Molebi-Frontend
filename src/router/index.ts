@@ -1,12 +1,13 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { guestRoutes } from './guest'
-import { homeRoutes } from './home.ts'
-import { familyTreeRoutes } from './family-tree'
-import { storageRoutes } from './storage'
 import { vaultRoutes } from './vault'
-import { timeCapsuleRoutes } from './time-capsule'
+import { guestRoutes } from './guest'
+import { homeRoutes } from './home'
+import { storageRoutes } from './storage'
 import { settingsRoutes } from './settings'
 import { heritageRoutes } from './heritage'
+import { familyTreeRoutes } from './family-tree'
+import { timeCapsuleRoutes } from './time-capsule'
+import { heritageVaultRoutes } from './heritage-vault'
+import { createRouter, createWebHistory } from 'vue-router'
 
 const AUTH_TOKEN_KEY = 'token'
 const GUEST_TOKEN_KEY = 'guest_token'
@@ -24,6 +25,7 @@ const router = createRouter({
     ...timeCapsuleRoutes,
     ...settingsRoutes,
     ...heritageRoutes,
+    ...heritageVaultRoutes,
   ],
 })
 

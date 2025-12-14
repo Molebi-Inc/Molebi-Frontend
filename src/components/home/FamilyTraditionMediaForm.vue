@@ -201,5 +201,3 @@ watch(
   font-family: General Sans;
 }
 </style>
-
-

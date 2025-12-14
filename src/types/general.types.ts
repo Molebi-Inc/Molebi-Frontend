@@ -50,6 +50,7 @@ export interface HomeFormConfig {
 
 export interface GeneralStoreInterface {
   familyMembers: FamilyMemberInterface[]
+  flow: string
 }
 
 export interface StateInterface {
@@ -61,4 +62,5 @@ export interface TabInterface {
   name: string
   label: string
   component: Component
+  props?: Record<string, unknown>
 }

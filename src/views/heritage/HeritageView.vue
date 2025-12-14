@@ -6,8 +6,8 @@
           Welcome to the Cultural heritage.
         </h1>
         <p class="text-neutral-600 text-sm md:text-base leading-relaxed">
-          The Cultural heritage helps you learn about your heritage, add new important information about
-          the culture of your hometown and store information for future generations.
+          The Cultural heritage helps you learn about your heritage, add new important information
+          about the culture of your hometown and store information for future generations.
         </p>
       </div>
 
@@ -71,10 +71,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { NCollapse, NCollapseItem } from 'naive-ui'
+import { useGetHeritageQuery } from '@/services/heritage.services'
+
+const heritageQuery = useGetHeritageQuery()
 
 const sections = computed(() => [
   {
@@ -108,6 +111,14 @@ const sections = computed(() => [
       'Commerce, fishing, and tourism anchor the local economy, with cultural heritage sites attracting visitors from within and outside Nigeria.',
   },
 ])
+
+const fetchHeritage = async () => {
+  heritageQuery.refetch()
+}
+
+onMounted(async () => {
+  await fetchHeritage()
+})
 </script>
 
 <style scoped>

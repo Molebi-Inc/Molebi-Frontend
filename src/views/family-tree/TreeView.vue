@@ -1,5 +1,16 @@
 <template>
-  <div ref="outer" class="w-full h-[820px] relative bg-white">
+  <div ref="root" class="w-full h-[820px] relative bg-[#F4CBA9]">
+    <!-- Tooltip (HTML overlay so it does not scale) -->
+    <div
+      v-if="tooltip.visible"
+      :style="tooltipStyle"
+      class="pointer-events-none z-50 bg-[#F4CBA9] border rounded shadow px-3 py-2 text-sm text-gray-700"
+    >
+      <div class="font-semibold">{{ tooltip.name }}</div>
+      <div class="text-xs text-gray-500 mt-0.5">{{ tooltip.rel }}</div>
+    </div>
+
+    <!-- Scroll container -->
     <div ref="scrollWrap" class="w-full h-full overflow-auto">
       <svg
         ref="svg"
@@ -7,27 +18,27 @@
         :height="svgHeight"
         :style="{ minWidth: svgWidth + 'px', minHeight: svgHeight + 'px', display: 'block' }"
       >
-        <!-- single zoomable layer containing everything so transforms stay in sync -->
+        <!-- single zoomable layer -->
         <g ref="zoomLayer">
-          <!-- generation lines -->
+          <!-- generation labels/lines -->
           <g class="generation-lines">
-            <g v-for="(g, i) in generationLines" :key="'gline-' + i">
+            <g v-for="(g, i) in generationRows" :key="'gen-' + i">
               <line
                 :x1="0"
                 :y1="g.y"
                 :x2="svgWidth"
                 :y2="g.y"
-                stroke="#E6E6E6"
+                stroke="#DB6F2363"
                 stroke-dasharray="6 6"
                 stroke-width="1"
               />
-              <rect :x="8" :y="g.y - 14" width="220" height="20" rx="6" fill="white" />
+              <rect :x="8" :y="g.y - 14" width="140" height="20" rx="6" fill="white" />
               <text :x="14" :y="g.y - 0" font-size="12" fill="#6b7280">{{ g.label }}</text>
             </g>
           </g>
 
-          <!-- parent connectors (straight short line between first two parents - P2) -->
-          <g class="parent-connectors">
+          <!-- parent connectors (straight line between the two parents if present) -->
+          <g>
             <path
               v-for="pc in parentConnectors"
               :key="pc.id"
@@ -39,14 +50,14 @@
             />
           </g>
 
-          <!-- all links -->
-          <g class="links-layer">
+          <!-- links -->
+          <g>
             <path
-              v-for="link in displayedLinks"
+              v-for="link in links"
               :key="link.id"
               :d="link.path"
               :stroke="link.stroke"
-              :stroke-width="link.strokeWidth"
+              :stroke-width="link.width"
               :opacity="link.opacity"
               fill="none"
               stroke-linecap="round"
@@ -55,11 +66,37 @@
             />
           </g>
 
-          <!-- nodes layer - foreignObject so you can use Tailwind/HTML for avatars -->
-          <g class="nodes-layer">
-            <g v-for="node in displayedNodes" :key="node.id">
-              <!-- node rendering -->
+          <!-- nodes -->
+          <g>
+            <g v-for="node in nodes" :key="node.id">
+              <!-- @mouseenter="showTooltip(node, $event)"
+              @mouseleave="hideTooltip" -->
+
+              <!-- HEART NODE -->
               <foreignObject
+                v-if="node.type === 'heart'"
+                :x="node.x - 20"
+                :y="node.y - 20"
+                width="40"
+                height="40"
+              >
+                <div class="w-full h-full flex items-center justify-center">
+                  <div
+                    class="bg-white rounded-full p-1.5 shadow-md flex items-center justify-center"
+                  >
+                    <!-- Simple Heart Icon (SVG) -->
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#0B5132" stroke="none">
+                      <path
+                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </foreignObject>
+
+              <!-- PERSON NODE -->
+              <foreignObject
+                v-else
                 :x="node.x - nodeSize / 2"
                 :y="node.y - nodeSize / 2"
                 :width="nodeSize"
@@ -71,52 +108,56 @@
                   class="relative"
                   :style="{ width: nodeSize + 'px', height: nodeSize + 'px' }"
                 >
-                  <!-- main person circle -->
+                  <!-- MAIN AVATAR -->
                   <div
-                    v-if="node.type === 'person'"
                     :class="[
                       'w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg flex items-center justify-center',
-                      node.isSelf ? 'ring-4 ring-amber-300' : '',
+                      node.isSelf ? 'ring-4 ring-green-300' : '',
                     ]"
                     style="background: white"
                   >
                     <img
-                      :src="node.data.profile_picture_url || defaultAvatar"
+                      :src="
+                        node.data.profile_picture_url ||
+                        getUserAvatar(
+                          node.data.first_name,
+                          node.data.last_name,
+                          node.data.profile_picture_url,
+                        )
+                      "
+                      :title="`${node.data.full_name} - ${relationText(node)}`"
                       class="object-cover w-full h-full"
                     />
                   </div>
 
-                  <!-- marriage node (small circle) - used only when we explicitly created a marriage mini-node (we seldom do in this variant) -->
+                  <!-- SUB-NODE (ANCESTOR BADGE) -->
                   <div
-                    v-else-if="node.type === 'marriage'"
-                    class="w-full h-full flex items-center justify-center pointer-events-none"
-                  >
-                    <svg :width="nodeSize" :height="nodeSize" viewBox="0 0 24 24" fill="none"
-                      ><circle cx="12" cy="12" r="7" :fill="COLOR.marriage"></circle
-                    ></svg>
-                  </div>
-
-                  <!-- spouse mini-badge: rendered when node.hasSpouse === true -->
-                  <div
-                    v-if="node.type === 'person' && node.hasSpouse"
-                    class="absolute"
-                    :style="spouseBadgeStyle(node)"
+                    v-if="node.subNode"
+                    class="absolute -bottom-2 -right-4 w-[40px] h-[40px] z-10"
                   >
                     <div
-                      class="w-[42px] h-[42px] rounded-full overflow-hidden border-2 border-white shadow"
-                      style="transform: translate(6px, 6px); background: white"
+                      class="w-full h-full rounded-full overflow-hidden border-2 border-white shadow-md bg-white"
                     >
                       <img
-                        :src="node.spouse.profile_picture_url || defaultAvatar"
-                        class="w-full h-full object-cover"
+                        :src="
+                          node.subNode.profile_picture_url ||
+                          getUserAvatar(
+                            node.subNode.first_name,
+                            node.subNode.last_name,
+                            node.subNode.profile_picture_url,
+                          )
+                        "
+                        :title="`${node.subNode.full_name} - Subnode`"
+                        class="object-cover w-full h-full"
                       />
                     </div>
                   </div>
                 </div>
               </foreignObject>
 
-              <!-- label under node -->
+              <!-- label -->
               <text
+                v-if="node.label"
                 :x="node.x"
                 :y="node.y + nodeSize / 2 + 14"
                 text-anchor="middle"
@@ -130,67 +171,45 @@
         </g>
       </svg>
     </div>
-
-    <!-- floating add button -->
-    <button
-      class="fixed right-8 bottom-8 w-14 h-14 rounded-full bg-green-700 text-white shadow-2xl flex items-center justify-center text-2xl"
-      @click="$emit('add-node')"
-      title="Add person"
-    >
-      +
-    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-/*
-    FamilyTreeEngine.vue - Layout A + spouse mini-badge + parent_id connections + faded non-direct edges
-    - Everything inside single zoomLayer group for consistent pan/zoom
-    - foreignObject nodes so Tailwind/HTML works for avatars
-    - Test payload contains parent_id for cousins / nieces / nephews
-  */
-
-import { ref, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
+import { ref, reactive, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
 import * as d3 from 'd3'
+import { getUserAvatar } from '@/helpers/general.helpers'
 
-// ---------- Types ----------
+/* ---------- Types ---------- */
 type Person = {
   id: string
   first_name?: string
-  middle_name?: string | null
-  family_name?: string
   full_name?: string
   profile_picture_url?: string | null
-  parent_id?: string | null // optional parent reference for cousins, nieces/nephews, grandchildren
+  parent_id?: string | number | null
 }
 
-type FamilyPayload = {
+export type Payload = {
   self: Person & { spouse?: Person | null }
-  parents?: Person[] // expect up to 2
-  spouse?: Person[] // legacy; will be pulled into self.spouse
-  siblings?: Person[]
-  children?: Person[]
-  grandparents?: Person[]
-  cousins?: Person[] // must include parent_id linking them to one of aunts/uncles
-  aunts_uncles?: Person[] // should include parent_id linking them to grandparents (optional)
-  nieces_nephews?: Person[] // must include parent_id linking them to a sibling
-  grandchildren?: Person[] // must include parent_id linking them to a child
+  parents?: Person[] // Gen 2 (if present)
+  siblings?: Person[] // Gen 3
+  children?: Person[] // Gen 4
+  grandparents?: Person[] // Gen 1
+  grandchildren?: Person[] // Gen 5
+  aunts_uncles?: Person[] // Gen 2
+  cousins?: Person[] // Gen 3
+  nieces_nephews?: Person[] // Gen 4
+  spouse?: Person[] // Attached to self in Gen 3
 }
 
-// ---------- Props & default test payload ----------
-const props = defineProps<{ payload?: FamilyPayload }>()
+/* ---------- Props & sample data ---------- */
+const props = defineProps<{ payload?: Payload }>()
 
-// Default test dataset with parent_id fields (demonstrates non-direct attachments)
-// - cousins have parent_id pointing to an aunt/uncle id
-// - nieces_nephews parent_id points to sibling id
-// - grandchildren parent_id points to a child id
-const defaultPayload: FamilyPayload = {
+const defaultPayload: Payload = {
   self: {
     id: '100',
     first_name: 'Azeem',
     full_name: 'Azeem Adenuga',
     profile_picture_url: null,
-    // we prefer self.spouse to represent the attached spouse
     spouse: {
       id: '400',
       first_name: 'Khadijah',
@@ -199,107 +218,69 @@ const defaultPayload: FamilyPayload = {
     },
   },
   parents: [
-    { id: '200', first_name: 'Kashoggi', full_name: 'Kashoggi Adenuga', profile_picture_url: null },
-    { id: '201', first_name: 'Shade', full_name: 'Shade Adenuga', profile_picture_url: null },
+    { id: '200', first_name: 'Kashoggi', full_name: 'Kashoggi Adenuga' },
+    { id: '201', first_name: 'Shade', full_name: 'Shade Adenuga' },
   ],
   siblings: [
-    { id: '300', first_name: 'Brahime', full_name: 'Brahime Adenuga', profile_picture_url: null },
-    { id: '301', first_name: 'Maryam', full_name: 'Maryam Adenuga', profile_picture_url: null },
+    { id: '300', first_name: 'Brahime', full_name: 'Brahime Adenuga' },
+    { id: '301', first_name: 'Maryam', full_name: 'Maryam Adenuga' },
   ],
   children: [
-    { id: '500', first_name: 'Imran', full_name: 'Imran Adenuga', profile_picture_url: null },
-    { id: '501', first_name: 'Aisha', full_name: 'Aisha Adenuga', profile_picture_url: null },
-    { id: '502', first_name: 'Suleiman', full_name: 'Suleiman Adenuga', profile_picture_url: null },
+    { id: '500', first_name: 'Imran', full_name: 'Imran Adenuga' },
+    { id: '501', first_name: 'Aisha', full_name: 'Aisha Adenuga' },
   ],
   grandparents: [
-    {
-      id: '600',
-      first_name: 'Abdulraheem',
-      full_name: 'Abdulraheem Adenuga',
-      profile_picture_url: null,
-    },
-    { id: '601', first_name: 'Kafilat', full_name: 'Kafilat Adenuga', profile_picture_url: null },
+    { id: '600', first_name: 'Grandpa', full_name: 'Grandpa Adenuga' },
+    { id: '601', first_name: 'Grandma', full_name: 'Grandma Adenuga' },
   ],
-  // one aunt/uncle who will be the parent of some cousins
-  aunts_uncles: [
-    { id: '800', first_name: 'Ridwan', full_name: 'Ridwan Adenuga', profile_picture_url: null },
-  ],
-  // cousins must include parent_id referencing an aunt/uncle
-  cousins: [
-    {
-      id: '1000',
-      first_name: 'Sability',
-      full_name: 'Sability Adenuga',
-      profile_picture_url: null,
-      parent_id: '800',
-    },
-    {
-      id: '1001',
-      first_name: 'Rahmah',
-      full_name: 'Rahmah Adenuga',
-      profile_picture_url: null,
-      parent_id: '800',
-    },
-  ],
-  // nieces/nephews reference the sibling that is their parent
-  nieces_nephews: [
-    {
-      id: '900',
-      first_name: 'Idris',
-      full_name: 'Idris Adenuga',
-      profile_picture_url: null,
-      parent_id: '300',
-    },
-    {
-      id: '901',
-      first_name: 'Farida',
-      full_name: 'Farida Adenuga',
-      profile_picture_url: null,
-      parent_id: '301',
-    },
-  ],
-  grandchildren: [
-    {
-      id: '700',
-      first_name: 'Sana',
-      full_name: 'Sana Adenuga',
-      profile_picture_url: null,
-      parent_id: '500',
-    },
-  ],
+  grandchildren: [],
+  aunts_uncles: [{ id: '800', first_name: 'Uncle', full_name: 'Uncle Adenuga' }],
+  cousins: [{ id: '900', first_name: 'Cousin', full_name: 'Cousin Adenuga' }],
+  spouse: [{ id: '400', first_name: 'Khadijah', full_name: 'Khadijah Olawale' }],
 }
 
-const payload = ref<FamilyPayload>(props.payload ?? defaultPayload)
+const payload = ref<Payload>(props.payload ?? defaultPayload)
 
-// ---------- DOM refs & visual constants ----------
-const outer = ref<HTMLElement | null>(null)
+/* ---------- Visual constants & state ---------- */
+const nodeSize = 72
+
+const svgWidth = ref(1400)
+const svgHeight = ref(1200)
+
+const root = ref<HTMLElement | null>(null)
 const scrollWrap = ref<HTMLDivElement | null>(null)
 const svg = ref<SVGSVGElement | null>(null)
 const zoomLayer = ref<SVGGElement | null>(null)
 
-const nodeSize = 72
-const defaultAvatar = '/mnt/data/d6974302-5ca3-4750-8641-8faa96e7ca42.png'
+const nodes = ref<any[]>([])
+const links = ref<any[]>([])
+const parentConnectors = ref<any[]>([])
+const generationRows = ref<any[]>([])
 
-const COLOR = {
-  grandparents: '#CBB89F',
-  parents: '#F3B27A',
-  marriage: '#F59E0B',
-  children: '#0B5132',
-  faint: '#D9BFA6', // baseline faint color (used with opacity)
-}
+/* ---------- Tooltips (HTML overlay, follow pan/zoom but not scale) ---------- */
+const tooltip = reactive({
+  visible: false,
+  name: '',
+  rel: '',
+  x: 0,
+  y: 0,
+})
 
-const svgWidth = ref<number>(1400)
-const svgHeight = ref<number>(820)
+const tooltipStyle = computed(() => {
+  return {
+    position: 'absolute' as const,
+    left: `${tooltip.x}px`,
+    top: `${tooltip.y}px`,
+    transform: 'translate(-50%, -100%)',
+    pointerEvents: 'none' as const,
+    whiteSpace: 'nowrap' as const,
+  }
+})
 
-// state to render
-const displayedNodes = ref<any[]>([])
-const displayedLinks = ref<
-  Array<{ id: string; path: string; stroke: string; strokeWidth: number; opacity: number }>
->([])
-const generationLines = ref<Array<{ label: string; y: number }>>([])
-const parentConnectors = ref<Array<{ id: string; path: string }>>([])
+/* ---------- d3 zoom transform tracking ---------- */
+let currentTransform = d3.zoomIdentity
 
-// ---------- RNG + wobbly path ----------
+/* ---------- RNG + wobbly path generator ---------- */
 function mulberry32(seed: number) {
   return function () {
     let t = (seed += 0x6d2b79f5)
@@ -339,456 +320,543 @@ function wobblyPath(sx: number, sy: number, tx: number, ty: number, seed = 1) {
   return `M ${sx} ${sy} C ${bump(c1xJ)} ${bump(c1yJ)}, ${bump(c2xJ)} ${bump(c2yJ)}, ${tx} ${ty}`
 }
 
-// ---------- Build generation rows (Layout A) ----------
-/*
-  Generation rows:
-  0: Grandparents
-  1: Parents / Aunts & Uncles
-  2: Self / Siblings / Cousins
-  3: Children / Nieces & Nephews  (N1)
-  4: Grandchildren
-  */
-function buildGenerationsAndPositions() {
-  // map generations
-  const gens: Record<number, any[]> = { 0: [], 1: [], 2: [], 3: [], 4: [] }
-
-  // helper pushUnique
-  const pushUnique = (arr: any[], item: any) => {
-    if (!arr.find((x) => String(x.id) === String(item.id))) arr.push(item)
-  }
+/* ---------- Layout algorithm (Crossed Helix: 5 gens) ---------- */
+function buildLayout() {
+  // Clear arrays
+  nodes.value = []
+  links.value = []
+  parentConnectors.value = []
+  generationRows.value = []
 
   const p = payload.value
 
-  // gp
-  ;(p.grandparents || []).forEach((gp) =>
-    pushUnique(gens[0] ?? [], {
-      ...gp,
-      generation: 0,
+  // Map data
+  // CROSS LOGIC:
+  // Self's Family -> LEFT side.
+  // Self -> RIGHT side.
+  // Spouse -> LEFT side.
+  // Spouse's Family -> RIGHT side.
+
+  // --- GEN 1: Grandparents ---
+  // Self's Grandparents (Left)
+  const selfGrandparents = (p.grandparents || []).map((d) => ({
+    ...d,
+    role: 'grandparent',
+    side: 'self_family_left',
+    type: 'person',
+  }))
+
+  // --- GEN 2: Parents ---
+  // Self's Parents (Left)
+  const selfParents = (p.parents || []).map((d) => ({
+    ...d,
+    role: 'parent',
+    side: 'self_family_left',
+    type: 'person',
+  }))
+  const selfAuntsUncles = (p.aunts_uncles || []).map((d) => ({
+    ...d,
+    role: 'aunt_uncle',
+    side: 'self_family_left',
+    type: 'person',
+  }))
+
+  // --- GEN 3: Self + Spouse + Siblings ---
+  // Self (Right)
+  const selfNode = p.self ? { ...p.self, role: 'self', side: 'self_right', type: 'person' } : null
+  // Spouse (Left)
+  const spouseNode =
+    p.self && p.self.spouse
+      ? { ...p.self.spouse, role: 'spouse', side: 'spouse_left', type: 'person' }
+      : null
+
+  // Siblings (Self's side -> usually grouped with Self. If Self is Right, Siblings Right)
+  const selfSiblings = (p.siblings || []).map((d) => ({
+    ...d,
+    role: 'sibling',
+    side: 'self_right',
+    type: 'person',
+  }))
+  const selfCousins = (p.cousins || []).map((d) => ({
+    ...d,
+    role: 'cousin',
+    side: 'self_right',
+    type: 'person',
+  }))
+
+  // --- GEN 4: Children ---
+  const children = (p.children || []).map((d) => ({
+    ...d,
+    role: 'child',
+    side: 'shared',
+    type: 'person',
+  }))
+  const niecesNephews = (p.nieces_nephews || []).map((d) => ({
+    ...d,
+    role: 'niece_nephew',
+    side: 'self_right',
+    type: 'person',
+  }))
+
+  // --- GEN 5: Grandchildren ---
+  const grandchildren = (p.grandchildren || []).map((d) => ({
+    ...d,
+    role: 'grandchild',
+    side: 'shared',
+    type: 'person',
+  }))
+
+  const rowHeight = 220
+  const startY = 100
+  const centerX = Math.max(900, svgWidth.value / 2)
+  const colSpacing = 220
+
+  // Offsets
+  const leftSideX = centerX - colSpacing * 0.8
+  const rightSideX = centerX + colSpacing * 0.8
+
+  // --- GEN 1 (Grandparents) ---
+  const y1 = startY + 0
+  // Self's Family -> LEFT
+  if (selfGrandparents.length > 0) {
+    const main = selfGrandparents[0]
+    const sub = selfGrandparents.length > 1 ? selfGrandparents[1] : null
+
+    nodes.value.push({
+      id: main!.id,
+      x: leftSideX,
+      y: y1,
+      label: main!.full_name,
+      data: main,
       type: 'person',
       role: 'grandparent',
-      label: gp.first_name || gp.full_name,
-    }),
-  )
+      side: 'self_family',
+      subNode: sub,
+    })
+  }
 
-  // parents and aunts/uncles in gen1
-  ;(p.parents || []).forEach((par) =>
-    pushUnique(gens[1] ?? [], {
-      ...par,
-      generation: 1,
+  // --- GEN 2 (Parents) ---
+  const y2 = startY + rowHeight
+  // Self's Family -> LEFT
+  if (selfParents.length > 0) {
+    const main = selfParents[0]
+    const sub = selfParents.length > 1 ? selfParents[1] : null
+
+    nodes.value.push({
+      id: main!.id,
+      x: leftSideX,
+      y: y2,
+      label: main!.full_name,
+      data: main,
       type: 'person',
       role: 'parent',
-      label: par.first_name || par.full_name,
-    }),
-  )
-  ;(p.aunts_uncles || []).forEach((au) =>
-    pushUnique(gens[1] ?? [], {
-      ...au,
-      generation: 1,
-      type: 'person',
-      role: 'aunt_uncle',
-      label: au.first_name || au.full_name,
-    }),
-  )
-
-  // gen2: self, siblings, cousins
-  if (p.self)
-    pushUnique(gens[2] ?? [], {
-      ...p.self,
-      generation: 2,
-      type: 'person',
-      role: 'self',
-      label: p.self.first_name || p.self.full_name,
+      side: 'self_family',
+      subNode: sub,
     })
-  ;(p.spouse || []).forEach((sp) =>
-    pushUnique(gens[2] ?? [], {
-      ...sp,
-      generation: 2,
+  }
+
+  // Aunts/Uncles (Left, further out)
+  if (selfAuntsUncles.length > 0) {
+    selfAuntsUncles.forEach((au, i) => {
+      nodes.value.push({
+        id: au.id,
+        x: leftSideX - colSpacing - i * 160,
+        y: y2,
+        label: au.full_name,
+        data: au,
+        type: 'person',
+        role: 'aunt_uncle',
+        opacity: 0.7,
+      })
+    })
+  }
+
+  // --- GEN 3 (Self & Spouse) ---
+  const y3 = startY + 2 * rowHeight
+  // Spouse (LEFT) -- Heart -- Self (RIGHT)
+
+  const spouseX = centerX - 100
+  const selfX = centerX + 100
+
+  if (spouseNode) {
+    nodes.value.push({
+      id: spouseNode.id,
+      x: spouseX,
+      y: y3,
+      label: spouseNode.full_name,
+      data: spouseNode,
       type: 'person',
       role: 'spouse',
-      label: sp.first_name || sp.full_name,
-    }),
-  )
-  ;(p.siblings || []).forEach((sb) =>
-    pushUnique(gens[2] ?? [], {
-      ...sb,
-      generation: 2,
+      side: 'spouse',
+    })
+
+    // Heart Icon Node
+    nodes.value.push({
+      id: 'heart-union',
+      x: centerX,
+      y: y3,
+      type: 'heart',
+      label: '',
+    })
+  }
+
+  if (selfNode) {
+    nodes.value.push({
+      id: selfNode.id,
+      x: selfX,
+      y: y3,
+      label: 'You',
+      data: selfNode,
+      type: 'person',
+      role: 'self',
+      side: 'self',
+      isSelf: true,
+    })
+  } else if (!spouseNode) {
+    // Fallback
+  }
+
+  // Siblings (Self's side -> RIGHT of Self)
+  selfSiblings.forEach((sb, i) => {
+    nodes.value.push({
+      id: sb.id,
+      x: selfX + colSpacing + i * 160,
+      y: y3,
+      label: sb.full_name,
+      data: sb,
       type: 'person',
       role: 'sibling',
-      label: sb.first_name || sb.full_name,
-    }),
-  )
-  ;(p.cousins || []).forEach((cs) =>
-    pushUnique(gens[2] ?? [], {
-      ...cs,
-      generation: 2,
+    })
+  })
+
+  // Cousins
+  selfCousins.forEach((co, i) => {
+    nodes.value.push({
+      id: co.id,
+      x: selfX + colSpacing + selfSiblings.length * 160 + colSpacing + i * 160,
+      y: y3,
+      label: co.full_name,
+      data: co,
       type: 'person',
       role: 'cousin',
-      parent_id: cs.parent_id,
-      label: cs.first_name || cs.full_name,
-    }),
-  )
+      opacity: 0.6,
+    })
+  })
 
-  // gen3: children + nieces/nephews (N1)
-  ;(p.children || []).forEach((ch) =>
-    pushUnique(gens[3] ?? [], {
-      ...ch,
-      generation: 3,
+  // --- GEN 4 (Children) ---
+  const y4 = startY + 3 * rowHeight
+  const childSpacing = 160
+  const childWidth = (children.length - 1) * childSpacing
+  const childStartX = centerX - childWidth / 2
+
+  children.forEach((ch, i) => {
+    nodes.value.push({
+      id: ch.id,
+      x: childStartX + i * childSpacing,
+      y: y4,
+      label: ch.full_name,
+      data: ch,
       type: 'person',
       role: 'child',
-      parent_id: ch.parent_id,
-      label: ch.first_name || ch.full_name,
-    }),
-  )
-  ;(p.nieces_nephews || []).forEach((nn) =>
-    pushUnique(gens[3] ?? [], {
-      ...nn,
-      generation: 3,
+      side: 'shared',
+    })
+  })
+
+  // Nieces/Nephews (Right side, under siblings)
+  niecesNephews.forEach((nn, i) => {
+    nodes.value.push({
+      id: nn.id,
+      x: selfX + colSpacing + i * 160,
+      y: y4,
+      label: nn.full_name,
+      data: nn,
       type: 'person',
       role: 'niece_nephew',
-      parent_id: nn.parent_id,
-      label: nn.first_name || nn.full_name,
-    }),
-  )
+      opacity: 0.6,
+    })
+  })
 
-  // gen4: grandchildren
-  ;(p.grandchildren || []).forEach((gc) =>
-    pushUnique(gens[4] ?? [], {
-      ...gc,
-      generation: 4,
+  // --- GEN 5 (Grandchildren) ---
+  const y5 = startY + 4 * rowHeight
+  const gcWidth = (grandchildren.length - 1) * childSpacing
+  const gcStartX = centerX - gcWidth / 2
+
+  grandchildren.forEach((gc, i) => {
+    nodes.value.push({
+      id: gc.id,
+      x: gcStartX + i * childSpacing,
+      y: y5,
+      label: gc.full_name,
+      data: gc,
       type: 'person',
       role: 'grandchild',
-      parent_id: gc.parent_id,
-      label: gc.first_name || gc.full_name,
-    }),
-  )
-
-  // compute positions: center gen2 (self row) horizontally, others centered around that
-  const rowHeight = 160
-  const centerX = Math.max(900, svgWidth.value / 2)
-  const horizontalSpacing = 200
-
-  const positions: Record<string, { x: number; y: number; node: any }> = {}
-
-  // ensure self is placed near center of gen2
-  // order gen2 so self is centered among gen2 nodes
-  const gen2 = [...(gens[2] ?? [])]
-  const selfNode = gen2.find(
-    (n) =>
-      n.role === 'self' || (payload.value.self && String(n.id) === String(payload.value.self.id)),
-  )
-  if (selfNode) {
-    // move self to middle
-    const others = gen2.filter((n) => String(n.id) !== String(selfNode.id))
-    const mid = Math.floor(others.length / 2)
-    gen2.length = 0
-    gen2.push(...others.slice(0, mid), selfNode, ...others.slice(mid))
-  }
-
-  // iterate gens 0..4 in order
-  for (let genIdx = 0; genIdx <= 4; genIdx++) {
-    const row = genIdx === 2 ? gen2 : (gens[genIdx] ?? [])
-    const y = 80 + genIdx * rowHeight
-    const count = Math.max(1, row.length)
-    const widthNeeded = (count - 1) * horizontalSpacing
-    const startX = centerX - widthNeeded / 2
-    row.forEach((node: any, i: number) => {
-      const x = startX + i * horizontalSpacing
-      positions[String(node.id)] = { x, y, node }
+      side: 'shared',
     })
-  }
+  })
 
-  // now add the self.spouse as mini-badge to the self node (not a separate node in displayedNodes)
-  // We'll still create a marriage connector position (for children linking) between self and spouse
-  // compute displayedNodes from positions
-  const nodesOut: any[] = []
-  for (const key of Object.keys(positions)) {
-    const pinfo = positions[key] ?? { x: 0, y: 0, node: null }
-    const node = pinfo.node
-    nodesOut.push({
-      id: node.id,
-      x: pinfo.x,
-      y: pinfo.y,
-      data: node,
-      label: node.label || '',
-      type: node.type || 'person',
-      role: node.role || null,
-      isSelf: node.role === 'self',
-      hasSpouse: false,
-      spouse: null,
+  // GENERATION LABELS
+  const genLabels = ['1st', '2nd', '3rd', '4th', '5th']
+  const genYs = [y1, y2, y3, y4, y5]
+  genYs.forEach((gy, i) => {
+    generationRows.value.push({
+      label: `${genLabels[i]} Generation`,
+      y: gy,
     })
-  }
+  })
 
-  // attach spouse info into the self node entry (mini-badge):
-  if (payload.value.self && payload.value.self.spouse) {
-    const selfId = payload.value.self.id
-    const selfEntry = nodesOut.find((n) => String(n.id) === String(selfId))
-    if (selfEntry) {
-      selfEntry.hasSpouse = true
-      selfEntry.spouse = payload.value.self.spouse
-      // ensure the spouse's image doesn't also produce a separate node in gen2 (remove if it exists)
-      const spId = payload.value.self.spouse.id
-      const spIndex = nodesOut.findIndex((n) => String(n.id) === String(spId))
-      if (spIndex !== -1) nodesOut.splice(spIndex, 1)
-    } else {
-      // if self not in nodesOut (edge-case), push a merged self+spouse node near center
-      const fallbackX = centerX
-      const fallbackY = 80 + 2 * rowHeight
-      nodesOut.push({
-        id: payload.value.self.id,
-        x: fallbackX,
-        y: fallbackY,
-        data: payload.value.self,
-        label: payload.value.self.first_name || payload.value.self.full_name,
-        type: 'person',
-        role: 'self',
-        isSelf: true,
-        hasSpouse: true,
-        spouse: payload.value.self.spouse,
+  // --- LINKS ---
+
+  const posOf = (id: string) => nodes.value.find((n) => String(n.id) === String(id))
+
+  // 1. GRANDPARENT -> PARENT/AUNTS/UNCLES (Curved Triangle Pattern)
+  // GP connects to Parent (green) and to outermost Aunt/Uncle (beige)
+  // Parent and siblings (aunts/uncles) are interconnected with beige
+
+  if (selfGrandparents.length > 0 && selfParents.length > 0) {
+    const gp = selfGrandparents[0] ? posOf(selfGrandparents[0].id) : null
+    const par = selfParents[0] ? posOf(selfParents[0].id) : null
+
+    if (gp && par) {
+      // GP -> Parent (Green - direct lineage)
+      links.value.push({
+        id: `gp-p-self`,
+        path: wobblyPath(gp!.x, gp!.y, par!.x, par!.y, 101),
+        stroke: '#0B5132',
+        width: 3,
+        opacity: 1,
       })
+
+      // If there are aunts/uncles, connect GP to the outermost one and interconnect them
+      if (selfAuntsUncles.length > 0) {
+        // Find outermost aunt/uncle (furthest from center)
+        const allGen2 = [
+          par,
+          ...selfAuntsUncles.map((au) => posOf(au.id)).filter((n) => n),
+        ] as any[]
+        allGen2.sort((a, b) => a.x - b.x) // Sort by X position
+
+        const outermost = allGen2[allGen2.length - 1] // Rightmost (furthest from GP on left)
+
+        // GP -> Outermost Aunt/Uncle (Beige)
+        if (outermost && outermost.id !== par!.id) {
+          links.value.push({
+            id: `gp-au-outer`,
+            path: wobblyPath(gp!.x, gp!.y, outermost.x, outermost.y, 102),
+            stroke: '#E7C19E',
+            width: 3,
+            opacity: 1,
+          })
+        }
+
+        // Interconnect Parent and Aunts/Uncles with beige lines
+        for (let k = 0; k < allGen2.length - 1; k++) {
+          links.value.push({
+            id: `gen2-link-${allGen2[k].id}-${allGen2[k + 1].id}`,
+            path: wobblyPath(
+              allGen2[k].x,
+              allGen2[k].y,
+              allGen2[k + 1].x,
+              allGen2[k + 1].y,
+              103 + k,
+            ),
+            stroke: '#E7C19E',
+            width: 3,
+            opacity: 1,
+          })
+        }
+      }
     }
   }
 
-  // assign displayedNodes
-  displayedNodes.value = nodesOut
-
-  // Build links
-  const links: Array<{
-    id: string
-    path: string
-    stroke: string
-    strokeWidth: number
-    opacity: number
-  }> = []
-
-  // helper to get pos by id
-  const posOf = (id: string) => {
-    const n = displayedNodes.value.find((x) => String(x.id) === String(id))
-    return n ? { x: n.x, y: n.y, node: n } : null
-  }
-
-  // 1) grandparents -> parents (index mapping)
-  const gpArr = gens[0] ?? []
-  const parArr = gens[1] ?? []
-  for (let i = 0; i < Math.min(gpArr.length, parArr.length); i++) {
-    const gp = gpArr[i],
-      par = parArr[i]
-    const from = posOf(gp.id)
-    const to = posOf(par.id)
-    if (from && to) {
-      const seed = hashString(`${gp.id}-${par.id}`)
-      const path = wobblyPath(from.x, from.y, to.x, to.y, seed)
-      links.push({
-        id: `gp-${gp.id}-p-${par.id}`,
-        path,
-        stroke: COLOR.grandparents,
-        strokeWidth: 4,
+  // Parent (Left) -> Self (Right)
+  if (selfParents.length > 0 && selfNode) {
+    const par = selfParents[0] ? posOf(selfParents[0].id) : null
+    const slf = posOf(selfNode.id)
+    if (par && slf) {
+      links.value.push({
+        id: `p-self`,
+        path: wobblyPath(par!.x, par!.y, slf!.x, slf!.y, 202), // Long cross
+        stroke: '#0B5132',
+        width: 3,
         opacity: 1,
       })
     }
   }
 
-  // 2) parents -> generation2 (self + siblings + cousins)
-  // direct edges (parents feed into gen2) are considered direct (strong)
-  for (const par of parArr) {
-    const ppos = posOf(par.id)
-    if (!ppos) continue
-    for (const g2node of Object.values(positions)
-      .map((v) => v.node)
-      .filter((n) => n.generation === 2)) {
-      // the displayed node might not have same id (cousins may exist), so check posOf
-      const childPos = posOf(g2node.id)
-      if (!childPos) continue
-      const seed = hashString(`${par.id}-${g2node.id}`)
-      const path = wobblyPath(ppos.x, ppos.y, childPos.x, childPos.y, seed)
-      links.push({
-        id: `p-${par.id}-g2-${g2node.id}`,
-        path,
-        stroke: COLOR.parents,
-        strokeWidth: 4,
-        opacity: 1,
-      })
-    }
-  }
-
-  // 3) parent connectors (P2) - straight line between first two parents if present
-  parentConnectors.value = []
-  if (parArr.length >= 2) {
-    const p1 = posOf(parArr[0].id)
-    const p2 = posOf(parArr[1].id)
-    if (p1 && p2)
-      parentConnectors.value.push({
-        id: `pc-${parArr[0].id}-${parArr[1].id}`,
-        path: `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`,
-      })
-  }
-
-  // 4) marriage connector (self & spouse) -> children
-  // We'll create a marriage point between self & spouse (midpoint) and link self->marriage & spouse->marriage (spouse is mini, so we create visual connector)
-  if (payload.value.self) {
-    const selfId = payload.value.self.id
-    const selfPos = posOf(selfId)
-    if (selfPos) {
-      const spouse = payload.value.self.spouse
-      const marriageX = spouse
-        ? (selfPos.x + (displayedNodes.value.find((n) => n.id === spouse.id)?.x ?? selfPos.x)) / 2
-        : selfPos.x
-      const marriageY = selfPos.y + 50 // slight below self row
-      const marriageId = `marriage-self-${selfId}`
-      // marriage node is ephemeral — used only to compute link start for children
-      // link self -> marriage (direct, strong)
-      const seedS = hashString(`${selfId}-${marriageId}`)
-      links.push({
-        id: `self-m-${marriageId}`,
-        path: wobblyPath(selfPos.x, selfPos.y, marriageX, marriageY, seedS),
-        stroke: COLOR.marriage,
-        strokeWidth: 6,
-        opacity: 1,
-      })
-      // if spouse exists, draw a short faint connector from the (visual) spouse badge to marriage
-      if (spouse) {
-        // spouse visual position is placed near the self node; compute approximate badge coords
-        // we compute the badge offset similarly to spouseBadgeStyle
-        const badgeOffset = 18 // fixed offset to the right-lower corner of main circle (this must match spouseBadgeStyle)
-        const spX = selfPos.x + badgeOffset
-        const spY = selfPos.y + badgeOffset
-        const seedSp = hashString(`${spouse.id}-${marriageId}`)
-        links.push({
-          id: `sp-m-${marriageId}`,
-          path: wobblyPath(spX, spY, marriageX, marriageY, seedSp),
-          stroke: COLOR.marriage,
-          strokeWidth: 3,
-          opacity: 0.9,
+  // Parent (Left) -> Siblings (Right)
+  if (selfParents.length > 0 && selfSiblings.length > 0) {
+    const par = selfParents[0] ? posOf(selfParents[0].id) : null
+    if (par) {
+      // Parent connects to first sibling with beige line
+      const closestSib = selfSiblings[0] ? posOf(selfSiblings[0].id) : null
+      if (closestSib) {
+        links.value.push({
+          id: `p-sib-0`,
+          path: wobblyPath(par!.x, par!.y, closestSib!.x, closestSib!.y, 666),
+          stroke: '#E7C19E',
+          width: 3,
+          opacity: 1,
         })
       }
 
-      // attach children: children are in gen3 positions (N1). For each child link from marriage -> child (strong).
-      ;(payload.value.children || []).forEach((ch) => {
-        const chPos = posOf(ch.id)
-        if (!chPos) return
-        const seed = hashString(`${marriageId}-${ch.id}`)
-        links.push({
-          id: `m-${marriageId}-c-${ch.id}`,
-          path: wobblyPath(marriageX, marriageY, chPos.x, chPos.y, seed),
-          stroke: COLOR.children,
-          strokeWidth: 6,
-          opacity: 1,
-        })
-      })
+      // Interconnect siblings with beige curved line
+      const groupIds = selfSiblings.map((s) => String(s.id))
+      for (let k = 0; k < groupIds.length - 1; k++) {
+        const n1 = posOf(groupIds[k]!)
+        const n2 = posOf(groupIds[k + 1]!)
+        if (n1 && n2) {
+          links.value.push({
+            id: `sib-link-${n1.id}-${n2.id}`,
+            path: wobblyPath(n1!.x, n1!.y, n2!.x, n2!.y, 555),
+            stroke: '#E7C19E',
+            width: 3,
+            opacity: 1,
+          })
+        }
+      }
     }
   }
 
-  // 5) parent_id-based non-direct relationships (cousins, nieces/nephews, grandchildren)
-  // These are drawn with faint style (thinner stroke, lower opacity)
-  const addParentIdLink = (child: Person, faint = true) => {
-    if (!child.parent_id) return
-    const parentPos = posOf(child.parent_id)
-    const childPos = posOf(child.id)
-    if (!parentPos || !childPos) return
-    const seed = hashString(`${parentPos.node.id}-${childPos.node.id}`)
-    const path = wobblyPath(parentPos.x, parentPos.y, childPos.x, childPos.y, seed)
-    links.push({
-      id: `pid-${parentPos.node.id}-${childPos.node.id}`,
-      path,
-      stroke: COLOR.faint,
-      strokeWidth: faint ? 2 : 4,
-      opacity: faint ? 0.32 : 1,
-    })
+  // 3. SHARED DESCENDANTS (Children)
+  // Crossed Helix Pattern: Self (Right) -> Leftmost Child, Spouse (Left) -> Rightmost Child
+
+  if (children.length > 0 && selfNode && spouseNode) {
+    const childNodes = children.map((c) => posOf(c.id)).filter((c) => c) as any[]
+    if (childNodes.length > 0) {
+      childNodes.sort((a, b) => a.x - b.x)
+      const first = childNodes[0] // Leftmost
+      const last = childNodes[childNodes.length - 1] // Rightmost
+
+      const slf = posOf(selfNode.id)! // Right side
+      const sps = posOf(spouseNode.id)! // Left side
+
+      // Self (Right) -> First Child (Left) [Green Crossed Line]
+      links.value.push({
+        id: `self-child-cross`,
+        path: wobblyPath(slf.x, slf.y, first.x, first.y, 707),
+        stroke: '#0B5132',
+        width: 3,
+        opacity: 1,
+      })
+
+      // Spouse (Left) -> Last Child (Right) [Brown Crossed Line]
+      links.value.push({
+        id: `spouse-child-cross`,
+        path: wobblyPath(sps.x, sps.y, last.x, last.y, 808),
+        stroke: '#E7C19E',
+        width: 3,
+        opacity: 1,
+      })
+
+      // Interconnect children horizontally
+      for (let k = 0; k < childNodes.length - 1; k++) {
+        links.value.push({
+          id: `child-sib-${childNodes[k].id}`,
+          path: wobblyPath(
+            childNodes[k].x,
+            childNodes[k].y,
+            childNodes[k + 1].x,
+            childNodes[k + 1].y,
+            333,
+          ),
+          stroke: '#0B5132',
+          width: 2,
+          opacity: 1,
+        })
+      }
+    }
   }
 
-  // cousins
-  ;(payload.value.cousins || []).forEach((c) => addParentIdLink(c, true))
-  // nieces & nephews
-  ;(payload.value.nieces_nephews || []).forEach((n) => addParentIdLink(n, true))
-  // grandchildren
-  ;(payload.value.grandchildren || []).forEach((g) => addParentIdLink(g, true))
-
-  // 6) optionally, connect siblings to their children (nieces/nephews) with faint lines if parent_id points to sibling
-  // already covered by addParentIdLink above (since nieces_nephews.parent_id points to sibling id)
-
-  // set displayedLinks
-  displayedLinks.value = links
-
-  // generation lines (labels)
-  generationLines.value = [
-    { label: 'Grandparents', y: 80 + 0 * rowHeight },
-    { label: 'Parents / Aunts & Uncles', y: 80 + 1 * rowHeight },
-    { label: 'Self / Siblings / Cousins', y: 80 + 2 * rowHeight },
-    { label: 'Children / Nieces & Nephews', y: 80 + 3 * rowHeight },
-    { label: 'Grandchildren', y: 80 + 4 * rowHeight },
-  ]
-
-  // adjust svg width/height to content
-  const xs = displayedNodes.value.map((n) => n.x)
-  const minX = Math.min(...xs)
-  const maxX = Math.max(...xs)
-  const contentWidth = maxX - minX + 600 // margins
-  svgWidth.value = Math.max(contentWidth, 1200)
-  svgHeight.value = Math.max(700, 5 * rowHeight + 240)
-}
-
-// helper used for spouse badge style in the template (keeps CSS in JS for position accuracy)
-function spouseBadgeStyle(node: any) {
-  // badge placed to right-lower quadrant of the main node; tweak translate to taste
-  return {
-    left: nodeSize * 0.45 + 'px',
-    top: nodeSize * 0.45 + 'px',
-    pointerEvents: 'none' as const,
+  // Final Sizing
+  const xs = nodes.value.map((n) => n.x)
+  if (xs.length) {
+    const minX = Math.min(...xs)
+    const maxX = Math.max(...xs)
+    svgWidth.value = Math.max(1400, maxX - minX + 600)
   }
+  svgHeight.value = Math.max(1000, startY + 5 * rowHeight + 200)
 }
 
-// ---------- D3 zoom ----------
-let zoomBehaviour: d3.ZoomBehavior<SVGSVGElement, unknown> | null = null
+/* ---------- Tooltip helpers ---------- */
+function worldToScreen(x: number, y: number) {
+  // apply currentTransform to world coords to get screen coords inside SVG
+  const p = currentTransform.apply([x, y]) // returns [x', y']
+  // get svg's position on page
+  const svgEl = svg.value!
+  const rect = svgEl.getBoundingClientRect()
+  return { x: rect.left + p[0], y: rect.top + p[1] }
+}
+
+function relationText(node: any) {
+  if (node.isSelf) return 'You'
+  if (node.role === 'parent') return 'Parent'
+  if (node.role === 'sibling') return 'Sibling'
+  if (node.role === 'child') return 'Child'
+  if (node.role === 'aunt_uncle') return 'Aunt / Uncle'
+  return 'Relative'
+}
+
+/* ---------- Spouse badge style (keeps it consistent) ---------- */
+const spouseBadgeStyle = {
+  left: `${nodeSize * 0.45}px`,
+  top: `${nodeSize * 0.45}px`,
+  pointerEvents: 'none',
+}
+
+/* ---------- D3 zoom (transform applied to zoomLayer) ---------- */
+let zoomBehavior: d3.ZoomBehavior<SVGSVGElement, unknown> | null = null
 function setupZoom() {
   if (!svg.value || !zoomLayer.value) return
   const svgSel = d3.select(svg.value)
-  zoomBehaviour = d3
+  zoomBehavior = d3
     .zoom<SVGSVGElement, unknown>()
     .scaleExtent([0.25, 2.5])
     .on('zoom', (event) => {
-      const t = event.transform
-      d3.select(zoomLayer.value).attr('transform', t.toString())
+      currentTransform = event.transform
+      d3.select(zoomLayer.value).attr('transform', currentTransform.toString())
+      // if tooltip is visible update its position so it follows the node but doesn't scale
+      if (tooltip.visible) {
+        // try to update to keep it anchored to hovered node (no direct reference to last node here)
+        // easiest: hide tooltip on zoom to avoid positioning glitches, user can re-hover
+        tooltip.visible = false
+      }
     })
-
-  svgSel.call(zoomBehaviour as any)
-  svgSel.call((zoomBehaviour as any).transform, d3.zoomIdentity.translate(10, 10).scale(1))
+  svgSel.call(zoomBehavior as any)
+  svgSel.call((zoomBehavior as any).transform, d3.zoomIdentity.translate(10, 10).scale(1))
 }
 
-// ---------- lifecycle ----------
+/* ---------- Lifecycle ---------- */
 onMounted(async () => {
   await nextTick()
-  outer.value = outer.value ?? (document.querySelector('[ref="outer"]') as HTMLElement)
-  scrollWrap.value =
-    scrollWrap.value ?? (document.querySelector('[ref="scrollWrap"]') as HTMLDivElement)
   svg.value = svg.value ?? (document.querySelector('svg') as SVGSVGElement)
   zoomLayer.value = zoomLayer.value ?? (document.querySelector('svg g') as SVGGElement)
-
-  buildGenerationsAndPositions()
+  buildLayout()
   await nextTick()
   setupZoom()
 
   const onResize = () => {
-    if (outer.value) {
-      svgHeight.value = outer.value.clientHeight
-      buildGenerationsAndPositions()
+    if (root.value) {
+      svgHeight.value = root.value.clientHeight
+      buildLayout()
     }
   }
   window.addEventListener('resize', onResize)
   onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 })
 
-// recompute when payload changes
+/* recompute when payload changes */
 watch(
   () => props.payload,
   (v) => {
     if (v) payload.value = v
-    buildGenerationsAndPositions()
+    buildLayout()
   },
 )
 </script>
 
 <style scoped>
 svg {
-  background: #fbfbf9;
+  background: #f5f1e8;
 }
 .links-layer path {
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.06));
