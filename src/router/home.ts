@@ -1,3 +1,5 @@
+import HomeCardView from '@/views/home/partials/HomeCardView.vue'
+
 export const homeRoutes = [
   {
     path: '/home',
@@ -14,7 +16,16 @@ export const homeRoutes = [
         name: 'App.HomeView',
         component: () => import('@/views/home/HomeView.vue'),
         meta: {
+          pageTitle: 'Welcome back 👋',
+        },
+      },
+      {
+        path: ':cardType(tradition|announcement)',
+        name: 'App.HomeCardView',
+        component: () => HomeCardView,
+        meta: {
           pageTitle: 'Home',
+          fullScreen: 'mobile',
         },
       },
     ],

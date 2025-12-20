@@ -206,4 +206,11 @@ onMounted(() => {
   line-height: 150% !important;
   font-family: General Sans;
 }
+:deep(.title-input .n-input__input-el) {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #1f1f1f !important;
+  line-height: 150% !important;
+  font-family: General Sans;
+}
 </style>

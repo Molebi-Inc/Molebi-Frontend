@@ -1,8 +1,8 @@
 <template>
-  <div class="grid grid-cols-2 md:grid-cols-10 bg-white py-5 md:px-8 rounded-2xl mb-8">
-    <div class="text-neutral-900 text-h2 font-bold md:col-span-3">
+  <div class="grid grid-cols-4 md:grid-cols-10 bg-white py-5 md:px-8 rounded-2xl mb-8">
+    <div class="text-neutral-900 text-h2 font-bold col-span-3">
       <span v-if="isLargeScreen">
-        {{ $route.meta.pageTitle }}
+        {{ pageTitle }}
       </span>
       <span v-else class="flex items-center gap-2">
         <img
@@ -21,7 +21,7 @@
       </span>
     </div>
     <div v-if="isLargeScreen" class="col-span-3"></div>
-    <div class="flex items-center gap-4 md:col-span-4 justify-end">
+    <div class="flex items-center gap-4 col-span-1 md:col-span-4 justify-end">
       <div
         class="cursor-pointer h-12 w-12 bg-gray-50 flex justify-center items-center rounded-full"
       >
@@ -54,12 +54,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, h } from 'vue'
+import { ref, h, computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import { NDropdown, NButton } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import MlbInput from '@/components/ui/MlbInput.vue'
 import { useProfileStore } from '@/stores/profile.store'
 import { useLogout } from '@/composables/useLogout'
 
@@ -69,7 +68,14 @@ const { logout } = useLogout()
 const profileStore = useProfileStore()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
-const search = ref<string | null>(null)
+const pageTitle = computed(() => {
+  const baseTitle = $route.meta.pageTitle as string
+  if ($route.name === 'App.HomeView' && profileStore.userDetails?.first_name) {
+    return `${baseTitle} ${profileStore.userDetails.first_name}`
+  }
+  return baseTitle
+})
+
 const options = ref([
   {
     label: 'Logout',

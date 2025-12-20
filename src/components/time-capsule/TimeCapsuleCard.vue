@@ -16,7 +16,9 @@
     </div>
 
     <!-- Title -->
-    <h1 class="text-sm font-medium text-gray-900 mb-6">{{ capsule.title }}</h1>
+    <div :title="capsule.title" class="text-sm font-medium text-gray-900 mb-6 line-clamp-1">
+      {{ capsule.title }}
+    </div>
 
     <!-- Date and Members Section -->
     <div class="flex justify-end mt-3">
@@ -54,6 +56,7 @@ import { useDeleteTimeCapsuleMutation } from '@/services/time-capsule.services'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useMessage } from 'naive-ui'
 import MlbAvatar from '@/components/ui/MlbAvatar.vue'
+import { useMediaQuery } from '@vueuse/core'
 
 interface Props {
   capsule: TimeCapsuleInterface
@@ -66,6 +69,7 @@ const $emit = defineEmits<{
 
 const $router = useRouter()
 const message = useMessage()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const deleteTimeCapsuleMutation = useDeleteTimeCapsuleMutation()
 
 const loading = ref<boolean>(false)
@@ -85,7 +89,11 @@ const options = [
 
 const handleSelect = (key: string) => {
   const action = {
-    edit: () => $router.push({ name: 'App.TimeCapsules.Edit', params: { id: props.capsule.id } }),
+    edit: () =>
+      $router.push({
+        name: 'App.TimeCapsules.Edit',
+        params: { id: props.capsule.id, step: isLargeScreen.value ? undefined : '1' },
+      }),
     delete: async () => await handleDelete(),
   }
   action[key as keyof typeof action]()

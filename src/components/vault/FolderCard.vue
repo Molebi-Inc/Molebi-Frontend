@@ -58,16 +58,6 @@
             />
           </div>
         </div>
-
-        <!-- Avatars & Menu -->
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <!-- Menu Dropdown -->
-          <n-dropdown :options="options" @select="(key) => handleSelect(key)">
-            <n-button text type="tertiary" size="small" @click.stop.prevent>
-              <MlbIcon name="vuesax.linear.more" :size="20" color="#737373" />
-            </n-button>
-          </n-dropdown>
-        </div>
       </div>
     </div>
   </div>
@@ -207,7 +197,6 @@ const _folder = computed<{
   lastname_field: string
   src_field: string
 }>(() => {
-  console.log('folder', currentFlow.value)
   if (currentFlow.value === 'vault') {
     return {
       members: (props.folder as FolderInterface)?.viewers || [],
@@ -233,18 +222,18 @@ const _folder = computed<{
 
 const handleClick = () => {
   setSelectedFolder(props.folder as FolderInterface | StorageFolderInterface)
-  // const routeName = currentFlow.value === 'vault' ? 'App.VaultFolderView' : 'App.StorageFolderView'
-  // if (!props.heritageVault) {
-  //   if (currentFlow.value === 'vault') {
-  //     $router.push({
-  //       name: routeName,
-  //       params: { ...$route.params },
-  //       query: { action: 'verify-pin' },
-  //     })
-  //   } else {
-  //     $router.push({ name: routeName, params: { ...$route.params, id: props.folder?.id } })
-  //   }
-  // }
+  const routeName = currentFlow.value === 'vault' ? 'App.VaultFolderView' : 'App.StorageFolderView'
+  if (!props.heritageVault) {
+    if (currentFlow.value === 'vault') {
+      $router.push({
+        name: routeName,
+        params: { ...$route.params },
+        query: { action: 'verify-pin' },
+      })
+    } else {
+      $router.push({ name: routeName, params: { ...$route.params, id: props.folder?.id } })
+    }
+  }
   $emit('click:folder', { flow: currentFlow.value, id: props.folder?.id })
   if (props.onClick) {
     props.onClick()

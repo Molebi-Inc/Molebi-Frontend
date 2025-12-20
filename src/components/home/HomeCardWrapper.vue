@@ -1,11 +1,14 @@
 <template>
   <div
-    class="col-span-1 bg-white border border-primary-400 rounded-2xl p-6 pt-0 h-[275px] overflow-y-auto"
+    class="col-span-1 bg-white md:border border-primary-400 rounded-2xl md:p-6 pt-0 h-[275px] md:overflow-y-auto"
   >
-    <div class="sticky top-0 bg-white z-10 pt-6 -mx-6 px-6 mb-8">
+    <div
+      class="sticky top-0 bg-white z-10 pt-6 -mx-6 px-6 mb-3 md:mb-8 flex justify-between items-center"
+    >
       <h4 :id="properties.id" class="text-gray-600 mb-0 font-medium uppercase tracking-wider">
         {{ properties.title }}
       </h4>
+      <MlbButton class="md:hidden!" text label="See all" @click="handleSeeAll" />
     </div>
     <div>
       <div v-if="card_type === 'tradition'" class="flex justify-evenly items-center mb-4">
@@ -28,14 +31,19 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, h } from 'vue'
-import type { Announcement } from '@/types/announcement.types'
-import type { FamilyTradition, FamilyTraditionTab } from '@/types/family-tradition.types'
-import AnnouncementCard from '@/components/home/AnnouncementCard.vue'
-import TraditionCard from '@/components/home/TraditionCard.vue'
-import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
+import { computed, ref } from 'vue'
 import type { Component } from 'vue'
+import { useRouter } from 'vue-router'
+import { useMediaQuery } from '@vueuse/core'
+import MlbButton from '@/components/ui/MlbButton.vue'
+import type { Announcement } from '@/types/announcement.types'
+import TraditionCard from '@/components/home/TraditionCard.vue'
+import AnnouncementCard from '@/components/home/AnnouncementCard.vue'
+import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
+import type { FamilyTradition, FamilyTraditionTab } from '@/types/family-tradition.types'
 
+const $router = useRouter()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const familyTraditionStore = useFamilyTraditionStore()
 
 const props = withDefaults(
@@ -49,6 +57,10 @@ const props = withDefaults(
     loading: false,
   },
 )
+
+const handleSeeAll = () => {
+  $router.push({ name: 'App.HomeCardView', params: { cardType: props.card_type } })
+}
 
 const activeTab = ref<FamilyTraditionTab>('Upcoming')
 
@@ -75,7 +87,9 @@ const properties = computed<{
       loading: props.loading,
       component: AnnouncementCard,
       componentProps: {
-        items: props.items as Announcement[],
+        items: isLargeScreen.value
+          ? (props.items as Announcement[])
+          : (props.items as Announcement[]).slice(0, 1),
         loading: props.loading,
       },
     },

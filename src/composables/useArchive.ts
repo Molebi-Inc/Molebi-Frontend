@@ -7,7 +7,7 @@ import { useStorageStore } from '@/stores/storage.store'
 import { useGeneralStore } from '@/stores/general.store'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import type { FamilyMediaFormValues } from '@/types/family-tradition.types'
-import type { CreateFolderValues, FolderInterface } from '@/types/vault.types'
+import type { CreateFilesValues, CreateFolderValues, FolderInterface } from '@/types/vault.types'
 
 export const useArchive = () => {
   const $route = useRoute()
@@ -34,6 +34,10 @@ export const useArchive = () => {
 
   const archiveExist = computed(() =>
     currentFlow.value === 'vault' ? vaultStore.selectedFolder : storageStore.selectedFolder,
+  )
+
+  const fileUploading = computed(() =>
+    currentFlow.value === 'vault' ? vault.fileUploading.value : storage.fileUploading.value,
   )
 
   const setSelectedFolder = (folder: FolderInterface | StorageFolderInterface | null) => {
@@ -68,11 +72,10 @@ export const useArchive = () => {
     return response
   }
 
-  const handleFileCreation = async (data: FamilyMediaFormValues | CreateFolderValues) => {
-    // let response
+  const handleFileCreation = async (data: FamilyMediaFormValues | CreateFilesValues) => {
     switch ($route.name) {
       case 'App.VaultFolderView':
-        return await vault.handleCreateFolder(data as CreateFolderValues)
+        return await vault.handleCreateFolder(data as CreateFilesValues)
       case 'App.StorageFolderView':
         return await storage.handleCreateFile(data as FamilyMediaFormValues)
       default:
@@ -90,11 +93,15 @@ export const useArchive = () => {
   }
 
   const clearFolderMedia = () => {
-    currentFlow.value === 'storage' ? storageStore.setStoreProp('folderMedia', []) : null
+    if (currentFlow.value === 'storage') {
+      storageStore.setStoreProp('folderMedia', [])
+    }
   }
 
   const fetchFolderDetails = async () => {
-    return currentFlow.value === 'storage' ? await storage.fetchStorageFolder() : null
+    return currentFlow.value === 'storage'
+      ? await storage.fetchStorageFolder()
+      : vault.fetchVaultFolder(vaultStore.selectedFolder?.id as number, vaultStore.pin as string)
   }
 
   return {
@@ -111,5 +118,6 @@ export const useArchive = () => {
     fetchFolderMedia,
     clearFolderMedia,
     fetchFolderDetails,
+    fileUploading,
   }
 }

@@ -125,8 +125,8 @@ export function toast(config: Omit<AlertConfig, 'type'>): void {
  */
 export function closeAlert(): void {
   alertState.value.show = false
-  if (rejectPromise) {
-    rejectPromise(new Error('Alert closed'))
+  if (resolvePromise) {
+    resolvePromise(null)
   }
   resolvePromise = null
   rejectPromise = null

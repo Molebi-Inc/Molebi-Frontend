@@ -63,7 +63,10 @@ const avatarOptions = computed(() => {
 })
 
 const handleUserFormatting = (user: Record<string, any>): { name: string; src: string } => {
-  const firstName = user[props.options.firstname_field as keyof typeof user]
+  const firstName =
+    props.options.firstname_field && user
+      ? user[props.options.firstname_field as keyof typeof user]
+      : ''
   const familyName = props.options.lastname_field
     ? user[props.options.lastname_field as keyof typeof user]
     : undefined

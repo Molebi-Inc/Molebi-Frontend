@@ -11,8 +11,10 @@
     </div>
     <div v-else>
       <!-- <div> -->
-      <div class="flex justify-center items-center mb-11">
-        <h1 class="text-2xl font-bold text-gray-800 text-center">{{ capsule?.title }}</h1>
+      <div class="flex justify-start md:justify-center items-center mb-11 mt-8 md:mt-0">
+        <h1 class="text-2xl font-bold text-gray-800 text-center">
+          {{ capsule?.title }}
+        </h1>
       </div>
       <div class="mb-4">
         <GalleryComponent
@@ -34,26 +36,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { onMounted } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import PageLoader from '@/components/common/PageLoader.vue'
-import type { TimeCapsuleInterface } from '@/types/time-capsule.types'
 import GalleryComponent from '@/components/common/GalleryComponent.vue'
-import { useGetTimeCapsuleByIdQuery } from '@/services/time-capsule.services'
+import { useTimeCapsule } from '@/composables/time-capsule.composables'
 
-const $route = useRoute()
-
-const capsule = ref<TimeCapsuleInterface | null>(null)
-const loading = ref<boolean>(false)
-const getTimeCapsuleDetails = useGetTimeCapsuleByIdQuery(Number($route.params.id))
-
-const fetchTimeCapsuleDetails = async () => {
-  loading.value = true
-  const response = await getTimeCapsuleDetails.refetch()
-  capsule.value = response.data?.data as TimeCapsuleInterface | null
-  loading.value = false
-}
+const { loading, fetchTimeCapsuleDetails, capsule } = useTimeCapsule()
 
 onMounted(async () => {
   await fetchTimeCapsuleDetails()

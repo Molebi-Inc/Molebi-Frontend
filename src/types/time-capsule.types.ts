@@ -43,4 +43,5 @@ export interface TimeCapsuleRequestParams extends ApiRequestParams {
 
 export interface TimeCapsuleStoreInterface {
   selectedTimeCapsule: TimeCapsuleInterface | null
+  timeCapsuleForm: TimeCapsuleFormValues
 }

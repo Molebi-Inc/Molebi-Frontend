@@ -20,7 +20,7 @@
             :length="4"
             :gap="24"
             size="large"
-            mask
+            :mask="false"
             custom-class="otp-input-wrapper border-gray-300 focus:border-primary-500"
           />
         </div>

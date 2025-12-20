@@ -1,5 +1,5 @@
 <template>
-  <div class="px-10">
+  <div class="md:px-10">
     <n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
       <div class="flex flex-col gap-1 mb-11">
         <n-form-item
@@ -30,9 +30,9 @@
       </div>
       <MlbButton
         type="submit"
-        :label="archiveExist ? 'Update' : 'Create'"
+        :label="!isLargeScreen ? 'Proceed' : archiveExist ? 'Update' : 'Create'"
         :loading="loading"
-        :disabled="loading"
+        :disabled="loading || (currentFlow === 'storage' ? !form.name : !form.title)"
         block
         class="rounded-2xl! bg-primary-700! h-13! text-white!"
         @click="onFormSubmit"
@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 import type { FormInst } from 'naive-ui'
+import { useMediaQuery } from '@vueuse/core'
 import { ref, onMounted, computed } from 'vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import { useVaultStore } from '@/stores/vault.store'
@@ -61,9 +62,13 @@ const storageStore = useStorageStore()
 const { form, rules } = createFolderValidation()
 const { currentFlow, archiveExist } = useArchive()
 const { loading, handleArchiveMutation } = useArchive()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const $emit = defineEmits<{
-  (e: 'update:folder', key: string): void
+  (
+    e: 'update:folder',
+    payload: { key: string; folder?: FolderInterface | StorageFolderInterface | null },
+  ): void
 }>()
 
 const formRef = ref<FormInst | null>(null)
@@ -81,7 +86,10 @@ const onFormSubmit = async () => {
     try {
       const response = await handleArchiveMutation(form.value)
       message.success(response?.message || 'Folder created successfully')
-      $emit('update:folder', selectedFolder.value ? 'edit' : 'create')
+      $emit('update:folder', {
+        key: response.key,
+        folder: selectedFolder.value,
+      })
       // $router.push({
       //   name: currentFlow.value === 'vault' ? 'App.VaultFolderView' : 'App.StorageFolderView',
       //   params: { id: response?.data?.id },
@@ -121,6 +129,13 @@ onMounted(() => {
   font-size: 24px !important;
   font-weight: 700 !important;
   color: #bababa !important;
+  line-height: 150% !important;
+  font-family: General Sans;
+}
+:deep(.title-input .n-input__input-el) {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #1f1f1f !important;
   line-height: 150% !important;
   font-family: General Sans;
 }

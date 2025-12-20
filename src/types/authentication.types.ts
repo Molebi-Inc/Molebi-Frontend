@@ -143,3 +143,9 @@ export interface ForgotPasswordResponseData {
 export interface ResendOtpResponseData {
   expires_in_minutes: number
 }
+
+export type SocialAuthenticationProvider = 'google' | 'facebook' | 'apple'
+
+export interface SocialAuthenticationRedirectResponseData {
+  redirect_url: string
+}

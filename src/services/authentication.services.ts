@@ -15,11 +15,17 @@ import type {
 import type { FamilyInfoFormValues } from '@/types/profile.types'
 import type { AxiosError } from 'axios'
 import { useMutation, useQuery } from '@tanstack/vue-query'
+import { computed, toValue } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
 import axiosInstance from '@/config/axios.config'
 import { useAuthConfig } from '@/config/auth.config'
 import type { ProfileFormValues } from '@/types/profile.types'
 import type { SignupResponseData } from '@/types/authentication.types'
 import type { ApiResponse, ValidationErrorResponse } from '@/types/general.types'
+import type {
+  SocialAuthenticationProvider,
+  SocialAuthenticationRedirectResponseData,
+} from '@/types/authentication.types'
 
 const authConfig = useAuthConfig()
 
@@ -182,5 +188,40 @@ export const useResetPasswordMutation = () => {
       return response.data
     },
     retry: false,
+  })
+}
+
+export const useSocialAuthenticationRedirectQuery = (
+  provider?: MaybeRefOrGetter<SocialAuthenticationProvider | undefined>,
+) => {
+  const providerValue = computed(() => toValue(provider))
+  return useQuery<
+    ApiResponse<SocialAuthenticationRedirectResponseData>,
+    AxiosError<ValidationErrorResponse>
+  >({
+    queryKey: computed(() => ['social-signin-redirect', providerValue.value]),
+    enabled: computed(() => !!providerValue.value),
+    queryFn: async ({ queryKey }) => {
+      const [, provider] = queryKey
+      const response = await axiosInstance.get<
+        ApiResponse<SocialAuthenticationRedirectResponseData>
+      >(`/api/user/auth/${provider}/redirect`)
+      return response.data
+    },
+  })
+}
+
+export const useSocialAuthenticationRedirectMutation = (provider: SocialAuthenticationProvider) => {
+  return useMutation<
+    ApiResponse<SigninResponseData>,
+    AxiosError<ValidationErrorResponse>,
+    Record<string, string>
+  >({
+    mutationFn: async (params: Record<string, string>) => {
+      const response = await axiosInstance.post<ApiResponse<SigninResponseData>>(
+        `/api/user/auth/${provider}/callback?${new URLSearchParams(params).toString()}`,
+      )
+      return response.data
+    },
   })
 }

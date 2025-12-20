@@ -2,7 +2,7 @@
   <nav class="md:hidden fixed left-1/2 bottom-4 z-30 w-[92%] -translate-x-1/2">
     <div class="relative">
       <div
-        class="absolute left-1/2 -translate-x-1/2 -top-8 w-16 h-16 rounded-full bg-primary-800 flex items-center justify-center shadow-[0px_10px_30px_rgba(16,111,75,0.35)]"
+        class="absolute left-1/2 -translate-x-1/2 -top-4 w-10 h-10 rounded-full bg-primary-800 flex items-center justify-center shadow-[0px_10px_30px_rgba(16,111,75,0.35)]"
         @click="$router.push({ name: 'App.FamilyTreeLayout' })"
       >
         <img src="@/assets/svg/home-footer-tree.svg" alt="growth icon" class="w-10 h-10" />
@@ -42,16 +42,33 @@ const $router = useRouter()
 const footerNavItems: SidebarItem[] = [
   {
     id: 'home',
-    label: 'Home',
+    label: '',
     icon: 'vuesax.broken.home-2',
     route: { name: 'App.HomeView' },
     main: true,
   },
   {
+    id: 'heritage',
+    label: '',
+    icon: 'vuesax.outline.bank',
+    route: { name: 'App.HeritageView' },
+    main: true,
+  },
+  {
     id: 'storage',
-    label: 'Storage',
+    label: '',
     icon: 'vuesax.outline.folder-open',
-    route: { name: 'App.HeritageVaultView' },
+    route: {
+      name: 'App.HeritageVaultView',
+      params: { module: 'family-archive', submodule: 'storage' },
+    },
+    main: true,
+  },
+  {
+    id: 'time-capsules',
+    label: '',
+    icon: 'time-capsule',
+    route: { name: 'App.TimeCapsules.View' },
     main: true,
   },
 ]

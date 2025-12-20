@@ -1,17 +1,11 @@
 import { z } from 'zod'
-import { ref } from 'vue'
-import type { TimeCapsuleFormValues } from '@/types/time-capsule.types'
+import { computed, ref } from 'vue'
 import type { FormItemRule } from 'naive-ui'
+import { useTimeCapsuleStore } from '@/stores/time-capsule.store'
+import type { TimeCapsuleFormValues } from '@/types/time-capsule.types'
 
 export const timeCapsuleValidation = () => {
-  const form = ref<TimeCapsuleFormValues>({
-    // family_tree_id: 0,
-    title: '',
-    description: '',
-    open_at: new Date().toISOString().split('T')[0],
-    family_member_ids: [],
-    files: [],
-  })
+  const form = computed<TimeCapsuleFormValues>(() => useTimeCapsuleStore().timeCapsuleForm)
   const schema = z.object({
     title: z.string().min(1, { message: 'Title is required.' }),
     description: z.string().min(1, { message: 'Description is required.' }),

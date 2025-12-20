@@ -1,5 +1,8 @@
 <template>
-  <section class="px-16">
+  <section class="md:px-16">
+    <div class="md:hidden py-4">
+      <BackButton icon="vuesax.linear.arrow-left" />
+    </div>
     <div class="flex flex-col gap-6">
       <div class="border border-gray-200 rounded-3xl p-6 md:p-8">
         <h1 class="text-xl md:text-2xl font-semibold text-primary-500 mb-2">
@@ -27,12 +30,11 @@
       <div class="bg-white border border-gray-200 rounded-3xl p-6 md:p-8">
         <p class="text-sm font-semibold text-neutral-500 uppercase mb-1">About</p>
         <p class="text-neutral-700 text-sm md:text-base leading-relaxed">
-          Badagry is a town in Badagry, Akwa Ibom State, Nigeria. Rich in cultural heritage and
-          traditions.
+          {{ heritageData?.about || 'No information available' }}
         </p>
       </div>
 
-      <div class="p-1 md:p-2">
+      <div class="p-1 md:p-2 mb-3">
         <n-collapse
           :accordion="false"
           class="heritage-collapse"
@@ -49,13 +51,13 @@
               <p class="text-neutral-900 font-medium">{{ section.title }}</p>
             </template>
             <div class="text-neutral-700 text-sm md:text-base leading-relaxed px-1 pb-2">
-              {{ section.content }}
+              {{ section.content || 'No information available' }}
             </div>
           </n-collapse-item>
         </n-collapse>
       </div>
 
-      <div
+      <!-- <div
         class="border border-dashed border-primary-200 bg-primary-50 rounded-3xl p-6 md:p-8 flex flex-col items-center text-center gap-4 mb-16"
       >
         <p class="text-neutral-700 text-sm md:text-base">
@@ -65,55 +67,62 @@
           label="+ Contribute Information"
           class="bg-white! text-primary-500! rounded-2xl! h-13!"
         />
-      </div>
+      </div> -->
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import MlbButton from '@/components/ui/MlbButton.vue'
+import BackButton from '@/components/common/BackButton.vue'
+// import MlbButton from '@/components/ui/MlbButton.vue'
 import { NCollapse, NCollapseItem } from 'naive-ui'
 import { useGetHeritageQuery } from '@/services/heritage.services'
+import type { HeritageDataInterface } from '@/types/heritage.types'
+import { handleApiError } from '@/helpers/error.helpers'
+import { useMessage } from 'naive-ui'
 
+const message = useMessage()
 const heritageQuery = useGetHeritageQuery()
+
+const heritageData = ref<HeritageDataInterface | null>(null)
 
 const sections = computed(() => [
   {
     key: 'population',
     title: 'Population',
-    content:
-      'Badagry has historically been a vibrant trading hub, drawing diverse communities and visitors along its coastal routes.',
+    content: heritageData?.value?.population,
   },
   {
     key: 'geography',
     title: 'Geography',
-    content:
-      'Situated along the Atlantic coast, Badagry features lagoons, sandy beaches, and lush greenery that have shaped its fishing and trading traditions.',
+    content: heritageData?.value?.geographic_info,
   },
   {
     key: 'traditionalRulers',
     title: 'Traditional Rulers',
-    content:
-      'The town is guided by traditional institutions that preserve customs, mediate communal matters, and steward cultural events.',
+    content: heritageData?.value?.traditional_rulers,
   },
   {
     key: 'history',
     title: 'History',
-    content:
-      'Badagry played a significant role in West African trade routes and remains a symbol of resilience, memory, and cultural continuity.',
+    content: heritageData?.value?.history,
   },
   {
     key: 'economy',
     title: 'Economy',
-    content:
-      'Commerce, fishing, and tourism anchor the local economy, with cultural heritage sites attracting visitors from within and outside Nigeria.',
+    content: heritageData?.value?.economy,
   },
 ])
 
 const fetchHeritage = async () => {
-  heritageQuery.refetch()
+  try {
+    const response = await heritageQuery.refetch()
+    heritageData.value = response.data?.data as unknown as HeritageDataInterface
+  } catch (error) {
+    handleApiError(error, message)
+  }
 }
 
 onMounted(async () => {
@@ -122,11 +131,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* .heritage-collapse :deep(.n-collapse-item__header) {
-  padding: 16px 18px;
-  border-bottom: 1px solid #e5e7eb;
-} */
-
 .heritage-collapse :deep(.n-collapse-item__content-inner) {
   padding: 0 18px 16px;
 }

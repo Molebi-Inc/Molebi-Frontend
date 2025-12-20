@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/config/axios.config'
 import { useAuthConfig } from '@/config/auth.config'
-import type { CreateFolderValues } from '@/types/vault.types'
+import type { CreateFolderValues, CreateFilesValues } from '@/types/vault.types'
 import type { ApiResponse, ValidationErrorResponse } from '@/types/general.types'
 import type { FolderInterface } from '@/types/vault.types'
 import type { AxiosError } from 'axios'
@@ -13,14 +13,43 @@ export const useUpdateFolderMutation = () => {
   const updateFolderMutation = useMutation<
     ApiResponse<FolderInterface>,
     AxiosError<ValidationErrorResponse>,
-    { folder: CreateFolderValues; id: number }
+    { folder: CreateFolderValues | CreateFilesValues; id: number }
   >({
-    mutationFn: async ({ folder, id }: { folder: CreateFolderValues; id: number }) => {
-      const response = await axiosInstance.put<ApiResponse<FolderInterface>>(
+    mutationFn: async ({
+      folder,
+      id,
+    }: {
+      folder: CreateFolderValues | CreateFilesValues
+      id: number
+    }) => {
+      // Check if folder contains files that need FormData
+      const hasFiles =
+        'files' in folder &&
+        (folder as CreateFilesValues).files &&
+        (folder as CreateFilesValues).files.length > 0
+
+      let payload: FormData | CreateFolderValues | CreateFilesValues
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${authConfig.getToken()}`,
+        ...(hasFiles && { 'Content-Type': 'multipart/form-data' }),
+      }
+
+      if (hasFiles) {
+        const formData = new FormData()
+        ;(folder as CreateFilesValues).files.forEach((file: File) => {
+          formData.append('files[]', file)
+        })
+        formData.append('_method', 'PUT')
+        payload = formData
+      } else {
+        payload = folder
+      }
+
+      const response = await axiosInstance.post<ApiResponse<FolderInterface>>(
         `/api/user/memory-vaults/${id}`,
-        folder,
+        hasFiles ? payload : { ...folder, _method: 'PUT' },
         {
-          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+          headers,
         },
       )
       return response.data

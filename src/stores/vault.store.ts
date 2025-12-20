@@ -6,6 +6,7 @@ export const useVaultStore = defineStore('vault', {
     selectedFolder: null,
     folders: [],
     foldersLoading: false,
+    pin: '0000'
   }),
 
   actions: {

@@ -12,8 +12,8 @@ import {
 import type { MaybeRefOrGetter } from 'vue'
 import { AlertService } from '@/services/alert.service'
 import { handleApiError } from '@/helpers/error.helpers'
-import type { CreateFolderValues } from '@/types/vault.types'
 import VaultPinForm from '@/components/vault/VaultPinForm.vue'
+import type { CreateFolderValues, CreateFilesValues } from '@/types/vault.types'
 
 export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   const message = useMessage()
@@ -32,11 +32,14 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
       getVaultFolderMutation.isPending.value,
   )
 
+  const fileUploading = computed(() => updateFolderMutation.isPending.value)
+
   const vaultFolderCreation = async (data: CreateFolderValues) => {
     try {
-      const response = await createFolderMutation.mutateAsync(data)
+      const response = await createFolderMutation.mutateAsync(data as CreateFolderValues)
       AlertService.alert({
-        subject: 'Set Vault PIN',
+        subject: 'Create Vault PIN',
+        message: 'This is the PIN you will use to access your vault. Please enter a PIN.',
         closable: true,
         showIcon: false,
         closablePosition: 'left',
@@ -79,7 +82,7 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     }
   }
 
-  const vaultFolderUpdate = async (data: CreateFolderValues) => {
+  const vaultFolderUpdate = async (data: CreateFolderValues | CreateFilesValues) => {
     try {
       const id = vaultStore.selectedFolder?.id as number
 
@@ -89,15 +92,15 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     }
   }
 
-  const handleCreateFolder = async (data: CreateFolderValues) => {
+  const handleCreateFolder = async (data: CreateFolderValues | CreateFilesValues) => {
     let response
     if (vaultStore.selectedFolder) {
       response = await vaultFolderUpdate(data)
     } else {
-      response = await vaultFolderCreation(data)
+      response = await vaultFolderCreation(data as CreateFolderValues)
     }
     await fetchVaultFolders()
-    return response
+    return { ...response, key: vaultStore.selectedFolder ? 'edit' : 'create' }
   }
 
   const deleteVaultFolder = async (id: number) => {
@@ -143,6 +146,7 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   return {
     loading,
     vaultStore,
+    fileUploading,
     fetchVaultFolder,
     deleteVaultFolder,
     handleCreateFolder,

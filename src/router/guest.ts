@@ -1,6 +1,7 @@
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
 import OnboardingView from '@/views/auth/OnboardingView.vue'
 import GuestLayout from '@/layouts/GuestLayout.vue'
+import SocialAuthenticationView from '@/views/auth/SocialAuthenticationView.vue'
 
 export const guestRoutes = {
   path: '/',
@@ -46,6 +47,15 @@ export const guestRoutes = {
       path: '/signin',
       name: 'Guests.SigninView',
       component: () => import('@/views/auth/SigninView.vue'),
+      meta: {
+        layout: 'guest',
+        requiresGuest: true,
+      },
+    },
+    {
+      path: '/auth/:provider(google|facebook|apple)',
+      name: 'Guests.SocialAuthenticationView',
+      component: () => SocialAuthenticationView,
       meta: {
         layout: 'guest',
         requiresGuest: true,

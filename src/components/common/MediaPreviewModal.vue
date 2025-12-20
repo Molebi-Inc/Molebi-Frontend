@@ -6,8 +6,8 @@
     @close="handleClose"
   >
     <template #header>
-      <div class="flex items-center justify-between w-full">
-        <div class="flex items-center gap-3">
+      <div class="flex items-center justify-between w-full gap-2">
+        <div class="flex items-center gap-3 w-[50%]">
           <MlbButton text secondary class="text-white! text-sm" @click="handleClose()">
             <template #icon>
               <MlbIcon
@@ -18,7 +18,10 @@
               />
             </template>
           </MlbButton>
-          <h2 class="text-xl font-semibold text-white">
+          <h2
+            class="text-xl font-semibold truncate text-white w-full"
+            :title="selectedMedia?.file_name || 'Media Preview'"
+          >
             {{ selectedMedia?.file_name || 'Media Preview' }}
           </h2>
         </div>

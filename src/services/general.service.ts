@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/vue-query'
 import { useAuthConfig } from '@/config/auth.config'
 import type { ValidationErrorResponse } from '@/types/general.types'
 import type { ApiResponse, StateInterface } from '@/types/general.types'
+import type { TourStageInterface, TourUpdateTypeInterface } from '@/types/tour.types'
 
 const authConfig = useAuthConfig()
 
@@ -63,6 +64,45 @@ export const useGetStatesQuery = ({ enabled = true }: { enabled?: boolean } = {}
           Authorization: `Bearer ${authConfig.getToken()}`,
         },
       })
+      return response.data
+    },
+  })
+}
+
+export const useGetTourStagesQuery = ({ enabled = true }: { enabled?: boolean } = {}) => {
+  return useQuery<ApiResponse<TourStageInterface[]>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['tour-stages'],
+    enabled,
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<TourStageInterface[]>>(
+        '/api/user/tour/stages',
+        {
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+          },
+        },
+      )
+      return response.data
+    },
+  })
+}
+
+export const useUpdateTourStagesMutation = () => {
+  return useMutation<
+    ApiResponse<TourStageInterface[]>,
+    AxiosError<ValidationErrorResponse>,
+    TourUpdateTypeInterface
+  >({
+    mutationFn: async (data: TourUpdateTypeInterface) => {
+      const response = await axiosInstance.post<ApiResponse<TourStageInterface[]>>(
+        '/api/user/tour/stages',
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+          },
+        },
+      )
       return response.data
     },
   })
