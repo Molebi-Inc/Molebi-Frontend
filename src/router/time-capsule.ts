@@ -8,6 +8,7 @@ export const timeCapsuleRoutes = [
       layout: 'app',
       requiresAuth: true,
       tour: 'time-capsules',
+      fullScreen: 'mobile-footer',
     },
     children: [
       {
@@ -27,7 +28,7 @@ export const timeCapsuleRoutes = [
         },
       },
       {
-        path: ':id/edit',
+        path: ':id/edit/:step(1|2)?',
         name: 'App.TimeCapsules.Edit',
         component: TimeCapsule,
         meta: {
@@ -43,7 +44,7 @@ export const timeCapsuleRoutes = [
         },
       },
       {
-        path: 'create',
+        path: 'create/:step(1|2)?',
         name: 'App.TimeCapsules.Create',
         component: TimeCapsule,
         meta: {

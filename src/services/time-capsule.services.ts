@@ -116,3 +116,21 @@ export const useDeleteTimeCapsuleMutation = () => {
     },
   })
 }
+
+export const useDeleteTimeCapsuleAttachmentMutation = () => {
+  return useMutation<
+    ApiResponse,
+    AxiosError<ValidationErrorResponse>,
+    { capsuleId: number; attachmentId: number }
+  >({
+    mutationFn: async (data: { capsuleId: number; attachmentId: number }) => {
+      const response = await axiosInstance.delete<ApiResponse>(
+        `/api/user/time-capsules/${data.capsuleId}/media/${data.attachmentId}`,
+        {
+          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+        },
+      )
+      return response.data
+    },
+  })
+}

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- Form -->
-    <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-10">
+    <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-3 md:px-10">
       <div>
         <n-form-item path="title" :show-require-mark="false" :show-feedback="false">
           <MlbInput
@@ -26,14 +26,16 @@
       </div>
 
       <!-- Upload Media -->
-      <div>
+      <div v-if="isLargeScreen || $route.params.step == '1'">
         <n-upload
           list-type="image-card"
+          accept="image/*"
           :file-list="uploadFileList"
           @update:file-list="handleFileListUpdate"
         />
       </div>
-      <div>
+
+      <div v-if="isLargeScreen || $route.params.step == '2'">
         <n-form-item
           path="open_at"
           :show-require-mark="false"
@@ -54,8 +56,9 @@
 
       <!-- Family Member Selection -->
       <UserSelector
+        v-if="isLargeScreen || $route.params.step == '2'"
         label="Family Members"
-        :form="form"
+        :form="formRecord"
         :users="familyMembers"
         :options="userSelectorOptions"
         @update:selected-users="updateForm"
@@ -63,6 +66,7 @@
 
       <!-- Create Button -->
       <MlbButton
+        v-if="isLargeScreen || $route.params.step == '2'"
         type="submit"
         :label="$route.params.id ? 'Update' : 'Create'"
         :loading="loading"
@@ -95,15 +99,17 @@ import { useHome } from '@/composables/useHome'
 import { useGeneralStore } from '@/stores/general.store'
 import type { UserSelectorOptions } from '@/components/common/UserSelector.vue'
 import UserSelector from '@/components/common/UserSelector.vue'
-import { useCreateTimeCapsuleMutation } from '@/services/time-capsule.services'
-import { handleApiError } from '@/helpers/error.helpers'
 import {
-  useGetTimeCapsuleByIdQuery,
+  useCreateTimeCapsuleMutation,
   useUpdateTimeCapsuleMutation,
+  useDeleteTimeCapsuleAttachmentMutation,
 } from '@/services/time-capsule.services'
+import { handleApiError } from '@/helpers/error.helpers'
 import { useRoute, useRouter } from 'vue-router'
-import type { TimeCapsuleInterface } from '@/types/time-capsule.types'
 import { AlertService } from '@/services/alert.service'
+import { useMediaQuery } from '@vueuse/core'
+import { useTimeCapsuleStore } from '@/stores/time-capsule.store'
+import { useTimeCapsule } from '@/composables/time-capsule.composables'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -111,17 +117,24 @@ const message = useMessage()
 const generalStore = useGeneralStore()
 const { fetchFamilyMembers } = useHome()
 const { form, rules } = timeCapsuleValidation()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const createTimeCapsuleMutation = useCreateTimeCapsuleMutation()
 const updateTimeCapsuleMutation = useUpdateTimeCapsuleMutation()
-const getTimeCapsuleDetails = useGetTimeCapsuleByIdQuery(
-  Number($route.params.id),
-  !!Number($route.params.id),
-)
+const timeCapsuleStore = useTimeCapsuleStore()
+const { loading, capsule: selectedCapsule, fetchTimeCapsuleDetails } = useTimeCapsule()
 
-const loading = ref<boolean>(false)
 const formRef = ref<FormInst | null>(null)
 const uploadFileList = ref<UploadFileInfo[]>([])
-const capsule = ref<TimeCapsuleInterface | null>(null)
+const previousFileList = ref<UploadFileInfo[]>([])
+const deleteAttachmentMutation = useDeleteTimeCapsuleAttachmentMutation()
+const emit = defineEmits<{
+  (e: 'submit', data: typeof form.value): void
+  (e: 'close'): void
+}>()
+
+defineExpose({
+  form,
+})
 
 const userSelectorOptions: UserSelectorOptions = {
   form_user_ids_field: 'family_member_ids',
@@ -132,18 +145,46 @@ const userSelectorOptions: UserSelectorOptions = {
 
 const familyMembers = computed<FamilyMemberInterface[]>(() => generalStore.familyMembers)
 
+const formRecord = computed<Record<string, unknown>>(
+  () => form.value as unknown as Record<string, unknown>,
+)
+
 const toValidFiles = (fileList: UploadFileInfo[]) =>
   fileList.map((file) => file.file).filter((item): item is File => item instanceof File)
 
-const handleFileListUpdate = (fileList: UploadFileInfo[]) => {
+const handleFileListUpdate = async (fileList: UploadFileInfo[]) => {
+  const deletedFiles = previousFileList.value.filter((prevFile) => {
+    return !fileList.some((newFile) => {
+      // If both have ids, compare by id
+      if (prevFile.id && newFile.id) {
+        return prevFile.id === newFile.id
+      }
+      // Otherwise, compare by url or name as fallback
+      return prevFile.url === newFile.url || prevFile.name === newFile.name
+    })
+  })
+
+  for (const deletedFile of deletedFiles) {
+    if (deletedFile.id && typeof deletedFile.id === 'string') {
+      const attachmentId = Number(deletedFile.id)
+      if (!isNaN(attachmentId) && attachmentId > 0) {
+        try {
+          await deleteAttachmentMutation.mutateAsync({
+            capsuleId: Number($route.params.id),
+            attachmentId,
+          })
+        } catch (error) {
+          handleApiError(error, message)
+        }
+      }
+    }
+  }
+
+  // Update the file lists
+  previousFileList.value = [...fileList]
   uploadFileList.value = fileList
   form.value.files = toValidFiles(fileList)
 }
-
-const emit = defineEmits<{
-  (e: 'submit', data: typeof form.value): void
-  (e: 'close'): void
-}>()
 
 const updateForm = (value: number[]) => {
   form.value.family_member_ids = value
@@ -155,20 +196,35 @@ const onFormSubmit = async () => {
       message.error('Please fill in all required fields.')
       return
     }
-    Number($route.params.id) ? await updateTimeCapsule() : await handleCreation()
+    try {
+      Number(selectedCapsule.value?.id) ? await updateTimeCapsule() : await handleCreation()
+
+      AlertService.success({
+        subject: selectedCapsule.value?.id ? 'Time Capsule Edited' : 'Time Capsule Created',
+        showIcon: true,
+        imageUrl: 'images/success.png',
+        closable: true,
+        closablePosition: 'left',
+        showCancelButton: false,
+        bottomSheet: !isLargeScreen.value,
+        bottomSheetHeight: 256,
+        closeText: 'Cancel',
+      })
+    } catch (error) {
+      handleApiError(error, message)
+    }
   })
 }
 
 const handleCreation = async () => {
   loading.value = true
   try {
-    const response = await createTimeCapsuleMutation.mutateAsync(form.value)
-    message.success(response?.message || 'Time capsule created successfully')
+    await createTimeCapsuleMutation.mutateAsync(form.value)
     emit('submit', form.value)
     emit('close')
     $router.replace({ name: 'App.TimeCapsules.View' })
   } catch (error) {
-    handleApiError(error, message)
+    throw error
   } finally {
     loading.value = false
   }
@@ -177,17 +233,16 @@ const handleCreation = async () => {
 const handleUpdate = async (password?: string) => {
   loading.value = true
   try {
-    const response = await updateTimeCapsuleMutation.mutateAsync({
+    await updateTimeCapsuleMutation.mutateAsync({
       ...form.value,
       password,
-      id: Number($route.params.id),
+      id: Number(selectedCapsule.value?.id),
     })
-    message.success(response?.message || 'Time capsule updated successfully')
     emit('submit', form.value)
     emit('close')
     $router.replace({ name: 'App.TimeCapsules.View' })
   } catch (error) {
-    handleApiError(error, message)
+    throw error
   } finally {
     loading.value = false
   }
@@ -201,8 +256,12 @@ const updateTimeCapsule = async () => {
     message:
       'We know that many things may happen but we hope that you always remember your new password',
     closable: true,
+    closeText: 'Cancel',
     showIcon: false,
+    bottomSheet: !isLargeScreen.value,
+    bottomSheetHeight: 400,
     closablePosition: 'left',
+    bottomSheetFooterClass: 'justify-center! mt-3!',
     inputs: [
       {
         type: 'password',
@@ -210,10 +269,6 @@ const updateTimeCapsule = async () => {
         label: 'Password',
         placeholder: 'Enter Password',
         required: true,
-        validation: (value: string) => {
-          if (!value) return 'Password is required'
-          return null
-        },
       },
     ],
     showCancelButton: false,
@@ -228,13 +283,6 @@ const updateTimeCapsule = async () => {
   if (password) {
     await handleUpdate(password)
   }
-}
-
-const fetchTimeCapsuleDetails = async () => {
-  loading.value = true
-  const response = await getTimeCapsuleDetails.refetch()
-  capsule.value = response.data?.data as TimeCapsuleInterface | null
-  loading.value = false
 }
 
 const formatDateForPicker = (dateString: string | undefined): string | undefined => {
@@ -255,9 +303,9 @@ const formatDateForPicker = (dateString: string | undefined): string | undefined
 }
 
 const getEditData = () => {
-  const selectedTimeCapsule = capsule.value
+  const selectedTimeCapsule = selectedCapsule.value
   if (selectedTimeCapsule) {
-    form.value = {
+    const formData = {
       title: selectedTimeCapsule.title,
       description: selectedTimeCapsule.description,
       open_at: formatDateForPicker(selectedTimeCapsule.open_at),
@@ -268,16 +316,20 @@ const getEditData = () => {
               typeof member.id === 'number',
           )
           .map((member) => member.id) ?? [],
-      files: [], // Existing attachments are already on server, files array is for new uploads only
+      files: [],
     }
+    timeCapsuleStore.setStoreProp('timeCapsuleForm', formData)
     // Convert existing attachments to UploadFileInfo format for display
-    uploadFileList.value = selectedTimeCapsule.attachments.map((attachment) => ({
+    const fileList = selectedTimeCapsule.attachments.map((attachment) => ({
       id: String(attachment.id),
       name: attachment.name,
       status: 'finished' as const,
       url: attachment.url,
       thumbnail: attachment.thumbnail || attachment.url,
     }))
+    uploadFileList.value = fileList
+    // Store the initial file list to track deletions
+    previousFileList.value = [...fileList]
   }
 }
 
@@ -306,6 +358,13 @@ onMounted(async () => {
   font-size: 24px !important;
   font-weight: 700 !important;
   color: #bababa !important;
+  line-height: 150% !important;
+  font-family: General Sans;
+}
+:deep(.title-input .n-input__input-el) {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #1f1f1f !important;
   line-height: 150% !important;
   font-family: General Sans;
 }

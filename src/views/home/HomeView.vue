@@ -6,24 +6,27 @@
         <!-- Did you know card -->
         <div class="w-full">
           <img
-            src="@/assets/images/welcome-banner.png"
+            v-if="isLargeScreen"
+            src="@/assets/images/welcome-banner.png
+            "
             alt="Did you know?"
-            class="w-[346px] md:w-full h-auto md:h-full"
+            class="w-full h-full"
+          />
+          <img
+            v-else
+            src="@/assets/images/welcome-banner-small.png"
+            alt="Did you know?"
+            @click="$router.push({ name: 'App.HeritageView' })"
           />
         </div>
 
-        <GrowthStageCard
+        <!-- <GrowthStageCard
           class="mt-6"
           :stage-title="growthStage.stageTitle"
           :next-stage="growthStage.nextStage"
           :description="growthStage.description"
           :tasks="growthStage.tasks"
-        />
-
-        <!-- Reminders -->
-        <div>
-          <ReminderContainer :reminders="reminders" />
-        </div>
+        /> -->
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Announcement and Family Tradition -->
@@ -41,7 +44,7 @@
           />
 
           <!-- Right Sidebar -->
-          <div class="col-span-1 space-y-4">
+          <div class="hidden md:block col-span-1 space-y-4">
             <div
               id="home-tour-step-5"
               class="cursor-pointer border border-dashed border-gray-500 text-white rounded-2xl p-1 text-center"
@@ -104,83 +107,84 @@
   </MlbModal>
 </template>
 <script setup lang="ts">
+import { useTourStore } from '@/stores/tour'
+import { useMediaQuery } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import { useTour } from '@/composables/useTour'
 import { useHome } from '@/composables/useHome'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
-import type { Reminder } from '@/types/reminder.types'
+import { useProfileStore } from '@/stores/profile.store'
 import { ref, computed, h, watch, onMounted } from 'vue'
-import { useReminderStore } from '@/stores/reminder.store'
 import BackButton from '@/components/common/BackButton.vue'
+// import { useGetStatesQuery } from '@/services/general.service'
 import type { Announcement } from '@/types/announcement.types'
 import { useAnnouncementStore } from '@/stores/announcement.store'
-import GrowthStageCard from '@/components/home/GrowthStageCard.vue'
+// import GrowthStageCard from '@/components/home/GrowthStageCard.vue'
 import HomeCardWrapper from '@/components/home/HomeCardWrapper.vue'
 import AnnouncementForm from '@/components/home/AnnoucementForm.vue'
-import type { FormType, HomeFormConfig, StateInterface } from '@/types/general.types'
 import type { FamilyTradition } from '@/types/family-tradition.types'
-import ReminderContainer from '@/components/home/ReminderContainer.vue'
 import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
 import FamilyTraditionForm from '@/components/home/FamilyTraditionForm.vue'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
-import { useTourStore } from '@/stores/tour'
-import { useProfileStore } from '@/stores/profile.store'
-import { useGetStatesQuery } from '@/services/general.service'
+import type {
+  FormType,
+  HomeFormConfig,
+  // , StateInterface
+} from '@/types/general.types'
 
 const $route = useRoute()
 const $router = useRouter()
 const profileStore = useProfileStore()
-const reminderStore = useReminderStore()
 const { startTour: startTourAction } = useTour()
 const announcementStore = useAnnouncementStore()
 const familyTraditionStore = useFamilyTraditionStore()
+// const { refetch: refetchStates } = useGetStatesQuery()
 const { fetchAnnouncements, fetchFamilyTraditions } = useHome()
-const { refetch: refetchStates } = useGetStatesQuery()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
-const states = ref<{ label: string; value: number }[]>([])
+// const states = ref<{ label: string; value: number }[]>([])
 
-onMounted(() => {
-  refetchStates().then((response) => {
-    states.value =
-      response.data?.data?.map((state: StateInterface) => ({
-        label: state.name,
-        value: state.id,
-      })) ?? []
-  })
-})
+// onMounted(() => {
+//   refetchStates().then((response) => {
+//     states.value =
+//       response.data?.data?.map((state: StateInterface) => ({
+//         label: state.name,
+//         value: state.id,
+//       })) ?? []
+//   })
+// })
 
 const showHomeFormModal = ref<boolean>(false)
 const showStartTourModal = ref<boolean>(false)
 const tourStore = useTourStore()
 const steps = computed(() => tourStore.getTourSteps?.tour_steps ?? [])
 
-const growthStage = ref({
-  stageTitle: 'Seedling Stage',
-  nextStage: 'Sapling',
-  description:
-    'You are currently in the seedling stage, keep growing your family by completing the tasks below.',
-  tasks: [
-    {
-      id: 'members',
-      label: 'Add 1 family member',
-      value: 0,
-      goal: 1,
-      icon: 'vuesax.linear.profile-2user',
-    },
-    {
-      id: 'traditions',
-      label: 'Add 1 tradition',
-      value: 0,
-      goal: 1,
-      icon: 'vuesax.linear.sparkle',
-    },
-    { id: 'memories', label: 'Add 1 memory', value: 0, goal: 1, icon: 'vuesax.linear.camera' },
-  ],
-})
+// const growthStage = ref({
+//   stageTitle: 'Seedling Stage',
+//   nextStage: 'Sapling',
+//   description:
+//     'You are currently in the seedling stage, keep growing your family by completing the tasks below.',
+//   tasks: [
+//     {
+//       id: 'members',
+//       label: 'Add 1 family member',
+//       value: 0,
+//       goal: 1,
+//       icon: 'vuesax.linear.profile-2user',
+//     },
+//     {
+//       id: 'traditions',
+//       label: 'Add 1 tradition',
+//       value: 0,
+//       goal: 1,
+//       icon: 'vuesax.linear.sparkle',
+//     },
+//     { id: 'memories', label: 'Add 1 memory', value: 0, goal: 1, icon: 'vuesax.linear.camera' },
+//   ],
+// })
 
-const reminders = computed<Reminder[]>(() => reminderStore.reminders)
 const announcements = computed<Announcement[]>(() => announcementStore.announcements)
 const familyTraditions = computed<FamilyTradition[]>(() => familyTraditionStore.familyTraditions)
 
@@ -203,7 +207,7 @@ const getHomeFormsMap = (): Record<FormType, HomeFormConfig> => {
       id: 3,
       name: 'family_tradition_media',
       title: 'Upload File',
-      component: h(FamilyTraditionMediaForm, { close: () => handleCloseForm }),
+      component: h(FamilyTraditionMediaForm),
     },
   }
 }

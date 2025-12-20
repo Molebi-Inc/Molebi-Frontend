@@ -56,7 +56,7 @@
       <div>
         <img src="@/assets/svg/tree-2.svg" alt="tree" class="w-full max-h-[20vh] object-contain" />
       </div>
-      <hr class="mb-4 border-gray-200" />
+      <!-- <hr class="mb-4 border-gray-200" />
       <div class="px-4 py-3 rounded-lg cursor-pointer transition-colors">
         <div class="flex items-center gap-2">
           <div>
@@ -75,7 +75,7 @@
             <p class="font-medium text-gray-900">{{ profileStore.userDetails?.first_name }}</p>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
   </section>
 </template>
@@ -84,9 +84,9 @@
 import { ref } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import type { SidebarItem } from '@/types/layout.types'
-import { useProfileStore } from '@/stores/profile.store'
+// import { useProfileStore } from '@/stores/profile.store'
 
-const profileStore = useProfileStore()
+// const profileStore = useProfileStore()
 
 const sidebarCollapsed = ref(false)
 const sidebarItems: SidebarItem[] = [

@@ -17,7 +17,7 @@ export const heritageVaultRoutes = [
         component: HeritageVaultView,
         meta: {
           pageTitle: 'Heritage Vault',
-          fullScreen: 'mobile',
+          fullScreen: 'mobile-footer',
         },
         children: [
           {

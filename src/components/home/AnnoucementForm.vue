@@ -150,7 +150,7 @@ const getEditData = () => {
       title: selectedAnnouncement.title,
       content: selectedAnnouncement.content,
       type: null,
-      priority: selectedAnnouncement.priority.value,
+      priority: selectedAnnouncement.priority,
       member_ids: selectedAnnouncement.members.map((member: FamilyMemberInterface) => member.id),
       create_reminder: selectedAnnouncement.send_to_all,
     }
@@ -179,6 +179,13 @@ onMounted(() => {
   font-size: 24px !important;
   font-weight: 700 !important;
   color: #bababa !important;
+  line-height: 150% !important;
+  font-family: General Sans;
+}
+:deep(.title-input .n-input__input-el) {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #1f1f1f !important;
   line-height: 150% !important;
   font-family: General Sans;
 }

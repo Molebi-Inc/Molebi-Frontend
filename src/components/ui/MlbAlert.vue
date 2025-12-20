@@ -3,26 +3,39 @@
   <MlbModal
     v-if="config && config.type !== 'toast' && show"
     v-model:show="localShow"
+    :bottom-sheet="config.bottomSheet"
+    :bottom-sheet-height="config.bottomSheetHeight"
     :class="[config.modalClass, 'rounded-3xl!']"
     :style="{
-      width: config.width || '90%',
-      maxWidth: config.maxWidth || '600px',
+      width: config.bottomSheet ? '100%' : config.width || '90%',
+      maxWidth: config.bottomSheet ? '100%' : config.maxWidth || '600px',
     }"
+    :bottom-sheet-footer-class="config.bottomSheetFooterClass"
   >
     <template #header>
+      <div v-if="config.header">
+        <component v-if="typeof config.header !== 'string'" :is="config.header" />
+        <span v-else v-html="config.header"></span>
+      </div>
       <div
-        v-if="config.closable !== false"
+        v-else-if="config.closable !== false"
         :class="[
           'flex mb-4',
           config.closablePosition === 'right' ? 'justify-end' : 'justify-start',
         ]"
       >
         <button
-          @click="handleClose"
+          text="config.closeText"
           class="p-1 hover:bg-gray-100 rounded-full transition-colors"
           aria-label="Close"
+          @click="handleClose"
         >
-          <MlbIcon name="vuesax.linear.close-circle" :size="24" />
+          <div v-if="config.closeText" class="text-sm text-[#626262]">
+            {{ config.closeText }}
+          </div>
+          <div v-else>
+            <MlbIcon name="vuesax.linear.close-circle" :size="24" />
+          </div>
         </button>
       </div>
     </template>
@@ -442,9 +455,28 @@ async function handleConfirm() {
     }
   }
 
+  // Store input values before clearing
+  const submittedValues = { ...inputValues.value }
+
+  // Clear form inputs after successful submission
+  if (config.inputs && config.inputs.length > 0) {
+    // Reset input values to initial state
+    inputValues.value = config.inputs.reduce(
+      (acc, input) => {
+        acc[input.name] = input.value || ''
+        return acc
+      },
+      {} as Record<string, string>,
+    )
+    // Clear form validation state
+    if (formRef.value) {
+      formRef.value.restoreValidation()
+    }
+  }
+
   // Close if configured to do so
   if (config.buttonConfig?.confirm?.closeOnClick !== false) {
-    resolveAlert(inputValues.value)
+    resolveAlert(submittedValues)
   }
 }
 

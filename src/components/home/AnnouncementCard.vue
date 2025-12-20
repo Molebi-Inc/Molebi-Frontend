@@ -5,7 +5,9 @@
     }"
   >
     <div v-if="!items.length && !loading">
-      <div class="py-9 px-4 bg-white rounded-2xl" style="box-shadow: 0px 4px 50px 0px #a8a8a81a">
+      <div
+        class="py-9 px-4 bg-white rounded-2xl border border-gray-200 md:border-none shadow-[0px_4px_50px_0px_#a8a8a81a]"
+      >
         <p class="text-gray-400 text-sm font-medium text-center">
           You don't have any announcements yet? <br />Let's start one!<br /><br />
           Click the announcement button <br />
@@ -33,12 +35,12 @@
             :class="[
               'text-[10px] px-2 font-medium py-0.5 rounded-[20px]',
               {
-                'text-red-500 bg-red-100': announcement.priority.label === 'High',
-                'text-yellow-500 bg-yellow-100': announcement.priority.label === 'Normal',
-                'text-blue-500 bg-blue-100': announcement.priority.label === 'Low',
+                'text-red-500 bg-red-100': announcement.priority.toLowerCase() === 'high',
+                'text-yellow-500 bg-yellow-100': announcement.priority.toLowerCase() === 'medium',
+                'text-blue-500 bg-blue-100': announcement.priority.toLowerCase() === 'low',
               },
             ]"
-            >⚉ {{ announcement.priority.label }}
+            >⚉ {{ announcement.priority.toLowerCase() }}
           </span>
           <div>
             <n-dropdown

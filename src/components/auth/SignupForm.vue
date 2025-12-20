@@ -83,13 +83,18 @@
         <div class="grow border-t border-gray-400"></div>
       </div>
       <div class="flex gap-2 justify-center">
-        <MlbButton v-for="option in socialSignInOptions" :key="option.label">
+        <MlbButton
+          v-for="option in socialSignInOptions"
+          :key="option.label"
+          @click="handleSocialAuth(option.tag as SocialAuthenticationProvider)"
+        >
           <template #icon>
             <MlbIcon :name="option.icon" />
           </template>
         </MlbButton>
       </div>
     </div>
+    <OverlayLoader v-if="socialAuthLoader" />
   </div>
 </template>
 
@@ -107,14 +112,18 @@ import { useAuthenticationStore } from '@/stores/authentication.store'
 import { useSignupMutation } from '@/services/authentication.services'
 import { signupValidation } from '@/validations/authentication.validations'
 import { NForm, NFormItem, NInput, NSelect, NInputGroup, useMessage } from 'naive-ui'
+import { useSocialSignin } from '@/composables/social-signin.composable'
+import type { SocialAuthenticationProvider } from '@/types/authentication.types'
 
 const $router = useRouter()
 const message = useMessage()
+const authConfig = useAuthConfig()
 const { form, rules } = signupValidation()
 const signupMutation = useSignupMutation()
-const authConfig = useAuthConfig()
 const authenticationStore = useAuthenticationStore()
+const { handleSocialAuthenticationRedirect } = useSocialSignin()
 
+const socialAuthLoader = ref<boolean>(false)
 const formRef = ref<FormInst | null>(null)
 const loading = computed(() => signupMutation.isPending.value)
 
@@ -159,16 +168,27 @@ const socialSignInOptions = computed(() => [
   {
     label: 'Google',
     icon: 'google',
+    tag: 'google',
   },
-  {
-    label: 'Facebook',
-    icon: 'facebook',
-  },
-  {
-    label: 'Apple',
-    icon: 'apple',
-  },
+  // {
+  //   label: 'Facebook',
+  //   icon: 'facebook',
+  // },
+  // {
+  //   label: 'Apple',
+  //   icon: 'apple',
+  // },
 ])
+const handleSocialAuth = async (provider: SocialAuthenticationProvider) => {
+  socialAuthLoader.value = true
+  try {
+    await handleSocialAuthenticationRedirect(provider)
+  } catch (error) {
+    handleApiError(error, message)
+  } finally {
+    socialAuthLoader.value = false
+  }
+}
 </script>
 
 <style scoped>

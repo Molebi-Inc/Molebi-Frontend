@@ -5,6 +5,10 @@ export interface CreateFolderValues {
   title: string | undefined
 }
 
+export interface CreateFilesValues {
+  files: File[]
+}
+
 export interface AttachmentInterface {
   id: number
   name: string
@@ -33,4 +37,5 @@ export interface VaultStoreInterface {
   selectedFolder: FolderInterface | null
   folders: FolderInterface[]
   foldersLoading: boolean
+  pin: string
 }

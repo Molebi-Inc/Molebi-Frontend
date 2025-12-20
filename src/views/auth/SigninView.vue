@@ -62,8 +62,8 @@
                 block
                 type="submit"
                 label="Login"
-                :loading="loading"
-                :disabled="loading"
+                :loading="signinLoader"
+                :disabled="signinLoader"
                 class="rounded-2xl! bg-primary-700! h-13! text-white!"
                 @click="onFormSubmit"
               />
@@ -91,7 +91,11 @@
                   <div class="grow border-t border-gray-400"></div>
                 </div>
                 <div class="flex gap-2 justify-center">
-                  <MlbButton v-for="option in socialSignInOptions" :key="option.label">
+                  <MlbButton
+                    v-for="option in socialSignInOptions"
+                    :key="option.label"
+                    @click="handleSocialAuth(option.tag as SocialAuthenticationProvider)"
+                  >
                     <template #icon>
                       <MlbIcon :name="option.icon" />
                     </template>
@@ -124,23 +128,27 @@
         <ResetPasswordEmailForm @back="active = false" />
       </n-drawer-content>
     </n-drawer>
+    <OverlayLoader v-if="loading" />
   </div>
 </template>
 <script setup lang="ts">
-import { signinValidation } from '@/validations/authentication.validations'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMediaQuery } from '@vueuse/core'
-import BackButton from '@/components/common/BackButton.vue'
-import ResetPasswordEmailForm from '@/components/auth/ResetPasswordEmailForm.vue'
-import { useMessage, NForm, NFormItem, NDrawer, NDrawerContent } from 'naive-ui'
 import type { FormInst } from 'naive-ui'
+import { useMediaQuery } from '@vueuse/core'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
-import MlbButton from '@/components/ui/MlbButton.vue'
-import { ref, computed } from 'vue'
-import { useSigninMutation } from '@/services/authentication.services'
 import { useAuthConfig } from '@/config/auth.config'
+import MlbButton from '@/components/ui/MlbButton.vue'
 import { handleApiError } from '@/helpers/error.helpers'
+import BackButton from '@/components/common/BackButton.vue'
+import OverlayLoader from '@/components/common/OverlayLoader.vue'
+import { useSigninMutation } from '@/services/authentication.services'
+import { useSocialSignin } from '@/composables/social-signin.composable'
+import { signinValidation } from '@/validations/authentication.validations'
+import { useMessage, NForm, NFormItem, NDrawer, NDrawerContent } from 'naive-ui'
+import ResetPasswordEmailForm from '@/components/auth/ResetPasswordEmailForm.vue'
+import type { SocialAuthenticationProvider } from '@/types/authentication.types'
 
 const $router = useRouter()
 const message = useMessage()
@@ -148,11 +156,13 @@ const authConfig = useAuthConfig()
 const signinMutation = useSigninMutation()
 const { form, rules } = signinValidation()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
+const { handleSocialAuthenticationRedirect } = useSocialSignin()
 
 const active = ref<boolean>(false)
+const loading = ref<boolean>(false)
 const formRef = ref<FormInst | null>(null)
 
-const loading = computed(() => signinMutation.isPending.value)
+const signinLoader = computed(() => signinMutation.isPending.value)
 
 const onFormSubmit = async () => {
   formRef.value?.validate(async (errors) => {
@@ -163,25 +173,36 @@ const onFormSubmit = async () => {
     try {
       const response = await signinMutation.mutateAsync(form.value)
       authConfig.setToken(response.data.token)
+      $router.push({ name: 'App.HomeView' })
     } catch (error) {
       handleApiError(error, message)
     }
-    $router.push({ name: 'App.HomeView' })
   })
 }
 
 const socialSignInOptions = computed(() => [
   {
     label: 'Google',
+    tag: 'google',
     icon: 'google',
   },
-  {
-    label: 'Facebook',
-    icon: 'facebook',
-  },
-  {
-    label: 'Apple',
-    icon: 'apple',
-  },
+  // {
+  //   label: 'Facebook',
+  //   icon: 'facebook',
+  // },
+  // {
+  //   label: 'Apple',
+  //   icon: 'apple',
+  // },
 ])
+const handleSocialAuth = async (provider: SocialAuthenticationProvider) => {
+  loading.value = true
+  try {
+    await handleSocialAuthenticationRedirect(provider)
+  } catch (error) {
+    handleApiError(error, message)
+  } finally {
+    loading.value = false
+  }
+}
 </script>

@@ -23,7 +23,8 @@
         <header
           v-if="
             (isLargeScreen && !['web'].includes($route.meta.fullScreen as string)) ||
-            (!isLargeScreen && !['mobile'].includes($route.meta.fullScreen as string))
+            (!isLargeScreen &&
+              !['mobile', 'mobile-footer'].includes($route.meta.fullScreen as string))
           "
         >
           <HeaderComponent />

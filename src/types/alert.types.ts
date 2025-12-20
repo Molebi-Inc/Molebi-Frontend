@@ -37,6 +37,7 @@ export interface AlertConfig {
   subject?: string // Title/Heading
   message?: string // Main message/description
   html?: string | VNode // HTML content (alternative to message) - can be string or VNode
+  header?: string | VNode // Custom header content
 
   // Icon configuration
   iconName?: string
@@ -83,9 +84,13 @@ export interface AlertConfig {
   // Modal specific
   closable?: boolean // Show close button (default: true)
   closablePosition?: 'right' | 'left'
+  closeText?: string
   maskClosable?: boolean // Close on mask click (default: false for confirm, true for others)
   width?: string | number
   maxWidth?: string | number
+  bottomSheet?: boolean
+  bottomSheetHeight?: number
+  bottomSheetFooterClass?: string
 
   // Promise resolve/reject
   resolve?: (value: unknown) => void

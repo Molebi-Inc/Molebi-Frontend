@@ -25,7 +25,7 @@ export default defineConfig({
         description:
           'Discover. Preserve. Connect. Build your family tree and preserve your legacy.',
         theme_color: '#0F4C3F',
-        background_color: '#fcfcf9',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',

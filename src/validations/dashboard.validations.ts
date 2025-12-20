@@ -9,6 +9,7 @@ import { ref } from 'vue'
 import type { FormItemRule } from 'naive-ui'
 import { z } from 'zod'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
+import type { CreateFilesValues } from '@/types/vault.types'
 
 export const announcementValidation = () => {
   const form = ref<AnnouncementFormValues>({
@@ -302,6 +303,38 @@ export const storageValidation = () => {
         }
       },
     },
+    files: {
+      required: true,
+      trigger: 'change',
+      validator: async (_rule: FormItemRule, value: File[]) => {
+        try {
+          schema.pick({ files: true }).parse({ files: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'At least one file is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+  }
+
+  return {
+    form,
+    rules,
+  }
+}
+
+export const createFilesValidation = () => {
+  const form = ref<CreateFilesValues>({
+    files: [],
+  })
+
+  const schema = z.object({
+    files: z.array(z.instanceof(File)).min(1, { message: 'At least one file is required.' }),
+  })
+
+  const rules = {
     files: {
       required: true,
       trigger: 'change',

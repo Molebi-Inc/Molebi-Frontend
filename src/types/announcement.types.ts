@@ -18,18 +18,12 @@ export interface AnnouncementFormErrors {
   family_members?: { message: string }[]
 }
 
-export interface AnnouncementPriority {
-  value: 'high' | 'medium' | 'low'
-  label: 'High' | 'Normal' | 'Low'
-  color: 'red' | 'brown' | 'gray'
-}
-
 export interface Announcement {
   id: number
   family_tree_id: number
   title: string
   content: string
-  priority: AnnouncementPriority
+  priority: 'high' | 'medium' | 'low'
   send_to_all: boolean
   creator: {
     id: number

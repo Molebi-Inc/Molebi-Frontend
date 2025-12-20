@@ -203,6 +203,9 @@ const modalComponent = computed(() => {
       return {
         component: FamilyTraditionMediaForm,
         title: 'Upload File',
+        props: {
+          onlyMediaUpload: currentFlow.value === 'vault' ? true : false,
+        },
       }
     case routeNames.includes(String($route.name)) &&
       !$route.params.id &&
@@ -231,13 +234,18 @@ const modalComponent = computed(() => {
 const postSubmitActions = () => {
   if ($route.query.tab) {
     fetchFolderDetails()
+    showVaultModal.value = false
+    const query = { ...$route.query }
+    delete query.tab
+    $router.push({
+      name: $route.name,
+      params: $route.params,
+      query,
+    })
   }
 }
 
 const handleClickFolder = (event: { flow: string }) => {
-  console.log(event)
-  console.log($route.query.action)
-  console.log(event.flow === 'vault' && $route.query.action === 'verify-pin')
   if (event.flow === 'vault' && $route.query.action === 'verify-pin') {
     showVaultModal.value = true
   }
@@ -270,6 +278,7 @@ const handleUpdateFolder = (key: string) => {
 }
 
 const handlePinSubmitted = async (value: string) => {
+  vaultStore.setStoreProp('pin', value)
   await fetchVaultFolder(vaultStore.selectedFolder?.id as number, value)
   showVaultModal.value = false
   const query = { ...$route.query }
@@ -391,6 +400,17 @@ watch(
   async ([routeName, id]) => {
     if (routeName === 'App.VaultFolderView' && !!id && !vaultStore.selectedFolder) {
       $router.push({ name: 'App.VaultFolderView' })
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => $route.query.tab,
+  (newVal) => {
+    if (newVal && $route.params.id) {
+      console.log('newVal', newVal)
+      showVaultModal.value = true
     }
   },
   { immediate: true },
