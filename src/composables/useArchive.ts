@@ -68,15 +68,14 @@ export const useArchive = () => {
       currentFlow.value === 'vault'
         ? await vault.deleteVaultFolder(id)
         : await storage.deleteStorageFolder(id)
-    setSelectedFolder(null)
     return response
   }
 
   const handleFileCreation = async (data: FamilyMediaFormValues | CreateFilesValues) => {
-    switch ($route.name) {
-      case 'App.VaultFolderView':
+    switch (currentFlow.value) {
+      case 'vault':
         return await vault.handleCreateFolder(data as CreateFilesValues)
-      case 'App.StorageFolderView':
+      case 'storage':
         return await storage.handleCreateFile(data as FamilyMediaFormValues)
       default:
         throw new Error('Invalid route name')
@@ -86,8 +85,7 @@ export const useArchive = () => {
   const fetchFolderMedia = async () => {
     const media =
       currentFlow.value === 'vault'
-        ? //  ? await vault.fetchFolderMedia()
-          vaultStore.selectedFolder?.attachments || []
+        ? vaultStore.selectedFolder?.attachments || []
         : await storage.fetchFolderMedia()
     return media
   }
@@ -102,6 +100,16 @@ export const useArchive = () => {
     return currentFlow.value === 'storage'
       ? await storage.fetchStorageFolder()
       : vault.fetchVaultFolder(vaultStore.selectedFolder?.id as number, vaultStore.pin as string)
+  }
+
+  const handleDeleteMedia = async (mediaIds: number[]) => {
+    if (currentFlow.value === 'vault') {
+      await vault.handleDeleteMedia(mediaIds)
+    } else {
+      await storage.handleDeleteMedia(mediaIds)
+    }
+    await fetchFolderDetails()
+    await fetchFolderMedia()
   }
 
   return {
@@ -119,5 +127,6 @@ export const useArchive = () => {
     clearFolderMedia,
     fetchFolderDetails,
     fileUploading,
+    handleDeleteMedia,
   }
 }

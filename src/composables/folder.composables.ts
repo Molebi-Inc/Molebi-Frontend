@@ -7,6 +7,7 @@ import { AlertService } from '@/services/alert.service'
 import type { FolderInterface } from '@/types/vault.types'
 import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 import type { StorageFolderInterface } from '@/types/storage.types'
+import { useMediaQuery } from '@vueuse/core'
 
 export const useFolderMenu = () => {
   const $route = useRoute()
@@ -14,6 +15,7 @@ export const useFolderMenu = () => {
   const { deleteArchiveFolder } = useArchive()
   const { loading, fetchVaultFolder } = useVault()
   const { currentFlow, setSelectedFolder } = useArchive()
+  const isLargeScreen = useMediaQuery('(min-width: 768px)')
   // const $emit = defineEmits<{
   //   (
   //     e: 'select:option',
@@ -46,7 +48,13 @@ export const useFolderMenu = () => {
   const handleSelect = (key: string, folder: FolderInterface | StorageFolderInterface) => {
     setSelectedFolder(folder)
     const action = {
-      edit: () => {},
+      edit: () => {
+        $router.push({
+          name: $route.name,
+          params: { ...$route.params, id: folder.id },
+          query: { ...$route.query },
+        })
+      },
       'add-media': () => {
         $router.push({
           name: $route.name,
@@ -88,6 +96,8 @@ export const useFolderMenu = () => {
       closable: true,
       showIcon: false,
       closablePosition: 'left',
+      fullPageAlert: !isLargeScreen.value,
+      textAlign: !isLargeScreen.value ? 'left' : 'center',
       html: h(VaultPinForm, {
         loading: loading.value,
         onPinSubmitted: async (value: string) =>

@@ -13,48 +13,49 @@
           />
           <p>Nothing to see here yet <br />Click the '+' button at the top to add one</p>
         </div>
-        <div
-          v-if="submodule === 'vault' && vaultStore.folders.length"
-          class="my-6 flex items-center justify-between"
-        >
-          <BackButton
-            icon="vuesax.linear.arrow-left"
-            :previous-route="false"
-            @update:go-back="
-              $router.push({ name: 'App.HeritageVaultView', params: { module: 'family-archive' } })
-            "
-          />
-          <div>Your Vault</div>
-          <div>
-            <MlbIcon
-              name="vuesax.linear.add"
-              color="#333333"
-              :size="24"
-              @click.prevent="handleAddModal"
-            />
-          </div>
-        </div>
         <div v-if="showFolders" class="h-full">
+          <div
+            v-if="module === 'vault' && $route.params.page === 'folders'"
+            class="my-6 flex items-center justify-between"
+          >
+            <BackButton
+              label=""
+              icon="vuesax.linear.arrow-left"
+              :previous-route="false"
+              @update:go-back="
+                $router.push({
+                  name: 'App.HeritageVaultView',
+                  params: { module: 'vault' },
+                })
+              "
+            />
+            <div>Your Vault</div>
+            <div>
+              <MlbIcon
+                name="vuesax.linear.add"
+                color="#333333"
+                :size="24"
+                @click.prevent="handleAddModal"
+              />
+            </div>
+          </div>
           <FolderWrapper
             :folders="folders"
             :heritageVault="true"
             @click:folder="handleFolderClick"
           />
         </div>
-      </div>
-
-      <hr v-if="submodule === 'storage'" class="border-gray-200" />
-
-      <div
-        v-if="submodule === 'storage'"
-        class="flex-[1] flex flex-col justify-center p-4 rounded-lg hover:shadow-md hover:bg-gray-100 cursor-pointer"
-        @click="
-          $router.push({ name: 'App.HeritageVaultView.Folders', params: { submodule: 'vault' } })
-        "
-      >
-        <MlbIcon name="vuesax.bold.lock" :size="24" />
-        <div class="mt-1 font-medium">Your Vault</div>
-        <div class="mt-3 font-medium text-gray-700 text-sm">{{ formattedFileCount }}</div>
+        <div
+          v-else
+          class="flex-1 flex flex-col justify-center p-4 rounded-lg hover:shadow-md hover:bg-gray-100 cursor-pointer"
+          @click="
+            $router.push({ name: $route.name, params: { ...$route.params, page: 'folders' } })
+          "
+        >
+          <MlbIcon name="vuesax.bold.lock" :size="24" />
+          <div class="mt-1 font-medium">Your Vault</div>
+          <div class="mt-3 font-medium text-gray-700 text-sm">{{ formattedFileCount }}</div>
+        </div>
       </div>
     </div>
   </section>
@@ -84,22 +85,26 @@ const storage = useStorage()
 const vaultStore = useVaultStore()
 const storageStore = useStorageStore()
 
-const submodule = ref<'storage' | 'vault'>('storage')
+const $emit = defineEmits<{
+  (e: 'update:show-add-modal', value: boolean): void
+}>()
+
+const module = ref<'storage' | 'vault'>('storage')
 
 const isEmpty = computed(
   () =>
-    (submodule.value === 'storage' && !storageStore.folders.length) ||
-    (submodule.value === 'vault' && !vaultStore.folders.length),
+    (module.value === 'storage' && !storageStore.folders.length) ||
+    (module.value === 'vault' && !vaultStore.folders.length && $route.params.page === 'folders'),
 )
 
 const showFolders = computed(
   () =>
-    (submodule.value === 'storage' && storageStore.folders.length) ||
-    (submodule.value === 'vault' && vaultStore.folders.length),
+    (module.value === 'storage' && storageStore.folders.length) ||
+    (module.value === 'vault' && vaultStore.folders.length && $route.params.page === 'folders'),
 )
 
 const folders = computed<StorageFolderInterface[] | FolderInterface[]>(() =>
-  submodule.value === 'storage' ? storageStore.folders : vaultStore.folders,
+  module.value === 'storage' ? storageStore.folders : vaultStore.folders,
 )
 
 const formattedFileCount = computed(() => {
@@ -116,14 +121,16 @@ const getArchiveFiles = async () => {
   }
 }
 
-const handleAddModal = () => {}
+const handleAddModal = () => {
+  $emit('update:show-add-modal', true)
+}
 
 const handleFolderClick = (event: { id?: number }) => {
   $router.push({
     name: 'App.HeritageVaultView.Gallery',
     params: {
       module: $route.params.module,
-      submodule: submodule.value,
+      page: $route.params.page,
       id: event.id,
     },
   })
@@ -134,14 +141,14 @@ onMounted(async () => {
 })
 
 watch(
-  () => $route.params.submodule as 'storage' | 'vault',
+  () => $route.params.module as 'storage' | 'vault',
   () => {
-    if ($route.params.submodule) {
-      submodule.value = ($route.params.submodule as 'storage' | 'vault') || 'storage'
+    if ($route.params.module) {
+      module.value = ($route.params.module as 'storage' | 'vault') || 'storage'
     } else {
-      $router.push({ name: 'App.HeritageVaultView.Folders', params: { submodule: 'storage' } })
+      $router.push({ name: $route.name, params: { ...$route.params, page: 'folders' } })
     }
-    generalStore.setStoreProp('flow', submodule.value)
+    generalStore.setStoreProp('flow', module.value)
   },
   { immediate: true },
 )

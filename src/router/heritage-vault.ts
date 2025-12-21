@@ -3,7 +3,7 @@ import HeritageVaultGalleryView from '@/views/heritage-vault/HeritageVaultGaller
 
 export const heritageVaultRoutes = [
   {
-    path: '/heritage-vault',
+    path: '/family-archive',
     name: 'App.HeritageVaultLayout',
     component: () => import('@/layouts/AppLayout.vue'),
     meta: {
@@ -12,7 +12,7 @@ export const heritageVaultRoutes = [
     },
     children: [
       {
-        path: ':module(family-archive|time-capsule)?',
+        path: ':module(storage|vault)/:page(folders)?',
         name: 'App.HeritageVaultView',
         component: HeritageVaultView,
         meta: {
@@ -21,16 +21,9 @@ export const heritageVaultRoutes = [
         },
         children: [
           {
-            path: ':submodule(storage|vault)',
-            name: 'App.HeritageVaultView.Folders',
-            component: HeritageVaultView,
-            children: [
-              {
-                path: ':id',
-                name: 'App.HeritageVaultView.Gallery',
-                component: HeritageVaultGalleryView,
-              },
-            ],
+            path: ':id(\\d+)',
+            name: 'App.HeritageVaultView.Gallery',
+            component: HeritageVaultGalleryView,
           },
         ],
       },

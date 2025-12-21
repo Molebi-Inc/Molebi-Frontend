@@ -4,14 +4,24 @@ import { z } from 'zod'
 import { useArchive } from '@/composables/useArchive'
 import type { CreateFolderValues } from '@/types/vault.types'
 
-export const pinValidation = () => {
+export const pinValidation = (hasConfirmation: boolean) => {
   const form = ref({
     pin: [] as string[],
+    pin_confirmation: [] as string[],
   })
   const pinSchema = z.object({
     pin: z
       .array(z.string().min(1, { message: 'Each field is required.' }))
       .length(4, { message: 'PIN must be 4 digits.' }),
+    pin_confirmation: hasConfirmation
+      ? z
+          .array(z.string().min(1, { message: 'Each field is required.' }))
+          .length(4, { message: 'PIN confirmation must be 4 digits.' })
+          .refine((val: string[]) => val.every((v, index) => v === form.value.pin[index]), {
+            message: 'PIN confirmation does not match.',
+            path: ['pin_confirmation'],
+          })
+      : z.array(z.string()).optional(),
   })
   const rules = {
     pin: {
@@ -23,6 +33,22 @@ export const pinValidation = () => {
           return Promise.resolve()
         } catch (err: unknown) {
           const messageText = err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid PIN.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    pin_confirmation: {
+      required: hasConfirmation,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string[]) => {
+        try {
+          if (hasConfirmation) {
+            pinSchema.pick({ pin_confirmation: true }).parse({ pin_confirmation: value })
+          }
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid PIN confirmation.'
           return Promise.reject(messageText)
         }
       },

@@ -123,7 +123,7 @@ export const useUpdateVaultPinMutation = () => {
       id: number
     }) => {
       const response = await axiosInstance.post<ApiResponse<FolderInterface>>(
-        `/api/user/memory-vaults/${id}/pin`,
+        `/api/user/memory-vaults/${id}`,
         { current_pin, new_pin, _method: 'PUT' },
         { headers: { Authorization: `Bearer ${authConfig.getToken()}` } },
       )
@@ -143,6 +143,24 @@ export const useGetVaultFolderMutation = () => {
         `/api/user/memory-vaults/${id}`,
         { pin: pin },
         { headers: { Authorization: `Bearer ${authConfig.getToken()}` } },
+      )
+      return response.data
+    },
+  })
+}
+
+export const useDeleteVaultMediaMutation = () => {
+  return useMutation<
+    ApiResponse,
+    AxiosError<ValidationErrorResponse>,
+    { id: number; mediaId: number }
+  >({
+    mutationFn: async ({ id, mediaId }: { id: number; mediaId: number }) => {
+      const response = await axiosInstance.delete<ApiResponse>(
+        `/api/user/memory-vaults/${id}/media/${mediaId}`,
+        {
+          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+        },
       )
       return response.data
     },

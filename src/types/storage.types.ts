@@ -41,6 +41,12 @@ export interface StorageStoreInterface {
 }
 
 export interface ShareFolderFormValues {
-  family_member_id: number[]
+  family_member_ids: number[]
   permission: 'view' | 'edit' | 'manage'
+}
+
+export interface ShareableLinkResponseData {
+  share_token: string
+  share_link: string
+  expires_at: string
 }

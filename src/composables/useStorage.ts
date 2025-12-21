@@ -8,6 +8,7 @@ import {
   useAddFilesMutation,
   useGetFolderMediaQuery,
   useGetStorageFolderQuery,
+  useDeleteStorageMediaMutation,
 } from '@/services/storage.services'
 import { useRoute } from 'vue-router'
 import type { MaybeRefOrGetter } from 'vue'
@@ -25,6 +26,7 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   const createFolderMutation = useCreateFolderMutation()
   const updateFolderMutation = useUpdateFolderMutation()
   const deleteFolderMutation = useDeleteFolderMutation()
+  const deleteStorageMediaMutation = useDeleteStorageMediaMutation()
 
   // Safely convert route.params.id to a number
   const routeFolderId = computed(() => {
@@ -60,6 +62,7 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
       return await createFolderMutation.mutateAsync(data)
     } catch (error) {
       handleApiError(error, message)
+      throw error
     }
   }
 
@@ -88,6 +91,7 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
       return await updateFolderMutation.mutateAsync({ folder: data, id })
     } catch (error) {
       handleApiError(error, message)
+      throw error
     }
   }
 
@@ -99,7 +103,7 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
       response = await storageFolderCreation(data)
     }
     await fetchStorageFolders()
-    return { ...response, key: storageStore.selectedFolder ? 'edit' : 'create' }
+    return { ...(response || {}), key: storageStore.selectedFolder ? 'edit' : 'create' }
   }
 
   const deleteStorageFolder = async (id: number) => {
@@ -121,6 +125,7 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
           text: 'Delete',
           primary: false,
           action: async () => {
+            storageStore.setStoreProp('selectedFolder', null)
             await handleDeleteFolder(id)
             await fetchStorageFolders()
           },
@@ -159,6 +164,20 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     return response
   }
 
+  const handleDeleteMedia = async (mediaIds: number[]) => {
+    try {
+      for (const mediaId of mediaIds) {
+        await deleteStorageMediaMutation.mutateAsync({
+          id: storageStore.selectedFolder?.id as number,
+          mediaId,
+        })
+      }
+      message.success('Media deleted successfully')
+    } catch (error) {
+      handleApiError(error, message)
+    }
+  }
+
   return {
     loading,
     storageStore,
@@ -169,5 +188,6 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     fetchStorageFolders,
     fetchFolderMedia,
     handleCreateFile,
+    handleDeleteMedia,
   }
 }

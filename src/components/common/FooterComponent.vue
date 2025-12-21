@@ -60,7 +60,7 @@ const footerNavItems: SidebarItem[] = [
     icon: 'vuesax.outline.folder-open',
     route: {
       name: 'App.HeritageVaultView',
-      params: { module: 'family-archive', submodule: 'storage' },
+      params: { module: 'storage' },
     },
     main: true,
   },

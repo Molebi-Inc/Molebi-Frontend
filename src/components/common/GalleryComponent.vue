@@ -6,7 +6,7 @@
       class="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200 flex items-center justify-between"
     >
       <div class="flex items-center gap-4">
-        <span class="text-sm font-medium text-gray-700">
+        <span class="text-xs md:text-sm font-medium text-gray-700">
           {{ selectedMediaIds.size }} {{ selectedMediaIds.size === 1 ? 'item' : 'items' }} selected
         </span>
         <MlbButton
@@ -14,7 +14,8 @@
           text
           class="text-sm text-gray-600 hover:text-gray-900 transition-colors cursor-pointer :hover:text-underline!"
         >
-          Clear selection
+          <MlbIcon name="vuesax.linear.close-circle" :size="18" color="#374151" />
+          {{ isLargeScreen ? 'Clear selection' : '' }}
         </MlbButton>
       </div>
       <div class="flex items-center gap-3">
@@ -23,14 +24,14 @@
           class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
         >
           <MlbIcon name="vuesax.broken.document-download" :size="18" color="#374151" />
-          Download
+          {{ isLargeScreen ? 'Download' : '' }}
         </MlbButton>
         <MlbButton
           @click="handleBatchDelete"
           class="flex items-center gap-2 px-4 py-2 bg-red-50! border border-red-200! rounded-lg hover:bg-red-100! transition-colors text-sm font-medium text-red-700!"
         >
           <MlbIcon name="delete" :size="18" color="#C20000" />
-          Delete
+          {{ isLargeScreen ? 'Delete' : '' }}
         </MlbButton>
       </div>
     </div>
@@ -328,6 +329,7 @@ import MediaPreviewModal from '@/components/common/MediaPreviewModal.vue'
 import SkeletalLoader from '@/components/common/SkeletalLoader.vue'
 import { useMediaQuery } from '@vueuse/core'
 import MlbButton from '@/components/ui/MlbButton.vue'
+import { downloadFile } from '@/helpers/general.helpers'
 
 // Props
 interface Props {
@@ -357,8 +359,8 @@ const { getMediaType } = useGallery()
 
 // Emits
 const emit = defineEmits<{
-  (e: 'batch-download', mediaIds: (string | number)[]): void
-  (e: 'batch-delete', mediaIds: (string | number)[]): void
+  (e: 'batch-download', mediaIds: number[]): void
+  (e: 'batch-delete', mediaIds: number[]): void
 }>()
 
 // State
@@ -422,12 +424,19 @@ const clearSelection = () => {
 
 const handleBatchDownload = () => {
   const ids = Array.from(selectedMediaIds.value)
-  emit('batch-download', ids)
+  for (const id of ids) {
+    const item = filteredMedia.value.find((item) => item.id === id)
+    if (item) {
+      downloadFile(item.url)
+    }
+  }
+  emit('batch-download', ids as number[])
+  clearSelection()
 }
 
 const handleBatchDelete = () => {
   const ids = Array.from(selectedMediaIds.value)
-  emit('batch-delete', ids)
+  emit('batch-delete', ids as number[])
   clearSelection()
 }
 

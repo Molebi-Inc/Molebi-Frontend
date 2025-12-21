@@ -67,14 +67,16 @@
 </template>
 
 <script setup lang="ts">
-import { NButton } from 'naive-ui'
+import { ref, computed, watch } from 'vue'
+import { NButton, useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
+import { useVault } from '@/composables/useVault'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import { useVaultStore } from '@/stores/vault.store'
-import { ref, computed, watch } from 'vue'
 import { useArchive } from '@/composables/useArchive'
 import { useStorageStore } from '@/stores/storage.store'
+import { handleApiError } from '@/helpers/error.helpers'
 import BackButton from '@/components/common/BackButton.vue'
 import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 import FolderWrapper from '@/components/vault/FolderWrapper.vue'
@@ -83,12 +85,9 @@ import type { StorageFolderInterface } from '@/types/storage.types'
 import ShareFolderForm from '@/components/vault/ShareFolderForm.vue'
 import GalleryComponent from '@/components/common/GalleryComponent.vue'
 import CreateFolderForm from '@/components/vault/CreateFolderForm.vue'
+import { useDeleteFolderMediaMutation } from '@/services/storage.services'
 import type { FolderInterface, AttachmentInterface } from '@/types/vault.types'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
-import { useDeleteFolderMediaMutation } from '@/services/storage.services'
-import { useMessage } from 'naive-ui'
-import { handleApiError } from '@/helpers/error.helpers'
-import { useVault } from '@/composables/useVault'
 
 const $route = useRoute()
 const $router = useRouter()
