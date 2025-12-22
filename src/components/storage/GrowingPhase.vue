@@ -21,7 +21,7 @@
             class="rounded-2xl! bg-green-700! py-4! px-7! text-white! w-100! h-13!"
             @click="
               $router.push({
-                name: 'App.StorageFamilyInfoView',
+                name: 'App.StorageFolderView',
               })
             "
           />

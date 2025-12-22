@@ -20,6 +20,9 @@ export interface PersonalInformationFormValues {
   nickname: string | null
   family_name: string
   dob: string | null
+  state_id: number | null
+  community_name: string
+  mother_family_name: string
 }
 
 export interface PersonalInformationFormErrors {

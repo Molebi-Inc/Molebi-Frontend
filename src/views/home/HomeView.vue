@@ -20,20 +20,54 @@
           />
         </div>
 
-        <!-- <GrowthStageCard
-          class="mt-6"
-          :stage-title="growthStage.stageTitle"
-          :next-stage="growthStage.nextStage"
-          :description="growthStage.description"
-          :tasks="growthStage.tasks"
-        /> -->
+        <div class="grid md:grid-cols-5 gap-4 items-stretch">
+          <div class="md:col-span-3">
+            <GrowthStageCard
+              class="h-full"
+              :stage-title="growthStage.stageTitle"
+              :next-stage="growthStage.nextStage"
+              :description="growthStage.description"
+              :tasks="growthStage.tasks"
+            />
+          </div>
+          <div class="md:flex flex-col h-full">
+            <p class="text-sm text-gray-600 mb-2">Gender Distribution</p>
+            <div ref="genderChartContainer" class="flex-1">
+              <GenderChart
+                :men="menCount"
+                :women="womenCount"
+                :direction="isLargeScreen ? 'vertical' : 'horizontal'"
+                :height="isLargeScreen ? chartHeight : 100"
+                :width="!isLargeScreen ? chartWidth : 200"
+              />
+            </div>
+          </div>
+          <div class="md:flex flex-col h-full">
+            <div
+              class="cursor-pointer border border-dashed border-gray-500 text-primary-900 rounded-2xl p-1 text-center h-full flex flex-col"
+              @click="
+                $router.push({ name: 'App.FamilyTreeView', params: { module: 'add-member' } })
+              "
+            >
+              <div
+                class="p-6 bg-[#D4EFD48C] rounded-2xl hover:bg-[#D4EFD4] transition-colors flex-1 flex flex-col justify-center"
+              >
+                <div class="text-4xl mb-2 text-primary-700 rounded-full p-2 bg-primary-50">
+                  <MlbIcon name="vuesax.linear.add" />
+                </div>
+                <p class="font-semibold">FAMILY MEMBER</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
           <!-- Announcement and Family Tradition -->
           <HomeCardWrapper
             :items="announcements"
             card_type="announcement"
             :loading="announcementStore.loading"
+            @add-option="(option) => handleHomeFormModal(option)"
           />
 
           <!-- Family Tradition Card -->
@@ -46,7 +80,7 @@
           <!-- Right Sidebar -->
           <div class="hidden md:block col-span-1 space-y-4">
             <div
-              id="home-tour-step-5"
+              :id="isLargeScreen ? 'home-tour-step-4' : ''"
               class="cursor-pointer border border-dashed border-gray-500 text-white rounded-2xl p-1 text-center"
               @click="handleHomeFormModal('announcement')"
             >
@@ -58,7 +92,7 @@
               </div>
             </div>
             <div
-              id="home-tour-step-6"
+              :id="isLargeScreen ? 'home-tour-step-5' : ''"
               class="cursor-pointer border border-dashed border-gray-500 text-primary-900 rounded-2xl p-1 text-center"
               @click="handleHomeFormModal('family_tradition')"
             >
@@ -74,14 +108,36 @@
       </div>
     </div>
   </section>
-  <MlbModal v-model:show="showHomeFormModal" class="rounded-3xl!" @close="handleCloseForm">
+  <MlbModal
+    v-model:show="showHomeFormModal"
+    class="rounded-3xl!"
+    :bottom-sheet="!isLargeScreen"
+    :bottom-sheet-height="662"
+    @close="handleCloseForm"
+  >
     <template #header>
-      <div>
-        <BackButton icon="vuesax.linear.arrow-left" class="mb-6" :previous-route="false" />
+      <div class="flex items-center justify-between">
+        <div>
+          <BackButton
+            :label="isLargeScreen ? 'Go Back' : 'Cancel'"
+            :icon="isLargeScreen ? 'vuesax.linear.arrow-left' : ''"
+            class="mb-6"
+            :previous-route="false"
+            @update:go-back="handleCloseForm(true)"
+          />
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-gray-900 text-center md:hidden">
+            {{ homeForm?.title }}
+          </h1>
+        </div>
+        <div></div>
       </div>
     </template>
 
-    <h1 class="text-2xl font-bold text-gray-900 text-center mb-11">{{ homeForm?.title }}</h1>
+    <h1 class="text-2xl font-bold text-gray-900 text-center mb-11 hidden md:block">
+      {{ homeForm?.title }}
+    </h1>
     <component :is="homeForm?.component" :key="$route.query.ftype" @close="handleCloseForm" />
   </MlbModal>
   <MlbModal v-model:show="showStartTourModal" class="rounded-3xl!">
@@ -116,12 +172,12 @@ import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { useProfileStore } from '@/stores/profile.store'
-import { ref, computed, h, watch, onMounted } from 'vue'
+import { ref, computed, h, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import BackButton from '@/components/common/BackButton.vue'
 // import { useGetStatesQuery } from '@/services/general.service'
 import type { Announcement } from '@/types/announcement.types'
 import { useAnnouncementStore } from '@/stores/announcement.store'
-// import GrowthStageCard from '@/components/home/GrowthStageCard.vue'
+import GrowthStageCard from '@/components/home/GrowthStageCard.vue'
 import HomeCardWrapper from '@/components/home/HomeCardWrapper.vue'
 import AnnouncementForm from '@/components/home/AnnoucementForm.vue'
 import type { FamilyTradition } from '@/types/family-tradition.types'
@@ -133,12 +189,17 @@ import type {
   HomeFormConfig,
   // , StateInterface
 } from '@/types/general.types'
+import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
+import type { FamilyMemberInterface } from '@/types/family-tree.types'
+import { familyMemberGenderMap } from '@/helpers/family-tree.helpers'
+import GenderChart from '@/components/family-tree/GenderChart.vue'
 
 const $route = useRoute()
 const $router = useRouter()
 const profileStore = useProfileStore()
 const { startTour: startTourAction } = useTour()
 const announcementStore = useAnnouncementStore()
+const familyTreesQuery = useGetFamilyTreesQuery()
 const familyTraditionStore = useFamilyTraditionStore()
 // const { refetch: refetchStates } = useGetStatesQuery()
 const { fetchAnnouncements, fetchFamilyTraditions } = useHome()
@@ -160,33 +221,39 @@ const showHomeFormModal = ref<boolean>(false)
 const showStartTourModal = ref<boolean>(false)
 const tourStore = useTourStore()
 const steps = computed(() => tourStore.getTourSteps?.tour_steps ?? [])
+const familyMemberCounts = ref<{ men: number; women: number }>({ men: 0, women: 0 })
+const genderChartContainer = ref<HTMLElement | null>(null)
+const chartHeight = ref<number>(60)
+const chartWidth = ref<number>(200)
 
-// const growthStage = ref({
-//   stageTitle: 'Seedling Stage',
-//   nextStage: 'Sapling',
-//   description:
-//     'You are currently in the seedling stage, keep growing your family by completing the tasks below.',
-//   tasks: [
-//     {
-//       id: 'members',
-//       label: 'Add 1 family member',
-//       value: 0,
-//       goal: 1,
-//       icon: 'vuesax.linear.profile-2user',
-//     },
-//     {
-//       id: 'traditions',
-//       label: 'Add 1 tradition',
-//       value: 0,
-//       goal: 1,
-//       icon: 'vuesax.linear.sparkle',
-//     },
-//     { id: 'memories', label: 'Add 1 memory', value: 0, goal: 1, icon: 'vuesax.linear.camera' },
-//   ],
-// })
+const growthStage = ref({
+  stageTitle: 'Seedling Stage',
+  nextStage: 'Sapling',
+  description:
+    'You are currently in the seedling stage, keep growing your family by completing the tasks below.',
+  tasks: [
+    {
+      id: 'members',
+      label: 'Add 1 family member',
+      value: 0,
+      goal: 1,
+      icon: 'vuesax.linear.profile-2user',
+    },
+    {
+      id: 'traditions',
+      label: 'Add 1 tradition',
+      value: 0,
+      goal: 1,
+      icon: 'vuesax.linear.sparkle',
+    },
+    { id: 'memories', label: 'Add 1 memory', value: 0, goal: 1, icon: 'vuesax.linear.camera' },
+  ],
+})
 
 const announcements = computed<Announcement[]>(() => announcementStore.announcements)
 const familyTraditions = computed<FamilyTradition[]>(() => familyTraditionStore.familyTraditions)
+const menCount = computed(() => familyMemberCounts.value.men)
+const womenCount = computed(() => familyMemberCounts.value.women)
 
 const getHomeFormsMap = (): Record<FormType, HomeFormConfig> => {
   const isEditMode = !!$route.query.fid
@@ -201,7 +268,7 @@ const getHomeFormsMap = (): Record<FormType, HomeFormConfig> => {
       id: 2,
       name: 'family_tradition',
       title: isEditMode ? 'Edit Family Tradition' : 'New Family Tradition',
-      component: h(FamilyTraditionForm, { close: () => handleCloseForm }),
+      component: h(FamilyTraditionForm, { close: () => handleCloseForm(true) }),
     },
     family_tradition_media: {
       id: 3,
@@ -228,7 +295,6 @@ const handleHomeFormModal = (name: string) => {
 }
 
 const handleCloseForm = (show?: boolean) => {
-  console.log('show', show)
   if (!show) return
   const query = { ...$route.query }
   if (query.ftype) delete query.ftype
@@ -237,6 +303,35 @@ const handleCloseForm = (show?: boolean) => {
     name: 'App.HomeView',
     query: query,
   })
+}
+
+const fetchFamilyMembers = async () => {
+  const response = await familyTreesQuery.refetch()
+  const familyTree = response.data?.data?.familyTree
+
+  if (!familyTree) {
+    familyMemberCounts.value = { men: 0, women: 0 }
+    return
+  }
+
+  // Flatten all family member arrays into a single array
+  const allMembers = [
+    ...(familyTree.self ? [familyTree.self] : []),
+    ...(familyTree.parents || []),
+    ...(familyTree.siblings || []),
+    ...(familyTree.spouse || []),
+    ...(familyTree.children || []),
+    ...(familyTree.grandparents || []),
+    ...(familyTree.grandchildren || []),
+    ...(familyTree.aunts_uncles || []),
+    ...(familyTree.nieces_nephews || []),
+    ...(familyTree.cousins || []),
+  ].filter((member) => member != null) as Array<FamilyMemberInterface & { relationship?: string }>
+
+  familyMemberCounts.value = {
+    men: allMembers.length * 0.5,
+    women: allMembers.length * 0.5,
+  }
 }
 
 const homeForm = computed(() => {
@@ -260,14 +355,45 @@ watch(
   { immediate: true },
 )
 
+const updateChartHeight = () => {
+  nextTick(() => {
+    if (genderChartContainer.value) {
+      const containerHeight = genderChartContainer.value.clientHeight
+      chartHeight.value = containerHeight > 0 ? containerHeight : 60
+    }
+  })
+}
+
+const updateChartWidth = () => {
+  nextTick(() => {
+    if (genderChartContainer.value) {
+      const containerWidth = genderChartContainer.value.clientWidth
+      chartWidth.value = containerWidth > 0 ? containerWidth : 200
+    }
+  })
+}
+
 onMounted(() => {
+  fetchFamilyMembers()
   fetchAnnouncements()
   fetchFamilyTraditions()
+
+  updateChartHeight()
+  updateChartWidth()
+
+  // Update height on window resize
+  window.addEventListener('resize', updateChartHeight)
+  window.addEventListener('resize', updateChartWidth)
 
   setTimeout(() => {
     const tourStage = profileStore?.userDetails?.tour_stage
     if (tourStage !== undefined && tourStage >= steps.value.length) return
     showStartTourModal.value = true
   }, 100)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateChartHeight)
+  window.removeEventListener('resize', updateChartWidth)
 })
 </script>

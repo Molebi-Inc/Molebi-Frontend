@@ -107,3 +107,21 @@ export const useUpdateTourStagesMutation = () => {
     },
   })
 }
+
+// export const useNotificationQuery = ({ enabled = true }: { enabled?: boolean } = {}) => {
+//   return useQuery<ApiResponse<NotificationTypeInterface[]>, AxiosError<ValidationErrorResponse>>({
+//     queryKey: ['notifications'],
+//     enabled,
+//     queryFn: async () => {
+//       const response = await axiosInstance.get<ApiResponse<NotificationInterface[]>>(
+//         '/api/user/notifications',
+//         {
+//           headers: {
+//             Authorization: `Bearer ${authConfig.getToken()}`,
+//           },
+//         },
+//       )
+//       return response.data
+//     },
+//   })
+// }

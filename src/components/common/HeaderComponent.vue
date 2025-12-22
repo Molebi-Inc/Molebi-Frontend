@@ -22,11 +22,29 @@
     </div>
     <div v-if="isLargeScreen" class="col-span-3"></div>
     <div class="flex items-center gap-4 col-span-1 md:col-span-4 justify-end">
-      <div
-        class="cursor-pointer h-12 w-12 bg-gray-50 flex justify-center items-center rounded-full"
+      <n-popover
+        trigger="click"
+        :show-arrow="false"
+        placement="bottom-end"
+        to="body"
+        :z-index="4000"
+        style="padding: 0; border-radius: 16px; border: 1px solid #f2f2f2"
       >
-        <MlbIcon name="vuesax.linear.notification" />
-      </div>
+        <template #trigger>
+          <div
+            class="cursor-pointer h-12 w-12 bg-gray-50 flex justify-center items-center rounded-full relative"
+          >
+            <MlbIcon name="vuesax.linear.notification" />
+            <span
+              v-if="mockNotifications.length"
+              class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] leading-3 rounded-full px-1.5 py-0.5"
+            >
+              {{ mockNotifications.length }}
+            </span>
+          </div>
+        </template>
+        <NotificationComponent :notifications="mockNotifications" :is-mobile="!isLargeScreen" />
+      </n-popover>
       <div
         v-if="isLargeScreen"
         class="cursor-pointer h-12 w-12 bg-gray-50 flex justify-center items-center rounded-full"
@@ -56,7 +74,8 @@
 <script setup lang="ts">
 import { ref, h, computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
-import { NDropdown, NButton } from 'naive-ui'
+import { NDropdown, NButton, NPopover } from 'naive-ui'
+import NotificationComponent from '@/components/common/NotificationComponent.vue'
 import { useRoute, useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useProfileStore } from '@/stores/profile.store'
@@ -67,6 +86,48 @@ const $router = useRouter()
 const { logout } = useLogout()
 const profileStore = useProfileStore()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
+
+const mockNotifications = [
+  // {
+  //   id: '1',
+  //   title: 'A new branch has grown!',
+  //   message: 'Sarah Johnson has been added to your family tree.',
+  //   timeAgo: '2hr ago',
+  //   type: 'branch',
+  // },
+  // {
+  //   id: '2',
+  //   title: 'Connection Request',
+  //   message: 'John Doe wants to join your family tree.',
+  //   timeAgo: '2 days ago',
+  //   type: 'connection',
+  //   actions: [
+  //     { label: 'Approve', approve: true },
+  //     { label: 'Decline', approve: false },
+  //   ],
+  // },
+  // {
+  //   id: '3',
+  //   title: 'Memory Shared',
+  //   message: 'Grandma Ada just shared a photo from 1975',
+  //   timeAgo: '2 weeks ago',
+  //   type: 'memory',
+  // },
+  // {
+  //   id: '4',
+  //   title: 'Birthday Reminder',
+  //   message: 'It’s Uncle Tunde’s birthday today! Send him wishes.',
+  //   timeAgo: '2 weeks ago',
+  //   type: 'birthday',
+  // },
+  // {
+  //   id: '5',
+  //   title: 'Family Tree Update',
+  //   message: 'Your family tree has new updates—explore recent additions.',
+  //   timeAgo: '2hr ago',
+  //   type: 'update',
+  // },
+]
 
 const pageTitle = computed(() => {
   const baseTitle = $route.meta.pageTitle as string

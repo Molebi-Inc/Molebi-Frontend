@@ -118,6 +118,9 @@ export const personalInformationValidation = () => {
     nickname: '',
     family_name: '',
     dob: null,
+    state_id: null,
+    community_name: '',
+    mother_family_name: '',
   })
 
   const schema = z.object({
@@ -125,6 +128,10 @@ export const personalInformationValidation = () => {
     middle_name: z.string().optional(),
     family_name: z.string().min(1, { message: 'Family name is required.' }),
     dob: z.string().min(1, { message: 'Date of birth is required.' }),
+    state_id: z.number().optional(),
+    community_name: z.string().optional(),
+    mother_family_name: z.string().optional(),
+    nickname: z.string().optional(),
   })
 
   const rules = {
@@ -181,6 +188,50 @@ export const personalInformationValidation = () => {
         } catch (err: unknown) {
           const messageText =
             err instanceof z.ZodError ? err.issues?.[0]?.message : 'Date of birth is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    state_id: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: number) => {
+        try {
+          schema.pick({ state_id: true }).parse({ state_id: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'State of origin is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    community_name: {
+      required: false,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ community_name: true }).parse({ community_name: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Community name is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    mother_family_name: {
+      required: false,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ mother_family_name: true }).parse({ mother_family_name: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError
+              ? err.issues?.[0]?.message
+              : "Mother's family name is required."
           return Promise.reject(messageText)
         }
       },

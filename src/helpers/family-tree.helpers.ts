@@ -605,3 +605,11 @@ export const getConnectionPath = (
 
   return `M ${fromPoint.x} ${fromPoint.y} C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${toPoint.x} ${toPoint.y}`
 }
+
+export const familyMemberGenderMap = (relationship: string): string => {
+  const maleRelationship = ['father', 'grandfather', 'brother', 'son']
+  const femaleRelationship = ['mother', 'grandmother', 'sister', 'daughter']
+  if (maleRelationship.includes(relationship)) return 'male'
+  if (femaleRelationship.includes(relationship)) return 'female'
+  return 'unknown'
+}

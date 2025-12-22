@@ -85,14 +85,16 @@ import { ref } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import type { SidebarItem } from '@/types/layout.types'
 // import { useProfileStore } from '@/stores/profile.store'
+import { useMediaQuery } from '@vueuse/core'
 
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 // const profileStore = useProfileStore()
 
 const sidebarCollapsed = ref(false)
 const sidebarItems: SidebarItem[] = [
   {
     id: 'home',
-    elId: 'home-tour-step-1',
+    elId: isLargeScreen.value ? 'home-tour-step-1' : '',
     label: 'Home',
     icon: 'vuesax.broken.home-2',
     route: { name: 'App.HomeView' },

@@ -150,25 +150,16 @@ const onFormSubmit = () => {
         imageClass: 'w-24 h-24 object-contain',
         subject: 'You have successfully <br /> created your account',
         message:
-          'Welcome to Molebi, you have successfully created your account, now you can go to the home screen to enjoy our offerings.',
-        confirmButtonText: 'Go to home',
-        cancelButtonText: 'Continue Onboarding',
+          'Welcome to Molebi, you have successfully created your account, now you can continue onboarding to enjoy our offerings.',
+        confirmButtonText: 'Continue Onboarding',
         customClass: {
           confirmButton: 'rounded-2xl! bg-primary-700! h-13! text-white!',
-          cancelButton: 'rounded-2xl! bg-primary-50! h-13! text-primary-700!',
         },
         buttonConfig: {
           confirm: {
-            text: 'Go to home',
-            action: async () => {
-              $router.push({ name: 'App.HomeView' })
-            },
-            closeOnClick: true,
-          },
-          cancel: {
             text: 'Continue Onboarding',
             action: () => {
-              $router.push({ name: 'Guests.OnboardingView', params: { module: 'personal-info' } })
+              $router.push({ name: 'Guests.OnboardingView', params: { module: 'seed-phase' } })
             },
             closeOnClick: true,
           },

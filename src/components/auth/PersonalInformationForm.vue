@@ -22,7 +22,7 @@
             custom-class="border-gray-300 focus:border-primary-500"
           />
         </n-form-item>
-        <n-form-item label="Nickname" path="nickname">
+        <!-- <n-form-item label="Nickname" path="nickname">
           <MlbInput
             v-model="form.nickname"
             id="nickname"
@@ -31,7 +31,7 @@
             placeholder="Enter Nickname"
             custom-class="border-gray-300 focus:border-primary-500"
           />
-        </n-form-item>
+        </n-form-item> -->
         <n-form-item label="Family Name / Surname" path="family_name">
           <MlbInput
             v-model="form.family_name"
@@ -50,6 +50,46 @@
             type="date"
             placeholder="Enter Date of Birth"
             class="w-full"
+          />
+        </n-form-item>
+        <n-form-item
+          label="State of Origin"
+          path="relationship"
+          label-style="color: #807F94; font-weight: 500;"
+          required
+        >
+          <NSelect
+            v-model:value="form.state_id"
+            :options="states"
+            placeholder="Select State"
+            size="large"
+            class="w-full"
+          >
+            <template #arrow>
+              <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
+            </template>
+          </NSelect>
+        </n-form-item>
+        <n-form-item
+          label="Community/Local Government (Optional)"
+          path="community_name"
+          label-style="color: #807F94; font-weight: 500;"
+        >
+          <MlbInput
+            v-model="form.community_name"
+            placeholder="Enter Community"
+            custom-class="w-full"
+          />
+        </n-form-item>
+        <n-form-item
+          label="Mother's Family Name"
+          path="mother_family_name"
+          label-style="color: #807F94; font-weight: 500;"
+        >
+          <MlbInput
+            v-model="form.mother_family_name"
+            placeholder="Enter Mother's Family Name"
+            custom-class="w-full"
           />
         </n-form-item>
       </div>
@@ -76,9 +116,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { FormInst } from 'naive-ui'
-import { NForm, NFormItem, NDatePicker, useMessage } from 'naive-ui'
+import { NForm, NFormItem, NDatePicker, useMessage, NSelect } from 'naive-ui'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import { useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
@@ -86,14 +126,31 @@ import MlbButton from '@/components/ui/MlbButton.vue'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useUpdateProfileMutation } from '@/services/authentication.services'
 import { personalInformationValidation } from '@/validations/authentication.validations'
+import { useGetStatesQuery } from '@/services/general.service'
+import type { StateInterface } from '@/types/general.types'
 
 const $router = useRouter()
 const message = useMessage()
+const { refetch: refetchStates } = useGetStatesQuery()
 const { form, rules } = personalInformationValidation()
 const updateProfileMutation = useUpdateProfileMutation()
 
 const formRef = ref<FormInst | null>(null)
+const states = ref<{ label: string; value: number }[]>([])
 const loading = computed(() => updateProfileMutation.isPending.value)
+
+const fetchStates = async () => {
+  try {
+    const response = await refetchStates()
+    states.value =
+      response.data?.data?.map((state: StateInterface) => ({
+        label: state.name,
+        value: state.id,
+      })) ?? []
+  } catch (error) {
+    handleApiError(error, message)
+  }
+}
 
 const onFormSubmit = async () => {
   formRef.value?.validate(async (errors) => {
@@ -106,10 +163,14 @@ const onFormSubmit = async () => {
 
       message.success(response.message || 'Profile updated successfully')
 
-      $router.push({ name: 'Guests.OnboardingView', params: { module: 'seed-phase' } })
+      $router.push({ name: 'App.HomeView' })
     } catch (error) {
       handleApiError(error, message)
     }
   })
 }
+
+onMounted(async () => {
+  await fetchStates()
+})
 </script>

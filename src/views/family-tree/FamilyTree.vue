@@ -377,6 +377,15 @@ onMounted(async () => {
 })
 
 onUnmounted(removeResizeListener)
+
+watch(
+  () => $route.params.module,
+  (module) => {
+    if (module === 'add-member') {
+      showFamilyTreeModal.value = true
+    }
+  },
+)
 </script>
 
 <style scoped>

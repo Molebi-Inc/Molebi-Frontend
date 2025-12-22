@@ -1,10 +1,10 @@
 <template>
-  <div class="bg-white rounded-3xl border border-primary-400 p-6 shadow-sm space-y-6">
+  <div class="bg-white rounded-3xl border border-primary-400 p-4 shadow-sm space-y-4">
     <div class="flex items-start justify-between gap-4">
       <div>
         <p class="text-xs uppercase tracking-wide text-primary-800 font-semibold">Current Stage</p>
-        <h2 class="text-2xl font-semibold text-gray-900 mt-1">{{ stageTitle }}</h2>
-        <p class="text-sm text-gray-600 mt-2">
+        <h2 class="text-xl font-semibold text-gray-900 mt-0.5">{{ stageTitle }}</h2>
+        <p class="text-sm text-gray-600 mt-1">
           {{ description }}
         </p>
       </div>
@@ -14,16 +14,16 @@
       </div>
     </div>
 
-    <div class="space-y-4">
-      <div v-for="task in tasks" :key="task.id" class="space-y-2">
+    <div class="space-y-3">
+      <div v-for="task in tasks" :key="task.id" class="space-y-1.5">
         <div class="flex items-center justify-between text-sm text-gray-700 font-medium">
           <div class="flex items-center gap-2">
-            <MlbIcon v-if="task.icon" :name="task.icon" :size="18" class="text-primary-700" />
+            <MlbIcon v-if="task.icon" :name="task.icon" :size="16" class="text-primary-700" />
             <span>{{ task.label }}</span>
           </div>
           <span class="text-gray-500 text-xs font-semibold">{{ task.value }}/{{ task.goal }}</span>
         </div>
-        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
           <div
             class="h-full rounded-full transition-all"
             :style="{

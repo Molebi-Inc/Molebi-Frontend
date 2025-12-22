@@ -1,6 +1,18 @@
 <template>
   <div class="relative h-full">
-    <div v-if="!capsules.length && !loading">
+    <div class="sticky top-0 z-10 bg-white md:hidden">
+      <div class="flex justify-between items-center mb-6 mt-3 py-3">
+        <BackButton label="" icon="vuesax.linear.arrow-left" class="mb-6" />
+        <div>Time Capsule</div>
+        <div>
+          <MlbButton text label="Add" @click.prevent="handleCreateCapsule(1)" />
+        </div>
+      </div>
+    </div>
+    <div
+      v-if="!capsules.length && !loading"
+      class="flex items-center justify-center h-full min-h-[calc(100vh-200px)]"
+    >
       <EmptyComponent
         icon="vuesax.broken.security-time"
         :icon-size="250"
@@ -12,20 +24,6 @@
       <SkeletalLoader :rows="2" :columns="isLargeScreen ? 5 : 2" :gap="4" height="160px" />
     </div>
     <div v-else>
-      <div class="sticky top-0 z-10 bg-white md:hidden">
-        <div class="flex justify-between items-center mb-6 mt-3 py-3">
-          <BackButton label="" icon="vuesax.linear.arrow-left" class="mb-6" />
-          <div>Time Capsule</div>
-          <div>
-            <MlbIcon
-              name="vuesax.linear.add"
-              color="#333333"
-              :size="24"
-              @click.prevent="handleCreateCapsule(1)"
-            />
-          </div>
-        </div>
-      </div>
       <div class="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
         <TimeCapsuleCard
           v-for="capsule in capsules"

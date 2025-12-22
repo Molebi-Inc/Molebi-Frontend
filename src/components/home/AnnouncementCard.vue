@@ -8,10 +8,22 @@
       <div
         class="py-9 px-4 bg-white rounded-2xl border border-gray-200 md:border-none shadow-[0px_4px_50px_0px_#a8a8a81a]"
       >
-        <p class="text-gray-400 text-sm font-medium text-center">
+        <p
+          class="text-gray-400 text-sm font-medium text-center"
+          @click="handleAddOption('announcement')"
+        >
           You don't have any announcements yet? <br />Let's start one!<br /><br />
-          Click the announcement button <br />
-          to start
+
+          <span class="hidden md:block">
+            Click the announcement button <br />
+            to start
+          </span>
+          <MlbButton
+            v-if="!isLargeScreen"
+            label="Create your first announcement"
+            class="rounded-lg! bg-primary-50! text-primary-700! h-9! border-none!"
+            @click="handleAddOption('announcement')"
+          />
         </p>
       </div>
     </div>
@@ -28,7 +40,7 @@
         :key="announcement.id"
         class="p-4 bg-white rounded-2xl cursor-pointer"
         style="box-shadow: 0px 4px 30px 0px #0000001a"
-        @click="handleClick(announcement)"
+        @click="handleAddOption('announcement')"
       >
         <div class="flex items-center justify-between gap-1 mb-3">
           <span
@@ -81,6 +93,12 @@
           />
         </div>
       </div>
+      <MlbButton
+        v-if="!isLargeScreen && items.length"
+        label="Create new announcement"
+        class="rounded-lg! bg-primary-50! text-primary-700! h-9! border-none! w-full!"
+        @click="handleAddOption('announcement')"
+      />
     </div>
   </div>
 </template>
@@ -95,6 +113,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAnnouncementStore } from '@/stores/announcement.store'
 import { useHome } from '@/composables/useHome'
 import { AlertService } from '@/services/alert.service'
+import { useMediaQuery } from '@vueuse/core'
+import MlbButton from '../ui/MlbButton.vue'
 
 withDefaults(
   defineProps<{
@@ -106,15 +126,29 @@ withDefaults(
     loading: false,
   },
 )
+// const $emit = defineEmits<{
+//   (e: 'add-option', option: 'announcement' | 'family-tradition'): void
+// }>()
 const $route = useRoute()
 const $router = useRouter()
 const announcementStore = useAnnouncementStore()
 const { deleteAnnouncement } = useHome()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const selectedId = ref<string | number>(0)
 
 const showDropdown = (id: string | number) => {
   return selectedId.value === id
+}
+
+const handleAddOption = (option: 'announcement' | 'family-tradition') => {
+  // $emit('add-option', option)
+  $router.push({
+    name: 'App.HomeView',
+    query: {
+      ftype: option,
+    },
+  })
 }
 
 const options = [

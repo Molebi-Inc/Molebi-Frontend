@@ -1,10 +1,5 @@
 <template>
-  <h3
-    id="home-tour-step-4"
-    class="text-gray-400 text-sm font-semibold uppercase mb-4 tracking-wider"
-  >
-    Reminders
-  </h3>
+  <h3 class="text-gray-400 text-sm font-semibold uppercase mb-4 tracking-wider">Reminders</h3>
   <div v-if="reminders.length > 0" class="relative overflow-auto">
     <!-- Left Scroll Button -->
     <button

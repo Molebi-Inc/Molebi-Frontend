@@ -6,10 +6,21 @@
   >
     <div v-if="!items.length && !loading">
       <div class="py-9 px-4 bg-white rounded-2xl" style="box-shadow: 0px 4px 50px 0px #a8a8a81a">
-        <p class="text-gray-400 text-sm font-medium text-center">
+        <p
+          class="text-gray-400 text-sm font-medium text-center"
+          @click="handleAddOption('family_tradition')"
+        >
           You don't have a family tradition yet? <br />Let's start one!<br /><br />
-          Click the family tradition button <br />
-          to start
+          <span class="hidden md:block">
+            Click the family tradition button <br />
+            to start
+          </span>
+          <MlbButton
+            v-if="!isLargeScreen"
+            label="Create your first family tradition"
+            class="rounded-lg! bg-primary-50! text-primary-700! h-9! border-none!"
+            @click="handleAddOption('family_tradition')"
+          />
         </p>
       </div>
     </div>
@@ -66,6 +77,13 @@
           />
         </div>
       </div>
+
+      <MlbButton
+        v-if="!isLargeScreen && items.length"
+        label="Create new family tradition"
+        class="rounded-lg! bg-primary-50! text-primary-700! h-9! border-none! w-full!"
+        @click="handleAddOption('family_tradition')"
+      />
     </div>
   </div>
 </template>
@@ -81,6 +99,8 @@ import { AlertService } from '@/services/alert.service'
 import { useRoute, useRouter } from 'vue-router'
 import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
 import TraditionDetailsFooter from './TraditionDetailsFooter.vue'
+import { useMediaQuery } from '@vueuse/core'
+import MlbButton from '../ui/MlbButton.vue'
 
 withDefaults(
   defineProps<{
@@ -92,10 +112,14 @@ withDefaults(
     loading: false,
   },
 )
+// const $emit = defineEmits<{
+//   (e: 'add-option', option: 'announcement' | 'family-tradition'): void
+// }>()
 const $route = useRoute()
 const $router = useRouter()
 const familyTraditionStore = useFamilyTraditionStore()
 const { deleteFamilyTradition } = useHome()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const selectedId = ref<string | number>(0)
 
@@ -120,6 +144,16 @@ const options = [
     icon: () => h(MlbIcon, { name: 'placeholder', size: 12, color: '#C20000' }),
   },
 ]
+
+const handleAddOption = (option: 'announcement' | 'family_tradition') => {
+  // $emit('add-option', option)
+  $router.push({
+    name: 'App.HomeView',
+    query: {
+      ftype: option,
+    },
+  })
+}
 
 const handleSelect = (key: string, tradition: FamilyTradition) => {
   const action = {
