@@ -70,16 +70,16 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, h, computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
-import { NDropdown, NButton, NPopover } from 'naive-ui'
-import NotificationComponent from '@/components/common/NotificationComponent.vue'
 import { useRoute, useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import { useProfileStore } from '@/stores/profile.store'
 import { useLogout } from '@/composables/useLogout'
+import { NDropdown, NButton, NPopover } from 'naive-ui'
+import { useProfileStore } from '@/stores/profile.store'
+import type { NotificationItem } from '@/types/general.types'
+import NotificationComponent from '@/components/common/NotificationComponent.vue'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -87,7 +87,7 @@ const { logout } = useLogout()
 const profileStore = useProfileStore()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
-const mockNotifications = [
+const mockNotifications: NotificationItem[] = [
   // {
   //   id: '1',
   //   title: 'A new branch has grown!',
