@@ -67,7 +67,7 @@
             :items="announcements"
             card_type="announcement"
             :loading="announcementStore.loading"
-            @add-option="(option) => handleHomeFormModal(option)"
+            @add-option="handleHomeFormModal"
           />
 
           <!-- Family Tradition Card -->
