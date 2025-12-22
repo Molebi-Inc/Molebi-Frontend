@@ -97,7 +97,7 @@ export const familyTraditionValidation = () => {
     title: z.string().min(1, { message: 'Name is required.' }),
     description: z.string().min(1, { message: 'Description is required.' }),
     date: z.string().min(1, { message: 'Date is required.' }),
-    time: z.string().min(1, { message: 'Time is required.' }),
+    time: z.string().min(1, { message: 'Time is required.' }).optional(),
     recurrence: z.string().min(1, { message: 'Reoccurrence is required.' }),
     family_member_ids: z.array(z.number()).min(0),
   })
@@ -160,15 +160,14 @@ export const familyTraditionValidation = () => {
       },
     },
     time: {
-      required: true,
+      required: false,
       trigger: 'input',
       validator: async (_rule: FormItemRule, value: string) => {
         try {
           schema.pick({ time: true }).parse({ time: value })
           return Promise.resolve()
         } catch (err: unknown) {
-          const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Time is required.'
+          const messageText = err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid time.'
           return Promise.reject(messageText)
         }
       },

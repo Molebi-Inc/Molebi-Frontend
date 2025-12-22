@@ -136,6 +136,8 @@ import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
 import { useVault } from '@/composables/useVault'
+import { useMediaQuery } from '@vueuse/core'
+import { useVaultStore } from '@/stores/vault.store'
 
 interface Props {
   folder: FolderInterface | StorageFolderInterface | null
@@ -160,8 +162,10 @@ const $emit = defineEmits<{
 
 const $route = useRoute()
 const $router = useRouter()
-const { currentFlow, setSelectedFolder, deleteArchiveFolder } = useArchive()
+const vaultStore = useVaultStore()
 const { loading, fetchVaultFolder } = useVault()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
+const { currentFlow, setSelectedFolder, deleteArchiveFolder } = useArchive()
 
 // const pinVerified = ref<boolean>(false)
 
@@ -279,9 +283,12 @@ const handleSelect = (key: string) => {
 const verifyPin = (postVerificationAction: () => void) => {
   AlertService.alert({
     subject: 'Enter Vault PIN',
+    message: 'Enter the PIN to your vault',
     closable: true,
     showIcon: false,
     closablePosition: 'left',
+    fullPageAlert: !isLargeScreen.value,
+    textAlign: !isLargeScreen.value ? 'left' : 'center',
     html: h(VaultPinForm, {
       loading: loading.value,
       onPinSubmitted: async (value: string) =>

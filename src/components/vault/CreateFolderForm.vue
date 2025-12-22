@@ -55,9 +55,11 @@ import { useStorageStore } from '@/stores/storage.store'
 import type { FolderInterface } from '@/types/vault.types'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import { createFolderValidation } from '@/validations/vault.validations'
+import { useRoute } from 'vue-router'
 
 const message = useMessage()
 const vaultStore = useVaultStore()
+const $route = useRoute()
 const storageStore = useStorageStore()
 const { form, rules } = createFolderValidation()
 const { currentFlow, archiveExist } = useArchive()
@@ -85,15 +87,14 @@ const onFormSubmit = async () => {
     }
     try {
       const response = await handleArchiveMutation(form.value)
-      message.success(response?.message || 'Folder created successfully')
-      $emit('update:folder', {
-        key: response.key,
-        folder: selectedFolder.value,
-      })
-      // $router.push({
-      //   name: currentFlow.value === 'vault' ? 'App.VaultFolderView' : 'App.StorageFolderView',
-      //   params: { id: response?.data?.id },
-      // })
+      if (response) {
+        message.success(response?.message || 'Folder created successfully')
+        // message.success('Folder created successfully')
+        $emit('update:folder', {
+          key: response.key,
+          folder: selectedFolder.value,
+        })
+      }
     } catch (error) {
       handleApiError(error, message)
     }
@@ -114,7 +115,10 @@ const getEditData = () => {
 }
 
 onMounted(() => {
-  getEditData()
+  if ($route.params.id) {
+    getEditData()
+    return
+  }
 })
 </script>
 

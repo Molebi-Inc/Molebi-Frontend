@@ -38,6 +38,7 @@ export interface AlertConfig {
   message?: string // Main message/description
   html?: string | VNode // HTML content (alternative to message) - can be string or VNode
   header?: string | VNode // Custom header content
+  textAlign?: 'left' | 'center' | 'right'
 
   // Icon configuration
   iconName?: string
@@ -62,6 +63,7 @@ export interface AlertConfig {
   }
   buttonLayout?: 'horizontal' | 'vertical'
   cancelFirst?: boolean
+  fullPageAlert?: boolean
 
   // Styling
   customClass?: CustomButtonClass

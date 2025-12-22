@@ -8,6 +8,7 @@
   >
     <div class="flex flex-col justify-center items-center mb-11">
       <n-form-item
+        v-if="step === 1"
         :show-require-mark="false"
         :show-label="false"
         path="pin"
@@ -17,6 +18,25 @@
           <MlbInputOtp
             v-model="form.pin"
             name="pin"
+            :length="4"
+            :gap="24"
+            size="large"
+            :mask="false"
+            custom-class="otp-input-wrapper border-gray-300 focus:border-primary-500"
+          />
+        </div>
+      </n-form-item>
+      <n-form-item
+        v-if="props.hasConfirmation && step === 2"
+        :show-require-mark="false"
+        :show-label="false"
+        path="pin_confirmation"
+        feedback-class="mt-5 text-center"
+      >
+        <div class="mt-5">
+          <MlbInputOtp
+            v-model="form.pin_confirmation"
+            name="pin_confirmation"
             :length="4"
             :gap="24"
             size="large"
@@ -39,30 +59,40 @@
 
 <script setup lang="ts">
 import type { FormInst } from 'naive-ui'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { useMessage, NForm, NFormItem } from 'naive-ui'
 import MlbInputOtp from '@/components/ui/MlbInputOtp.vue'
 import { pinValidation } from '@/validations/vault.validations'
+import { useVaultStore } from '@/stores/vault.store'
 
 const message = useMessage()
-const { form, rules } = pinValidation()
+const vaultStore = useVaultStore()
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     loading: boolean
+    hasConfirmation?: boolean
   }>(),
   {
     loading: false,
+    hasConfirmation: false,
   },
 )
+const { form, rules } = pinValidation(props.hasConfirmation)
+
 const emit = defineEmits<{
   (e: 'pinSubmitted', value: string): void
 }>()
 
+const step = computed<number>(() => vaultStore.pinStep)
 const formRef = ref<FormInst | null>(null)
 
 const onFormSubmit = () => {
+  if (step.value === 1 && props.hasConfirmation) {
+    vaultStore.setStoreProp('pinStep', 2)
+    return
+  }
   formRef.value?.validate(async (errors) => {
     if (errors) {
       message.error('Invalid form')

@@ -3,7 +3,7 @@ export type SidebarItem = {
   elId?: string
   label: string
   icon: string
-  route: { name: string; params?: { module: string; submodule?: string } }
+  route: { name: string; params?: { module: string; page?: string } }
   main?: boolean
 }
 

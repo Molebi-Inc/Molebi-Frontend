@@ -64,3 +64,26 @@ export interface TabInterface {
   component: Component
   props?: Record<string, unknown>
 }
+
+export type NotificationType =
+  | 'branch'
+  | 'connection'
+  | 'memory'
+  | 'birthday'
+  | 'update'
+  | 'generic'
+
+interface NotificationAction {
+  label: string
+  approve?: boolean
+  onClick?: (n: NotificationItem) => void
+}
+
+export interface NotificationItem {
+  id: string | number
+  title: string
+  message: string
+  timeAgo: string
+  type?: NotificationType
+  actions?: NotificationAction[]
+}

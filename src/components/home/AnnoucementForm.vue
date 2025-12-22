@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- Form -->
-    <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-10">
+    <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-0 md:px-10">
       <div>
         <n-form-item path="title" :show-require-mark="false" :show-feedback="false">
           <MlbInput
@@ -26,7 +26,7 @@
       </div>
 
       <!-- Type Select -->
-      <n-form-item path="type" :show-require-mark="false" :show-feedback="false">
+      <!-- <n-form-item path="type" :show-require-mark="false" :show-feedback="false">
         <template #label>
           <label for="type" class="text-sm font-medium text-gray-500">Select Type</label>
         </template>
@@ -37,7 +37,7 @@
           size="large"
           class="w-full rounded!"
         />
-      </n-form-item>
+      </n-form-item> -->
 
       <!-- Priority Select -->
       <n-form-item path="priority" :show-require-mark="false" :show-feedback="false">

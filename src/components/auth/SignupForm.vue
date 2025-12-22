@@ -22,6 +22,7 @@
               filterable
               :consistent-menu-width="false"
               :options="countryOptions"
+              :render-label="renderCountryLabel"
               @filter="filterCountryOptions"
             />
             <n-input
@@ -86,7 +87,7 @@
         <MlbButton
           v-for="option in socialSignInOptions"
           :key="option.label"
-          @click="handleSocialAuth(option.tag as SocialAuthenticationProvider)"
+          @click="handleSocialAuth(option.tag)"
         >
           <template #icon>
             <MlbIcon :name="option.icon" />
@@ -114,6 +115,7 @@ import { signupValidation } from '@/validations/authentication.validations'
 import { NForm, NFormItem, NInput, NSelect, NInputGroup, useMessage } from 'naive-ui'
 import { useSocialSignin } from '@/composables/social-signin.composable'
 import type { SocialAuthenticationProvider } from '@/types/authentication.types'
+import OverlayLoader from '@/components/common/OverlayLoader.vue'
 
 const $router = useRouter()
 const message = useMessage()
@@ -127,14 +129,40 @@ const socialAuthLoader = ref<boolean>(false)
 const formRef = ref<FormInst | null>(null)
 const loading = computed(() => signupMutation.isPending.value)
 
-const filterCountryOptions = (pattern: string, option: SelectOption): boolean => {
+export type CountrySelectOption = SelectOption & {
+  countryName?: string
+  fullLabel?: string
+  dialingCode?: string
+}
+
+// Custom label renderer: in the dropdown show "Country (+Code)", when selected show just "+Code"
+const renderCountryLabel = (option: SelectOption, selected: boolean) => {
+  const opt = option as CountrySelectOption
+  const code =
+    opt.dialingCode || String(opt.value || '').split('|')[0] || String(option.label || '')
+  if (selected) {
+    // Selected text inside the input
+    return code
+  }
+  // Dropdown option text
+  return opt.fullLabel || `${opt.countryName ?? ''} (${code})`
+}
+
+const filterCountryOptions = (pattern: string, option: CountrySelectOption): boolean => {
   if (!pattern) return true
   const searchPattern = pattern.toLowerCase().trim()
   const label = String(option.label || '').toLowerCase()
-  const value = String(option.value || '').toLowerCase()
+  const value = String(option.dialingCode || '').toLowerCase()
+  const countryName = String(option.countryName || '').toLowerCase()
+  const fullLabel = String(option.fullLabel || '').toLowerCase()
 
-  // Check if pattern matches country name, dialing code, or full label exactly
-  return label.includes(searchPattern) || value.includes(searchPattern)
+  // Match by dialing code, country name, or full label
+  return (
+    label.includes(searchPattern) ||
+    value.includes(searchPattern) ||
+    countryName.includes(searchPattern) ||
+    fullLabel.includes(searchPattern)
+  )
 }
 
 const onFormSubmit = async () => {
@@ -144,7 +172,8 @@ const onFormSubmit = async () => {
       return
     }
     try {
-      const dialingCode = form.value.code?.split('|')[0] || form.value.code
+      // form.code is `${dialingCode}|${countryCode}`; extract the dialing code part
+      const dialingCode = form.value.code ? String(form.value.code).split('|')[0] : ''
       const response = await signupMutation.mutateAsync({
         ...form.value,
         phone: `${dialingCode}${form.value.phone}`,
@@ -164,7 +193,9 @@ const onFormSubmit = async () => {
   })
 }
 
-const socialSignInOptions = computed(() => [
+const socialSignInOptions = computed<
+  { label: string; icon: string; tag: SocialAuthenticationProvider }[]
+>(() => [
   {
     label: 'Google',
     icon: 'google',
@@ -173,10 +204,12 @@ const socialSignInOptions = computed(() => [
   // {
   //   label: 'Facebook',
   //   icon: 'facebook',
+  //   tag: 'facebook' as SocialAuthenticationProvider,
   // },
   // {
   //   label: 'Apple',
   //   icon: 'apple',
+  //   tag: 'apple' as SocialAuthenticationProvider,
   // },
 ])
 const handleSocialAuth = async (provider: SocialAuthenticationProvider) => {

@@ -1,4 +1,4 @@
-import { h, computed } from 'vue'
+import { h, computed, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useVaultStore } from '@/stores/vault.store'
 import {
@@ -8,12 +8,14 @@ import {
   useCreateVaultFolderMutation,
   useUpdateVaultPinMutation,
   useGetVaultFolderMutation,
+  useDeleteVaultMediaMutation,
 } from '@/services/vault.services'
 import type { MaybeRefOrGetter } from 'vue'
-import { AlertService } from '@/services/alert.service'
+import { AlertService, useAlertState } from '@/services/alert.service'
 import { handleApiError } from '@/helpers/error.helpers'
 import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 import type { CreateFolderValues, CreateFilesValues } from '@/types/vault.types'
+import { useMediaQuery } from '@vueuse/core'
 
 export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   const message = useMessage()
@@ -24,6 +26,8 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   const getVaultFolderMutation = useGetVaultFolderMutation()
   const updateVaultPinMutation = useUpdateVaultPinMutation()
   const getVaultFoldersQuery = useGetVaultFoldersQuery(queryEnabled)
+  const deleteVaultMediaMutation = useDeleteVaultMediaMutation()
+  const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
   const loading = computed(
     () =>
@@ -33,18 +37,33 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   )
 
   const fileUploading = computed(() => updateFolderMutation.isPending.value)
+  const pinStep = computed(() => vaultStore.pinStep)
+  const pinSubject = computed(() =>
+    pinStep.value === 1 ? 'Create Vault PIN' : 'Confirm Vault PIN',
+  )
+  const alertState = useAlertState()
+
+  // Watch pinStep and update alert subject reactively
+  watch(pinStep, () => {
+    if (alertState.value.config && alertState.value.show) {
+      alertState.value.config.subject = pinSubject.value
+    }
+  })
 
   const vaultFolderCreation = async (data: CreateFolderValues) => {
     try {
       const response = await createFolderMutation.mutateAsync(data as CreateFolderValues)
       AlertService.alert({
-        subject: 'Create Vault PIN',
+        subject: pinSubject.value,
         message: 'This is the PIN you will use to access your vault. Please enter a PIN.',
         closable: true,
         showIcon: false,
         closablePosition: 'left',
+        fullPageAlert: !isLargeScreen.value,
+        textAlign: !isLargeScreen.value ? 'left' : 'center',
         html: h(VaultPinForm, {
           loading: updateVaultPinMutation.isPending.value,
+          hasConfirmation: true,
           onPinSubmitted: (value: string) =>
             updateVaultPinMutation.mutateAsync({
               current_pin: '0000',
@@ -52,12 +71,16 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
               id: response.data?.id as number,
             }),
         }),
+        onClose: () => {
+          vaultStore.setStoreProp('pinStep', 1)
+        },
         showCancelButton: false,
         showConfirmButton: false,
       })
       return response
     } catch (error) {
       handleApiError(error, message)
+      throw error
     }
   }
 
@@ -89,6 +112,7 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
       return await updateFolderMutation.mutateAsync({ folder: data, id })
     } catch (error) {
       handleApiError(error, message)
+      throw error
     }
   }
 
@@ -100,7 +124,7 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
       response = await vaultFolderCreation(data as CreateFolderValues)
     }
     await fetchVaultFolders()
-    return { ...response, key: vaultStore.selectedFolder ? 'edit' : 'create' }
+    return { ...(response || {}), key: vaultStore.selectedFolder ? 'edit' : 'create' }
   }
 
   const deleteVaultFolder = async (id: number) => {
@@ -122,6 +146,7 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
           text: 'Delete',
           primary: false,
           action: async () => {
+            vaultStore.setStoreProp('selectedFolder', null)
             await handleDeleteFolder(id)
             await fetchVaultFolders()
           },
@@ -143,6 +168,20 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     }
   }
 
+  const handleDeleteMedia = async (mediaIds: number[]) => {
+    try {
+      for (const mediaId of mediaIds) {
+        await deleteVaultMediaMutation.mutateAsync({
+          id: vaultStore.selectedFolder?.id as number,
+          mediaId,
+        })
+      }
+      message.success('Media deleted successfully')
+    } catch (error) {
+      handleApiError(error, message)
+    }
+  }
+
   return {
     loading,
     vaultStore,
@@ -151,5 +190,6 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     deleteVaultFolder,
     handleCreateFolder,
     fetchVaultFolders,
+    handleDeleteMedia,
   }
 }

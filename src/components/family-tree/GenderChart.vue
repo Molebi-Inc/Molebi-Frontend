@@ -4,61 +4,140 @@
       <!-- Background -->
       <rect :width="width" :height="height" fill="#f9fafb" rx="4" />
 
-      <!-- Chart lines -->
-      <g v-if="men > 0 || women > 0">
-        <!-- Men line -->
-        <polyline
-          :points="menPoints"
-          fill="none"
-          stroke="#3b82f6"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-
-        <!-- Women line -->
-        <polyline
-          :points="womenPoints"
-          fill="none"
-          stroke="#ec4899"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-
-        <!-- Men area fill -->
-        <polygon
-          :points="`0,${height} ${menPoints} ${width},${height}`"
+      <!-- Horizontal Chart bars -->
+      <g v-if="(men > 0 || women > 0) && direction === 'horizontal'">
+        <!-- Men bar -->
+        <rect
+          :x="barPadding"
+          :y="barSpacing"
+          :width="menBarWidth"
+          :height="barHeight"
           fill="#3b82f6"
-          fill-opacity="0.2"
+          rx="4"
         />
 
-        <!-- Women area fill -->
-        <polygon
-          :points="`0,${height} ${womenPoints} ${width},${height}`"
+        <!-- Men value label ABOVE bar -->
+        <text
+          v-if="men > 0"
+          :x="barPadding + menBarWidth / 2"
+          :y="barSpacing - 4"
+          text-anchor="middle"
+          dominant-baseline="auto"
+          class="text-xs fill-gray-700 font-medium"
+        >
+          {{ men }}
+        </text>
+
+        <!-- Women bar -->
+        <rect
+          :x="barPadding"
+          :y="barSpacing * 2 + barHeight"
+          :width="womenBarWidth"
+          :height="barHeight"
           fill="#ec4899"
-          fill-opacity="0.2"
+          rx="4"
         />
 
-        <!-- Men dots -->
-        <circle
-          v-for="(point, index) in menDataPoints"
-          :key="`men-${index}`"
-          :cx="point.x"
-          :cy="point.y"
-          r="3"
+        <!-- Women value label ABOVE bar -->
+        <text
+          v-if="women > 0"
+          :x="barPadding + womenBarWidth / 2"
+          :y="barSpacing * 2 + barHeight - 4"
+          text-anchor="middle"
+          dominant-baseline="auto"
+          class="text-xs fill-gray-700 font-medium"
+        >
+          {{ women }}
+        </text>
+
+        <!-- Y-axis labels (left of bars) -->
+        <text
+          :x="barPadding - 8"
+          :y="barSpacing + barHeight / 2"
+          text-anchor="end"
+          dominant-baseline="middle"
+          class="text-xs fill-gray-600"
+        >
+          Men
+        </text>
+        <text
+          :x="barPadding - 8"
+          :y="barSpacing * 2 + barHeight + barHeight / 2"
+          text-anchor="end"
+          dominant-baseline="middle"
+          class="text-xs fill-gray-600"
+        >
+          Women
+        </text>
+      </g>
+
+      <!-- Vertical Chart bars -->
+      <g v-if="(men > 0 || women > 0) && direction === 'vertical'">
+        <!-- Men bar -->
+        <rect
+          :x="verticalBarSpacing"
+          :y="menBarY"
+          :width="verticalBarWidth"
+          :height="menBarHeight"
           fill="#3b82f6"
+          rx="4"
         />
 
-        <!-- Women dots -->
-        <circle
-          v-for="(point, index) in womenDataPoints"
-          :key="`women-${index}`"
-          :cx="point.x"
-          :cy="point.y"
-          r="3"
+        <!-- Men value label on bar -->
+        <text
+          v-if="men > 0"
+          :x="verticalBarSpacing + verticalBarWidth / 2"
+          :y="menBarY - 4"
+          text-anchor="middle"
+          dominant-baseline="auto"
+          class="text-xs fill-gray-700 font-medium"
+        >
+          {{ men }}
+        </text>
+
+        <!-- Men label below bar -->
+        <text
+          :x="verticalBarSpacing + verticalBarWidth / 2"
+          :y="height - labelPadding"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          class="text-xs fill-gray-600"
+        >
+          Men
+        </text>
+
+        <!-- Women bar -->
+        <rect
+          :x="verticalBarSpacing * 2 + verticalBarWidth"
+          :y="womenBarY"
+          :width="verticalBarWidth"
+          :height="womenBarHeight"
           fill="#ec4899"
+          rx="4"
         />
+
+        <!-- Women value label on bar -->
+        <text
+          v-if="women > 0"
+          :x="verticalBarSpacing * 2 + verticalBarWidth + verticalBarWidth / 2"
+          :y="womenBarY - 4"
+          text-anchor="middle"
+          dominant-baseline="auto"
+          class="text-xs fill-gray-700 font-medium"
+        >
+          {{ women }}
+        </text>
+
+        <!-- Women label below bar -->
+        <text
+          :x="verticalBarSpacing * 2 + verticalBarWidth + verticalBarWidth / 2"
+          :y="height - labelPadding"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          class="text-xs fill-gray-600"
+        >
+          Women
+        </text>
       </g>
 
       <!-- Empty state -->
@@ -72,18 +151,6 @@
         No data
       </text>
     </svg>
-
-    <!-- Legend -->
-    <div class="flex items-center gap-4 mt-2 text-xs">
-      <div class="flex items-center gap-1">
-        <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-        <span class="text-gray-600">Men ({{ men }})</span>
-      </div>
-      <div class="flex items-center gap-1">
-        <div class="w-3 h-3 rounded-full bg-pink-500"></div>
-        <span class="text-gray-600">Women ({{ women }})</span>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -95,53 +162,62 @@ interface Props {
   women: number
   width?: number
   height?: number
+  direction?: 'horizontal' | 'vertical'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   width: 200,
   height: 60,
+  direction: 'horizontal',
 })
 
-const total = computed(() => props.men + props.women)
+const direction = computed(() => props.direction)
 
 const maxValue = computed(() => Math.max(props.men, props.women, 1))
 
-// Generate data points for the line chart
-// Using a simple curve with 5 points for smooth visualization
-const dataPoints = computed(() => {
-  const points = 5
-  const step = props.width / (points - 1)
-  return Array.from({ length: points }, (_, i) => i * step)
+// Horizontal chart configuration
+const barPadding = computed(() => 50) // Space for y-axis labels
+const barSpacing = computed(() => 8) // Space between bars
+const barHeight = computed(() => (props.height - barSpacing.value * 3) / 2) // Height of each bar
+const chartWidth = computed(() => props.width - barPadding.value - 40) // Available width for bars (40px for value labels)
+
+// Horizontal bar widths
+const menBarWidth = computed(() => {
+  if (maxValue.value === 0 || direction.value === 'vertical') return 0
+  return (props.men / maxValue.value) * chartWidth.value
 })
 
-const menDataPoints = computed(() => {
-  return dataPoints.value.map((x, index) => {
-    // Create a smooth curve that peaks at the men value
-    const progress = index / (dataPoints.value.length - 1)
-    const y =
-      props.height -
-      (props.men / maxValue.value) * props.height * (0.5 + 0.5 * Math.sin(progress * Math.PI))
-    return { x, y }
-  })
+const womenBarWidth = computed(() => {
+  if (maxValue.value === 0 || direction.value === 'vertical') return 0
+  return (props.women / maxValue.value) * chartWidth.value
 })
 
-const womenDataPoints = computed(() => {
-  return dataPoints.value.map((x, index) => {
-    // Create a smooth curve that peaks at the women value
-    const progress = index / (dataPoints.value.length - 1)
-    const y =
-      props.height -
-      (props.women / maxValue.value) * props.height * (0.5 + 0.5 * Math.sin(progress * Math.PI))
-    return { x, y }
-  })
+// Vertical chart configuration
+const labelPadding = computed(() => 20) // Space for labels at bottom
+const verticalBarSpacing = computed(() => 16) // Space between bars
+const verticalBarWidth = computed(() => (props.width - verticalBarSpacing.value * 3) / 2) // Width of each bar
+const chartHeight = computed(() => props.height - labelPadding.value - 20) // Available height for bars (20px for value labels at top)
+
+// Vertical bar heights
+const menBarHeight = computed(() => {
+  if (maxValue.value === 0 || direction.value === 'horizontal') return 0
+  return (props.men / maxValue.value) * chartHeight.value
 })
 
-const menPoints = computed(() => {
-  return menDataPoints.value.map((p) => `${p.x},${p.y}`).join(' ')
+const womenBarHeight = computed(() => {
+  if (maxValue.value === 0 || direction.value === 'horizontal') return 0
+  return (props.women / maxValue.value) * chartHeight.value
 })
 
-const womenPoints = computed(() => {
-  return womenDataPoints.value.map((p) => `${p.x},${p.y}`).join(' ')
+// Vertical bar Y positions (bars start from bottom)
+const menBarY = computed(() => {
+  if (direction.value === 'horizontal') return 0
+  return props.height - labelPadding.value - menBarHeight.value
+})
+
+const womenBarY = computed(() => {
+  if (direction.value === 'horizontal') return 0
+  return props.height - labelPadding.value - womenBarHeight.value
 })
 </script>
 

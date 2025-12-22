@@ -1,5 +1,5 @@
 <template>
-  <div class="share-folder-form px-6 pb-6">
+  <div class="share-folder-form px-1 md:px-6 pb-6">
     <!-- Header -->
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900 mb-2">Share Folder</h1>
@@ -69,12 +69,15 @@
         :options="userSelectorOptions"
         @update:selected-users="updateForm"
       />
-      <div v-if="form.family_member_id.length > 0" class="mt-3 grid grid-cols-3 items-center gap-2">
+      <div
+        v-if="form.family_member_ids.length > 0"
+        class="mt-3 grid grid-cols-3 items-center gap-2"
+      >
         <div class="col-span-2 text-sm font-medium text-gray-500">
           {{
-            form.family_member_id.length > 1
-              ? `${form.family_member_id.length} members`
-              : `${form.family_member_id.length} member`
+            form.family_member_ids.length > 1
+              ? `${form.family_member_ids.length} members`
+              : `${form.family_member_ids.length} member`
           }}
         </div>
         <n-select
@@ -143,16 +146,16 @@
     <div class="flex gap-3 mt-6">
       <MlbButton
         class="flex-1 rounded-xl! bg-primary-700! h-12! text-white! font-medium!"
-        :loading="loading"
-        :disabled="form.family_member_id.length === 0 || loading"
+        :loading="loading === 'sharing ...'"
+        :disabled="form.family_member_ids.length === 0 || loading === 'sharing ...'"
         @click="handleShare"
       >
         Share
       </MlbButton>
       <MlbButton
         class="rounded-xl! bg-primary-50! h-12! text-primary-700! font-medium! px-4!"
-        :loading="loading"
-        :disabled="loading"
+        :loading="loading === 'copying link ...'"
+        :disabled="loading === 'copying link ...'"
         @click="handleCopyLink"
       >
         <template #icon>
@@ -170,15 +173,17 @@ import MlbIcon from '@/components/ui/MlbIcon.vue'
 import UserSelector from '@/components/common/UserSelector.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
-import type { FolderInterface } from '@/types/vault.types'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import { useMessage, type FormInst } from 'naive-ui'
 import { shareFolderFormValidation } from '@/validations/storage.validations'
 import { useHome } from '@/composables/useHome'
 import type { UserSelectorOptions } from '@/components/common/UserSelector.vue'
-import { useShareFolderMutation } from '@/services/storage.services'
+import {
+  useShareFolderMutation,
+  useGenerateShareableLinkMutation,
+} from '@/services/storage.services'
 import { handleApiError } from '@/helpers/error.helpers'
-import { formatFileSize } from '@/helpers/general.helpers'
+import { copyToClipboard, formatFileSize, getHumanReadableDate } from '@/helpers/general.helpers'
 import { useGeneralStore } from '@/stores/general.store'
 import type { SelectOption } from 'naive-ui'
 import { NForm, NSelect } from 'naive-ui'
@@ -199,6 +204,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: 'share'): void
   (e: 'copy-link'): void
+  (e: 'submit'): void
 }>()
 
 const message = useMessage()
@@ -206,13 +212,14 @@ const generalStore = useGeneralStore()
 const { fetchFamilyMembers } = useHome()
 const { form, rules } = shareFolderFormValidation()
 const shareFolderMutation = useShareFolderMutation()
+const generateShareableLinkMutation = useGenerateShareableLinkMutation()
 
-const loading = ref<boolean>(false)
+const loading = ref<string>('')
 // const activeTab = ref<'individual' | 'family'>('individual')
 
 const formRef = ref<FormInst | null>(null)
 const userSelectorOptions: UserSelectorOptions = {
-  form_user_ids_field: 'family_member_id',
+  form_user_ids_field: 'family_member_ids',
   search_fields: ['first_name', 'middle_name', 'family_name'],
   avatar_field: 'profile_picture_url',
   name_fields: ['first_name', 'middle_name', 'family_name'],
@@ -241,7 +248,7 @@ const handleShare = async () => {
       message.error('Please fill in all required fields.')
       return
     }
-    loading.value = true
+    loading.value += 'sharing ...'
     try {
       const response = await shareFolderMutation.mutateAsync({
         id: props.folder?.id ?? 0,
@@ -250,42 +257,36 @@ const handleShare = async () => {
 
       message.success(response.message ?? 'Folder shared successfully')
       emit('share')
+      emit('submit')
     } catch (error) {
       handleApiError(error, message)
     } finally {
-      loading.value = false
+      loading.value = loading.value.replace('sharing ...', '')
     }
   })
 }
 
 const updateForm = (value: number[]) => {
-  form.value.family_member_id = value
+  form.value.family_member_ids = value
 }
 
 // Handle copy link action
 const handleCopyLink = async () => {
-  const link = props.shareableLink || window.location.href
+  loading.value += 'copying link ...'
 
   try {
-    await navigator.clipboard.writeText(link)
-    message.success('Link copied to clipboard')
+    const response = await generateShareableLinkMutation.mutateAsync({
+      id: props.folder?.id ?? 0,
+    })
+    await copyToClipboard(response.data.share_link ?? '')
+    const humanReadable = getHumanReadableDate(response.data.expires_at ?? '')
+    message.success(`Link copied to clipboard and expires on ${humanReadable}`)
     emit('copy-link')
-  } catch {
-    // Fallback for older browsers
-    const textArea = document.createElement('textarea')
-    textArea.value = link
-    textArea.style.position = 'fixed'
-    textArea.style.opacity = '0'
-    document.body.appendChild(textArea)
-    textArea.select()
-    try {
-      document.execCommand('copy')
-      message.success('Link copied to clipboard')
-      emit('copy-link')
-    } catch {
-      message.error('Failed to copy link')
-    }
-    document.body.removeChild(textArea)
+    emit('submit')
+  } catch (error) {
+    handleApiError(error, message)
+  } finally {
+    loading.value = loading.value.replace('copying link ...', '')
   }
 }
 

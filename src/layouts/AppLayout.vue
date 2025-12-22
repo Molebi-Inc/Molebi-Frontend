@@ -15,23 +15,24 @@
     </aside>
     <main
       :class="[
-        'flex-1 h-full relative pb-24 md:pb-0 overflow-y-auto',
-        isLargeScreen && !['web'].includes($route.meta.fullScreen as string) ? 'md:ml-64' : '',
+        'flex-1 h-full relative overflow-y-auto',
+        isLargeScreen && !['web'].includes(String($route.meta.fullScreen)) ? 'md:ml-64' : '',
+        !isLargeScreen && $route.meta.fullScreen !== 'mobile' ? 'pb-32' : 'md:pb-0',
       ]"
     >
-      <div :class="['h-full', isLargeScreen ? 'p-6' : '']">
+      <div :class="['min-h-full', isLargeScreen ? 'h-full p-6' : '']">
         <header
           v-if="
-            (isLargeScreen && !['web'].includes($route.meta.fullScreen as string)) ||
+            (isLargeScreen && !['web'].includes(String($route.meta.fullScreen))) ||
             (!isLargeScreen &&
-              !['mobile', 'mobile-footer'].includes($route.meta.fullScreen as string))
+              !['mobile', 'mobile-footer'].includes(String($route.meta.fullScreen)))
           "
         >
           <HeaderComponent />
         </header>
         <section
           :class="[
-            'h-full',
+            isLargeScreen ? 'h-full' : '',
             $route.meta.fullScreen === 'web' ? 'flex items-center justify-center' : '',
           ]"
         >

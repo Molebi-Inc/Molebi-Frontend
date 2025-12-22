@@ -1,25 +1,29 @@
 <template>
-  <div class="md:grid grid-cols-7 gap-4 bg-brand-background h-screen">
+  <div class="md:grid grid-cols-7 bg-brand-background h-screen overflow-hidden">
     <div
-      class="border-r border-secondary-200 bg-white col-span-4 md:px-[72px] md:py-[40px] px-6 py-8"
+      class="border-r border-secondary-200 bg-white col-span-4 md:px-[72px] md:py-[40px] px-6 py-8 flex flex-col overflow-hidden"
     >
-      <header v-if="isLargeScreen">
+      <header v-if="isLargeScreen" class="shrink-0">
         <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
       </header>
-      <div class="flex justify-center items-center h-full">
-        <div class="w-[344px] h-[344px] md:w-[540px] md:h-auto mt-12 md:mt-0">
-          <img :src="component?.image_url" alt="Molebi" class="" />
+      <div class="flex-1 flex justify-center items-center min-h-0">
+        <div
+          class="w-full h-full max-w-[344px] max-h-[344px] md:max-w-[540px] md:max-h-[540px] flex items-center justify-center"
+        >
+          <img :src="component?.image_url" alt="Molebi" class="w-full h-full object-contain" />
         </div>
       </div>
     </div>
-    <div class="flex flex-col justify-center col-span-3 md:px-[120px] px-6">
-      <div class="flex justify-start mb-8">
+    <div
+      class="flex flex-col justify-center col-span-3 md:px-[120px] px-6 overflow-hidden py-4 md:py-8"
+    >
+      <div class="flex justify-start mb-4 md:mb-8 shrink-0">
         <BackButton
           v-if="component?.has_back_button && isLargeScreen"
           icon="vuesax.linear.arrow-left"
         />
       </div>
-      <div class="flex items-center gap-2 mb-2">
+      <div class="flex items-center gap-2 mb-2 shrink-0">
         <div
           v-for="i in 3"
           :key="i"
@@ -29,13 +33,13 @@
           ]"
         ></div>
       </div>
-      <h1 class="text-2xl font-semibold mb-2 text-black">
+      <h1 class="text-2xl font-semibold mb-2 text-black shrink-0">
         {{ component?.title }}
       </h1>
-      <p class="text-black text-body-sm">
+      <p class="text-black text-body-sm mb-4 md:mb-0 shrink-0">
         {{ component?.description }}
       </p>
-      <div class="flex flex-col mt-12 mb-3.5 gap-4">
+      <div class="flex flex-col mt-4 md:mt-12 mb-2 md:mb-3.5 gap-3 md:gap-4 shrink-0">
         <MlbButton
           :label="component?.primary_button_label"
           block
@@ -49,7 +53,7 @@
           @click="component && $router.push(component.secondary_button_route)"
         />
       </div>
-      <div class="text-black text-caption">
+      <div class="text-black text-caption shrink-0">
         By continuing, you agree to Molebi's
         <a href="#" class="underline">Terms of Service</a> and
         <a href="#" class="underline">Privacy Policy</a>

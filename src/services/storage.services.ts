@@ -3,7 +3,11 @@ import axiosInstance from '@/config/axios.config'
 import { useAuthConfig } from '@/config/auth.config'
 import type { AttachmentInterface, CreateFolderValues } from '@/types/vault.types'
 import type { ApiResponse, ValidationErrorResponse } from '@/types/general.types'
-import type { ShareFolderFormValues, StorageFolderInterface } from '@/types/storage.types'
+import type {
+  ShareableLinkResponseData,
+  ShareFolderFormValues,
+  StorageFolderInterface,
+} from '@/types/storage.types'
 import type { AxiosError } from 'axios'
 import { toValue, type MaybeRefOrGetter } from 'vue'
 import type { FamilyMediaFormValues } from '@/types/family-tradition.types'
@@ -175,6 +179,45 @@ export const useShareFolderMutation = () => {
       const response = await axiosInstance.post<ApiResponse>(
         `/api/user/storage/folders/${id}/share`,
         data,
+        {
+          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+        },
+      )
+      return response.data
+    },
+  })
+}
+
+export const useDeleteStorageMediaMutation = () => {
+  return useMutation<
+    ApiResponse,
+    AxiosError<ValidationErrorResponse>,
+    { id: number; mediaId: number }
+  >({
+    mutationFn: async ({ id, mediaId }: { id: number; mediaId: number }) => {
+      const response = await axiosInstance.delete<ApiResponse>(
+        `/api/user/storage/media/${mediaId}`,
+        {
+          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+        },
+      )
+      return response.data
+    },
+  })
+}
+
+export const useGenerateShareableLinkMutation = () => {
+  return useMutation<
+    ApiResponse<ShareableLinkResponseData>,
+    AxiosError<ValidationErrorResponse>,
+    { id: number }
+  >({
+    mutationFn: async ({ id }: { id: number }) => {
+      const response = await axiosInstance.post<ApiResponse<ShareableLinkResponseData>>(
+        `/api/user/storage/folders/${id}/share-link`,
+        {
+          expires_in_days: 14,
+        },
         {
           headers: { Authorization: `Bearer ${authConfig.getToken()}` },
         },

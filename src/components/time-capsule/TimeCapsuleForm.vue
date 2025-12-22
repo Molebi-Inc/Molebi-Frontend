@@ -208,7 +208,7 @@ const onFormSubmit = async () => {
         showCancelButton: false,
         bottomSheet: !isLargeScreen.value,
         bottomSheetHeight: 256,
-        closeText: 'Cancel',
+        closeText: 'Close',
       })
     } catch (error) {
       handleApiError(error, message)

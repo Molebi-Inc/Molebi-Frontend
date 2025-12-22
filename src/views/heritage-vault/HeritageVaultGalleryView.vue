@@ -77,15 +77,14 @@
       :show-info="false"
       :is-loading="folderMediaLoading"
       :allow-batch-action="true"
+      @batch-delete="handleBatchDelete"
     />
     <MlbModal
       v-model:show="showModal"
       class="rounded-3xl!"
-      :bottom-sheet="true"
-      :bottom-sheet-height="306"
+      :bottom-sheet="modalComponent?.hasBottomSheet"
+      :bottom-sheet-height="modalComponent?.height"
     >
-      <!-- :bottom-sheet="modalComponent?.hasBottomSheet"
-      :bottom-sheet-height="modalComponent?.height" -->
       <template #header>
         <div class="flex items-center justify-between">
           <BackButton
@@ -108,7 +107,7 @@
   </section>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { NDropdown, NButton } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import { useVaultStore } from '@/stores/vault.store'
@@ -136,20 +135,31 @@ const vaultStore = useVaultStore()
 const storageStore = useStorageStore()
 const { options, handleSelect } = useFolderMenu()
 const { loading: vaultLoading, fetchVaultFolder } = useVault()
-const { folderMediaLoading, fetchFolderMedia, fetchFolderDetails, fetchArchiveFolders } =
-  useArchive()
+const {
+  folderMediaLoading,
+  fetchFolderMedia,
+  fetchFolderDetails,
+  fetchArchiveFolders,
+  handleDeleteMedia,
+  setSelectedFolder,
+} = useArchive()
 
 const showModal = ref<boolean>(false)
 
 const handleBackButtonClick = () => {
   showModal.value = false
+  const query = { ...$route.query }
+  delete query.action
+  delete query.tab
+  setSelectedFolder(null)
+  $router.push({
+    name: $route.name,
+    params: { ...$route.params },
+    query,
+  })
 }
 
-// const handleFolderModify = (folder: FolderInterface | StorageFolderInterface) => {
-//   showModal.value = false
-// }
-
-const currentFlow = computed(() => $route.params.submodule)
+const currentFlow = computed(() => $route.params.module)
 
 const selectedFolder = computed<FolderInterface | StorageFolderInterface | null>(
   () => vaultStore.selectedFolder || storageStore.selectedFolder,
@@ -196,7 +206,9 @@ const gallery = computed<AttachmentInterface[]>(() =>
 )
 
 const initSelect = (key: string, folder: FolderInterface | StorageFolderInterface) => {
-  showModal.value = true
+  if (key !== 'delete') {
+    showModal.value = true
+  }
   handleSelect(key, folder)
 }
 
@@ -215,8 +227,16 @@ const handleUpdateFolder = async (value: {
 }
 
 const postSubmitActions = async () => {
-  if ($route.query.tab) {
+  if ($route.query.tab || $route.query.action) {
     await fetchFolderDetails()
+    showModal.value = false
+    const query = { ...$route.query }
+    delete query.tab
+    $router.push({
+      name: $route.name,
+      params: $route.params,
+      query,
+    })
   }
 }
 
@@ -234,7 +254,7 @@ const handlePinSubmitted = async (value: string) => {
 
 const modalComponent = computed(() => {
   switch (true) {
-    case !!$route.params.id && !$route.query.action:
+    case !!$route.params.id && !$route.query.action && !$route.query.tab:
       const archiveExist =
         currentFlow.value === 'vault' ? vaultStore.selectedFolder : storageStore.selectedFolder
       return {
@@ -245,6 +265,9 @@ const modalComponent = computed(() => {
     case !!$route.params.id && ['file', 'audio'].includes($route.query.tab as string):
       return {
         component: FamilyTraditionMediaForm,
+        props: {
+          onlyMediaUpload: currentFlow.value === 'vault' ? true : false,
+        },
         title: 'Upload File',
         height: 576,
         hasBottomSheet: true,
@@ -271,7 +294,14 @@ const modalComponent = computed(() => {
 })
 
 const handleGalleryBack = () => {
-  $router.push({ name: 'App.HeritageVaultView.Folders', params: { submodule: currentFlow.value } })
+  $router.push({
+    name: 'App.HeritageVaultView',
+    params: { module: $route.params.module, page: 'folders' },
+  })
+}
+
+const handleBatchDelete = async (mediaIds: number[]) => {
+  await handleDeleteMedia(mediaIds)
 }
 
 onMounted(async () => {
@@ -280,4 +310,14 @@ onMounted(async () => {
   await fetchFolderDetails()
   // }
 })
+
+watch(
+  [() => $route.query.tab, () => $route.query.action],
+  ([tab, action]) => {
+    if (tab || action) {
+      showModal.value = true
+    }
+  },
+  { immediate: true },
+)
 </script>

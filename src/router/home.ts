@@ -8,6 +8,7 @@ export const homeRoutes = [
     meta: {
       layout: 'app',
       tour: 'home',
+      mobileTour: 'home-mobile',
       requiresAuth: true,
     },
     children: [
@@ -16,7 +17,7 @@ export const homeRoutes = [
         name: 'App.HomeView',
         component: () => import('@/views/home/HomeView.vue'),
         meta: {
-          pageTitle: 'Welcome back 👋',
+          pageTitle: 'Hello ',
         },
       },
       {

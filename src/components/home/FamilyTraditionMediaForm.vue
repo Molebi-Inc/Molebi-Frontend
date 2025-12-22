@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- Form -->
-    <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-10">
+    <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-1 md:px-10">
       <n-tabs
         type="line"
         justify-content="space-evenly"

@@ -62,13 +62,33 @@ export const timeOptions: SelectOption[] = [
   })),
 ]
 
-export const countryOptions = Object.entries(country.all as Record<string, Country>).map(
-  ([countryCode, country]) => {
+export const countryOptions = Object.entries(country.all as Record<string, Country>)
+  .map(([countryCode, country]) => {
     const dialingCode =
       country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`
+    const fullLabel = `${country.name} (${dialingCode})`
     return {
-      label: `${country.name} (${dialingCode})`,
-      value: `${dialingCode}|${countryCode}`, // Use composite key to ensure uniqueness
+      // What is shown in the dropdown list
+      label: fullLabel,
+      // Unique value (code + ISO) to avoid duplicate warnings
+      // We still derive the pure dialing code from this in the form logic
+      value: `${dialingCode}|${countryCode}`,
+      countryCode,
+      countryName: country.name,
+      dialingCode,
+      fullLabel,
+    } as SelectOption & {
+      countryCode: string
+      countryName: string
+      dialingCode: string
+      fullLabel: string
     }
-  },
-)
+  })
+  // Sort options alphabetically by country name
+  .sort(
+    (a: SelectOption & { countryName?: string }, b: SelectOption & { countryName?: string }) => {
+      const nameA = (a.countryName || '').toLowerCase()
+      const nameB = (b.countryName || '').toLowerCase()
+      return nameA.localeCompare(nameB)
+    },
+  )

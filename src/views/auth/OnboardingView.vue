@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full">
+  <div class="w-full bg-white md:bg-transparent">
     <div :class="['w-full', { 'md:flex justify-center items-center': !component?.has_full_page }]">
       <div
         :class="[
@@ -9,7 +9,7 @@
             ),
           },
           {
-            'px-4 py-8 md:p-12 md:w-[522px] h-full md:rounded-3xl': !component?.has_full_page,
+            'px-6 py-8 md:p-12 md:w-[522px] h-full md:rounded-3xl': !component?.has_full_page,
             'w-full': component?.has_full_page,
           },
         ]"
@@ -17,7 +17,7 @@
         <BackButton
           v-if="component?.has_back_button"
           icon="vuesax.linear.arrow-left"
-          class="mb-6"
+          class="mb-4! md:mb-6!"
         />
         <div
           :class="[
@@ -26,10 +26,10 @@
           ]"
         >
           <div v-if="!component?.has_full_page">
-            <h1 class="text-neutral-900 font-semibold text-2xl mb-2 text-center">
+            <h1 class="text-neutral-900 font-semibold text-2xl mb-2 md:text-center">
               {{ component?.title }}
             </h1>
-            <p class="text-neutral-600 font-normal text-sm text-center">
+            <p class="text-neutral-600 font-normal text-sm md:text-center">
               {{ component?.description }}
             </p>
           </div>
@@ -68,16 +68,16 @@ const component = computed(() => {
       has_back_button: true,
       component: OtpForm,
     },
+    'seed-phase': {
+      has_back_button: false,
+      has_full_page: true,
+      component: SeedPhase,
+    },
     'personal-info': {
       title: 'Personal Information',
       description: 'Add your personal information to continue',
       has_back_button: true,
       component: PersonalInformationForm,
-    },
-    'seed-phase': {
-      has_back_button: false,
-      has_full_page: true,
-      component: SeedPhase,
     },
   }[$route.params.module as string]
 })

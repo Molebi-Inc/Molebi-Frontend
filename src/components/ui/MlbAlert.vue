@@ -5,12 +5,13 @@
     v-model:show="localShow"
     :bottom-sheet="config.bottomSheet"
     :bottom-sheet-height="config.bottomSheetHeight"
-    :class="[config.modalClass, 'rounded-3xl!']"
+    :class="[config.modalClass, !config.fullPageAlert ? 'rounded-3xl!' : '']"
     :style="{
       width: config.bottomSheet ? '100%' : config.width || '90%',
       maxWidth: config.bottomSheet ? '100%' : config.maxWidth || '600px',
     }"
     :bottom-sheet-footer-class="config.bottomSheetFooterClass"
+    :full-page="config.fullPageAlert"
   >
     <template #header>
       <div v-if="config.header">
@@ -69,12 +70,18 @@
       </div>
 
       <!-- Subject/Title -->
-      <h2 v-if="config.subject" class="text-2xl font-semibold text-gray-900 text-center mb-4">
+      <h2
+        v-if="config.subject"
+        :class="[`text-2xl font-semibold mb-4 text-gray-900 text-${config.textAlign || 'center'}`]"
+      >
         <span v-html="config.subject"></span>
       </h2>
 
       <!-- Message -->
-      <div v-if="config.message" class="text-gray-700 text-center mb-6">
+      <div
+        v-if="config.message"
+        :class="[`text-gray-700 mb-6 text-${config.textAlign || 'center'}`]"
+      >
         <span v-html="config.message"></span>
       </div>
 

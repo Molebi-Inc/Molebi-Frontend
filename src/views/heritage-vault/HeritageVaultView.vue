@@ -6,13 +6,14 @@
     <!-- Render tab content when on the Folders route -->
     <div v-else>
       <div
-        v-if="$route.params.submodule === 'storage'"
+        v-if="!($route.params.module === 'vault' && $route.params.page === 'folders')"
         class="flex items-center justify-between mt-3 mb-6"
       >
         <div></div>
         <div>Heritage Vault</div>
         <div>
           <MlbIcon
+            v-if="$route.params.module === 'storage'"
             name="vuesax.linear.add"
             color="#333333"
             :size="24"
@@ -20,14 +21,8 @@
           />
         </div>
       </div>
-      <template v-if="$route.params.submodule === 'vault'">
-        <component
-          :is="tabs.find((tab) => tab.name === activeTab)?.component"
-          v-bind="tabs.find((tab) => tab.name === activeTab)?.props"
-        />
-      </template>
       <n-tabs
-        v-else
+        v-if="!($route.params.module === 'vault' && $route.params.page === 'folders')"
         v-model:value="activeTab"
         animated
         :bar-width="0"
@@ -42,9 +37,13 @@
           :tab="tab.label"
           class="w-full mt-6"
         >
-          <component :is="tab.component" v-bind="tab.props" />
         </n-tab-pane>
       </n-tabs>
+      <component
+        :is="tabs.find((tab) => tab.name === activeTab)?.component"
+        v-bind="tabs.find((tab) => tab.name === activeTab)?.props"
+        @update:show-add-modal="handleAddModal"
+      />
     </div>
     <MlbModal v-model:show="showModal" class="rounded-3xl! bottom-sheet" :bottom-sheet="true">
       <template #header>
@@ -57,8 +56,8 @@
           <h1 class="text-base font-semibold text-center">
             New
             {{
-              String($route.params.submodule).charAt(0).toUpperCase() +
-              String($route.params.submodule).slice(1)
+              String($route.params.module).charAt(0).toUpperCase() +
+              String($route.params.module).slice(1)
             }}
             Folder
           </h1>
@@ -77,7 +76,6 @@ import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import BackButton from '@/components/common/BackButton.vue'
 import type { TabInterface } from '@/types/general.types'
-import TimeCapsule from '@/views/time-capsules/TimeCapsule.vue'
 import type { FolderInterface } from '@/types/vault.types'
 import { AlertService } from '@/services/alert.service'
 import { useGeneralStore } from '@/stores/general.store'
@@ -90,12 +88,12 @@ const $router = useRouter()
 const generalStore = useGeneralStore()
 
 const showModal = ref<boolean>(false)
-const activeTab = ref<'family-archive' | 'time-capsule'>('family-archive')
+const activeTab = ref<'storage' | 'vault'>('storage')
 
 const tabs = computed<TabInterface[]>(() => [
   {
-    name: 'family-archive',
-    label: 'Family Archive',
+    name: 'storage',
+    label: 'Storage',
     component: FamilyArchive,
     props: {
       fileCount: 0,
@@ -103,24 +101,16 @@ const tabs = computed<TabInterface[]>(() => [
     },
   },
   {
-    name: 'time-capsule',
-    label: 'Time Capsule',
-    component: TimeCapsule,
+    name: 'vault',
+    label: 'Vault',
+    component: FamilyArchive,
   },
 ])
-
-// const component = computed(() => {
-//   return {
-//     'family-archive': FamilyArchive,
-//     'time-capsule': TimeCapsule,
-//   }[$route.params.module as string]
-// })
 
 const onTabUpdate = (value: string) => {
   $router.push({
     name: $route.name ?? undefined,
     params: {
-      ...$route.params,
       module: value,
     },
   })
@@ -139,13 +129,12 @@ const handleFolderModify = (payload: {
   folder?: FolderInterface | StorageFolderInterface | null
 }) => {
   showModal.value = false
-  const folderName = payload.folder
-    ? 'title' in payload.folder
+  const folderName =
+    payload.folder && $route.params.module === 'vault'
       ? (payload.folder as FolderInterface).title
       : (payload.folder as StorageFolderInterface).name
-    : ''
   AlertService.success({
-    subject: `New ${String($route.params.submodule).charAt(0).toUpperCase() + String($route.params.submodule).slice(1)} Folder <span class="font-bold text-gray-400">"${folderName}"</span> Created`,
+    subject: `New ${String($route.params.module).charAt(0).toUpperCase() + String($route.params.module).slice(1)} Folder <span class="font-bold text-gray-400">"${folderName}"</span> Created`,
     message: 'Folder created successfully',
     imageUrl: 'images/success.png',
     imageAlt: 'Success',
@@ -209,22 +198,22 @@ const handleFolderModify = (payload: {
 watch(
   () => $route.params.module,
   (value) => {
-    activeTab.value = (value as 'family-archive' | 'time-capsule') ?? 'family-archive'
+    activeTab.value = (value as 'storage' | 'vault') ?? 'storage'
   },
   { immediate: true },
 )
 
 onMounted(() => {
-  if (!$route.params.module) {
-    $router.push({
-      name: $route.name ?? undefined,
-      params: {
-        ...$route.params,
-        module: 'family-archive',
-        submodule: 'storage',
-      },
-    })
-  }
-  generalStore.setStoreProp('flow', $route.params.submodule || 'storage')
+  // if (!$route.params.module) {
+  //   $router.push({
+  //     name: 'App.HeritageVaultView',
+  //     params: {
+  //       ...$route.params,
+  //       module: 'storage',
+  //       page: 'folders',
+  //     },
+  //   })
+  // }
+  generalStore.setStoreProp('flow', $route.params.module || 'storage')
 })
 </script>

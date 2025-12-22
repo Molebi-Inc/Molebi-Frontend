@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-6">
-    <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-10">
+    <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-0 md:px-10">
       <div>
         <n-form-item path="title" :show-require-mark="false" :show-feedback="false">
           <MlbInput
