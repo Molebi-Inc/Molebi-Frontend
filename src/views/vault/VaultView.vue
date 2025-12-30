@@ -40,7 +40,7 @@
       class="min-h-screen flex flex-col items-center justify-center text-center gap-4"
     >
       <img
-        :src="`/src/assets/${emptyState.image}`"
+        :src="emptyState.image"
         alt="Vault Folder"
         :class="
           !$route.params.id ? 'w-[240px] h-[188px] object-cover' : 'w-[90px] h-[90px] object-cover'
@@ -125,6 +125,8 @@ import { useDeleteFolderMediaMutation } from '@/services/storage.services'
 import type { FolderInterface, AttachmentInterface } from '@/types/vault.types'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
 import { capitalize } from '@/helpers/general.helpers'
+import emptyVaultImage from '@/assets/images/empty-vault.png'
+import emptyGalleryImage from '@/assets/images/empty-gallery.png'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -167,7 +169,7 @@ const emptyState = computed(() => {
       // !vaultStore.foldersLoading:
       return {
         message: 'Nothing to see here yet',
-        image: 'images/empty-vault.png',
+        image: emptyVaultImage,
       }
     case !gallery.value.length &&
       routeNames.includes(String($route.name)) &&
@@ -175,7 +177,7 @@ const emptyState = computed(() => {
       !folderMediaLoading.value:
       return {
         message: 'No media files uploaded yet!',
-        image: 'images/empty-gallery.png',
+        image: emptyGalleryImage,
       }
     default:
       return null
