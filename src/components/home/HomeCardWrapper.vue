@@ -6,7 +6,7 @@
     <div
       class="sticky top-0 bg-white z-10 pt-6 -mx-6 px-6 mb-3 md:mb-8 flex justify-between items-center"
     >
-      <div></div>
+      <div v-if="isLargeScreen"></div>
       <h4 :id="properties.id" class="text-gray-600 mb-0 font-medium uppercase tracking-wider">
         {{ properties.title }}
       </h4>
