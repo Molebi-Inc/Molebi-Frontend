@@ -7,7 +7,15 @@ export interface FamilyMemberFormValues {
   nickname: string
   relation_type: string | null
   profile_picture?: File | null | string
+  gender: GenderType
+  related_through: number | null
+  parent_id: number | null
+  is_adoptive: boolean
+  is_former: boolean
+  is_deceased: boolean
 }
+
+export type GenderType = 'male' | 'female' | 'other' | 'prefer_not_to_say'
 
 export interface FamilyRequestFormValues {
   unique_tree_id: string
@@ -40,6 +48,7 @@ export interface FamilyMemberInterface {
   first_name: string
   middle_name: string | null
   family_name: string
+  gender: GenderType
   family_tree_id: number
   full_name?: string
   is_registered?: boolean
@@ -85,15 +94,25 @@ export interface TreeLayout {
 export interface FamilyTreeInterface {
   userId: string
   familyTree: {
-    self: Partial<FamilyMemberInterface>
-    parents: Partial<FamilyMemberInterface>[]
-    siblings: Partial<FamilyMemberInterface>[]
-    spouse: Partial<FamilyMemberInterface>[]
-    children: Partial<FamilyMemberInterface>[]
-    grandparents: Partial<FamilyMemberInterface>[]
-    grandchildren: Partial<FamilyMemberInterface>[]
-    aunts_uncles: FamilyMemberInterface[]
-    nieces_nephews: Partial<FamilyMemberInterface>[]
-    cousins: Partial<FamilyMemberInterface>[]
+    [key in FamilyTreeMember]: Partial<FamilyMemberInterface>[]
   }
 }
+
+export interface FamilyTreeStoreInterface {
+  familyTreeData: FamilyTreeInterface | null
+  loading: boolean
+  error: string | null
+}
+
+export type FamilyTreeMember =
+  | 'self'
+  | 'parents'
+  | 'siblings'
+  | 'spouse'
+  | 'grandparents'
+  | 'grandchildren'
+  | 'aunts_uncles'
+  | 'nieces_nephews'
+  | 'cousins'
+  | 'step_parents'
+  | 'children'

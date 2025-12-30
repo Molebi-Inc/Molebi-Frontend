@@ -179,7 +179,7 @@ export const buildTreeFromFamilyTree = (
 
   // Create aunt/uncle nodes (generation -1 - same as parents)
   familyTree.aunts_uncles.forEach((auntUncle) => {
-    const auntUncleNode = getOrCreateNode(auntUncle)
+    const auntUncleNode = getOrCreateNode(auntUncle as FamilyMemberInterface)
     auntUncleNode.generation = -1
     // Connect to grandparents if they exist
     familyTree.grandparents.forEach((grandparent) => {

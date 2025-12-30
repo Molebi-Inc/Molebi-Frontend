@@ -200,9 +200,12 @@ const createChart = async () => {
 const updateChart = () => {
   if (!chartInstance) return
 
-  chartInstance.data = chartData()
-  chartInstance.options = chartOptions()
-  chartInstance.update(props.animate ? 'active' : 'none')
+  const options = chartOptions()
+  if (options) {
+    chartInstance.data = chartData()
+    chartInstance.options = options
+    chartInstance.update(props.animate ? 'active' : 'none')
+  }
 }
 
 onMounted(() => {
