@@ -73,7 +73,19 @@ export const buildTreeFromFamilyTree = (
   }
 
   // Create self node (generation 0 - center)
-  const selfNode = getOrCreateNode(familyTree.self as FamilyMemberInterface)
+  // `familyTree.self` is modeled as an array of partial members; we expect exactly one entry.
+  const selfMember = familyTree.self[0]
+  if (!selfMember || selfMember.id == null) {
+    // If there is no valid self member, return an empty layout to avoid unsafe casts.
+    return {
+      nodes: [],
+      connections: [],
+      generations: [],
+      rootNode: undefined,
+    }
+  }
+
+  const selfNode = getOrCreateNode(selfMember as FamilyMemberInterface)
   selfNode.generation = 0
 
   // Create parent nodes (generation -1)
