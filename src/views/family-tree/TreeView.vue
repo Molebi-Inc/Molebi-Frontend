@@ -94,7 +94,7 @@
                 </div>
               </foreignObject>
 
-              <!-- PERSON NODE -->
+              <!-- PERSON NODE (Standard or SuperNode) -->
               <foreignObject
                 v-else
                 :x="node.x - nodeSize / 2"
@@ -109,46 +109,91 @@
                   :style="{ width: nodeSize + 'px', height: nodeSize + 'px' }"
                   @click.stop="handleNodeClick(node)"
                 >
-                  <!-- MAIN AVATAR -->
-                  <div
-                    :class="[
-                      'w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg flex items-center justify-center',
-                      node.isSelf ? 'ring-4 ring-green-300' : '',
-                    ]"
-                    style="background: white"
-                  >
-                    <img
-                      :src="
-                        node.data?.profile_picture_url ||
-                        getUserAvatar(
-                          node.data?.first_name || 'User',
-                          node.data?.last_name || '',
-                          node.data?.profile_picture_url || undefined,
-                        )
-                      "
-                      :title="`${node.data?.full_name || 'Family member'} - ${relationText(node)}`"
-                      class="object-cover w-full h-full"
-                    />
-                  </div>
-
-                  <!-- SUB-NODE (ANCESTOR BADGE) -->
-                  <div
-                    v-if="node.subNode"
-                    class="absolute -bottom-2 -right-4 w-[40px] h-[40px] z-10"
-                  >
+                  <!-- SUPER NODE (e.g. Parents: Father & Mother) -->
+                  <div v-if="node.isSuperNode" class="relative w-full h-full">
+                    <!-- Main person (Full size) -->
                     <div
-                      class="w-full h-full rounded-full overflow-hidden border-2 border-white shadow-md bg-white"
+                      class="absolute top-0 left-0 w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg bg-white z-10"
                     >
                       <img
                         :src="
-                          node.subNode?.profile_picture_url ||
+                          node.data?.profile_picture_url ||
                           getUserAvatar(
-                            node.subNode?.first_name || 'User',
-                            node.subNode?.last_name || '',
-                            node.subNode?.profile_picture_url || undefined,
+                            node.data?.first_name || 'User',
+                            node.data?.last_name || '',
+                            node.data?.profile_picture_url || undefined,
                           )
                         "
-                        :title="`${node.subNode?.full_name || 'Family member'} - Subnode`"
+                        class="object-cover w-full h-full"
+                        :title="node.data?.full_name"
+                      />
+                    </div>
+
+                    <!-- Subnode (Mini circle overlapping bottom-right) -->
+                    <div
+                      v-if="node.subNodes && node.subNodes.length > 0"
+                      class="absolute bottom-0 right-0 w-[32px] h-[32px] rounded-full overflow-hidden border-2 border-white shadow-md bg-white z-20"
+                      :style="{ bottom: '-4px', right: '-4px' }"
+                    >
+                      <img
+                        :src="
+                          node.subNodes[0]?.profile_picture_url ||
+                          getUserAvatar(
+                            node.subNodes[0]?.first_name || 'User',
+                            node.subNodes[0]?.last_name || '',
+                            node.subNodes[0]?.profile_picture_url || undefined,
+                          )
+                        "
+                        class="object-cover w-full h-full"
+                        :title="node.subNodes[0]?.full_name"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- STANDARD NODE -->
+                  <div v-else class="relative w-full h-full">
+                    <!-- Main Avatar -->
+                    <div
+                      :class="[
+                        'w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg flex items-center justify-center relative z-20',
+                        node.isSelf ? 'ring-4 ring-green-300' : '',
+                      ]"
+                      style="background: white"
+                    >
+                      <img
+                        :src="
+                          node.data?.profile_picture_url ||
+                          getUserAvatar(
+                            node.data?.first_name || 'User',
+                            node.data?.last_name || '',
+                            node.data?.profile_picture_url || undefined,
+                          )
+                        "
+                        :title="`${node.data?.full_name || 'Family member'} - ${relationText(node)}`"
+                        class="object-cover w-full h-full"
+                      />
+                    </div>
+
+                    <!-- Subnodes (e.g. other spouses) - Small badges -->
+                    <div
+                      v-for="(sub, idx) in node.subNodes || []"
+                      :key="sub.id || idx"
+                      class="absolute z-30 w-[40px] h-[40px] border-2 border-white rounded-full overflow-hidden shadow-md bg-white"
+                      :style="{
+                        bottom: '-5px',
+                        right: `${-15 - idx * 20}px`,
+                      }"
+                    >
+                      <img
+                        :src="
+                          sub.profile_picture_url ||
+                          getUserAvatar(
+                            sub.first_name || 'User',
+                            sub.last_name || '',
+                            sub.profile_picture_url || undefined,
+                          )
+                        "
+                        :title="sub.full_name"
                         class="object-cover w-full h-full"
                       />
                     </div>
@@ -230,6 +275,79 @@
         </ul>
       </div>
     </div>
+
+    <!-- Spouse Selection Modal -->
+    <div
+      v-if="showSpouseSelectionModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      @click.self="showSpouseSelectionModal = false"
+    >
+      <div class="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4" @click.stop>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Select Spouse</h3>
+          <button
+            type="button"
+            class="text-gray-400 hover:text-gray-600"
+            @click="showSpouseSelectionModal = false"
+          >
+            ✕
+          </button>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          You have multiple spouses. Select which one to display:
+        </p>
+        <div class="space-y-2 max-h-64 overflow-y-auto">
+          <button
+            v-for="spouse in payload?.spouse || []"
+            :key="spouse.id"
+            type="button"
+            class="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-colors"
+            @click="selectSpouse(spouse)"
+          >
+            <div class="font-medium text-gray-900">
+              {{ spouse.full_name || spouse.first_name }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">
+              {{ spouse.is_former ? 'Former Spouse' : 'Current Spouse' }}
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Member View Modal -->
+    <div
+      v-if="showMemberModal && selectedMemberForModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
+      @click.self="showMemberModal = false"
+    >
+      <div class="relative w-full max-w-2xl" @click.stop>
+        <ViewMember
+          :member="
+            nodeToMember({
+              id: String(selectedMemberForModal.id),
+              x: 0,
+              y: 0,
+              type: 'person',
+              data: selectedMemberForModal,
+              role: selectedMemberRole || undefined,
+              isSelf: selectedMemberRole === 'self',
+            })
+          "
+          variant="card"
+          :show-back="false"
+          @back="showMemberModal = false"
+          @view-profile="handleViewProfile"
+        />
+        <button
+          type="button"
+          class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-lg text-gray-400 hover:text-gray-600 transition-colors z-10"
+          @click="showMemberModal = false"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -237,6 +355,7 @@
 import { ref, reactive, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
 import * as d3 from 'd3'
 import { getUserAvatar } from '@/helpers/general.helpers'
+import ViewMember from '@/components/family-tree/ViewMember.vue'
 
 /* ---------- Types ---------- */
 type Person = {
@@ -271,26 +390,50 @@ type LayoutNode = {
   role?: string
   side?: string
   isSelf?: boolean
-  subNode?: Person | null
+  isSuperNode?: boolean // For Parents/In-Laws (Mother & Father combined)
+  subNodes?: Person[] // Additional people in this node (e.g. other spouses, or the other parent in a supernode)
   opacity?: number
+  // Connection points for cleaner arcs
+  connectionPoints?: {
+    top: { x: number; y: number }
+    bottom: { x: number; y: number }
+    left: { x: number; y: number }
+    right: { x: number; y: number }
+  }
 }
 
 export type Payload = {
   self: Person & { spouse?: Person | null }
-  parents?: Person[] // Gen 2 (if present)
-  siblings?: Person[] // Gen 3
+  parents?: Person[] // Gen 2: Father, Mother
+  siblings?: Person[] // Gen 3: Brothers, Sisters
   children?: Person[] // Gen 4
   grandparents?: Person[] // Gen 1
   grandchildren?: Person[] // Gen 5
-  aunts_uncles?: Person[] // Gen 2
-  cousins?: Person[] // Gen 3
-  nieces_nephews?: Person[] // Gen 4
+  aunts_uncles?: Person[] // Gen 2: Aunts, Uncles (filtered by related_through)
+  cousins?: Person[] // Gen 3: Only shown in A/U tree view
+  nieces_nephews?: Person[] // Gen 4: Only shown in Cousin tree view
   /**
    * All spouses of the logged‑in user.
    * - The primary / current spouse will be shown opposite the self node
    * - Any additional spouses will appear as subnodes on the self node
    */
   spouse?: Person[]
+  /**
+   * Parents-in-Law (Father-in-Law, Mother-in-Law) - Gen 2, spouse side
+   */
+  parents_in_law?: Person[]
+  /**
+   * Siblings-in-Law (Brother-in-Law, Sister-in-Law) - Gen 3, spouse side
+   */
+  siblings_in_law?: Person[]
+  /**
+   * Step-Parents - Only shown when viewing parent's tree
+   */
+  step_parents?: Person[]
+  /**
+   * Step-Siblings / Half-Siblings - Only shown when step-parent is displayed
+   */
+  step_siblings?: Person[]
 }
 
 /* ---------- Props & sample data ---------- */
@@ -333,6 +476,10 @@ const defaultPayload: Payload = {
     { id: '900', first_name: 'Mousin', full_name: 'Mousin Adenuga' },
   ],
   spouse: [{ id: '400', first_name: 'Khadijah', full_name: 'Khadijah Olawale' }],
+  parents_in_law: [],
+  siblings_in_law: [],
+  step_parents: [],
+  step_siblings: [],
 }
 
 // const payload = ref<Payload>(props.payload ?? defaultPayload)
@@ -390,8 +537,15 @@ const tooltipStyle = computed(() => {
 /* ---------- Node selection / drill‑down state ---------- */
 const selectedNode = ref<LayoutNode | null>(null)
 const selectedNodeChildren = ref<Person[]>([])
-const focusedPerson = ref<Person | null>(null) // When an uncle/aunt is clicked, this becomes the "self"
+const focusedPerson = ref<Person | null>(null) // When drilling down, this becomes the "self"
 const originalPayload = ref<Payload | null>(null) // Store original payload to return to
+const viewMode = ref<'main' | 'sibling' | 'parent' | 'aunt_uncle' | 'spouse'>('main')
+const selectedSpouse = ref<Person | null>(null) // When viewing self with multiple spouses
+const parentSuperNodeMain = ref<Person | null>(null) // Which parent is main in supernode (determines which side's relatives show)
+const showSpouseSelectionModal = ref(false) // Modal for selecting spouse when multiple exist
+const showMemberModal = ref(false) // Modal for viewing member details
+const selectedMemberForModal = ref<Person | null>(null) // Member data for the modal
+const selectedMemberRole = ref<string | null>(null) // Role/relation for the modal
 
 /* ---------- d3 zoom transform tracking ---------- */
 let currentTransform = d3.zoomIdentity
@@ -445,21 +599,165 @@ function arrangeInArc(
 ): Array<{ x: number; y: number; id: string }> {
   if (nodes.length === 0) return []
   if (nodes.length === 1) {
-    return [{ x: centerX, y: baseY, id: nodes[0]!.id }]
+    return [{ x: centerX, y: baseY, id: String(nodes[0]!.id) }]
   }
 
-  const spacing = (radius * 2) / (nodes.length - 1)
-  const startX = centerX - radius
+  // If we want the arc to be centered, we calculate total width and center it
+  const totalWidth = radius
+  const actualStartX = centerX - totalWidth / 2
+  const step = totalWidth / (nodes.length - 1 || 1)
 
   return nodes.map((node, i) => {
-    const x = startX + i * spacing
-    const t = (i / (nodes.length - 1)) * 2 - 1 // -1 to 1
-    const yOffset = -curvature * (1 - t * t) // Parabolic curve
-    return { x, y: baseY + yOffset, id: node.id }
+    // Linear X placement
+    const x = nodes.length > 1 ? actualStartX + i * step : centerX
+
+    // Parabolic Y offset: y = a(x - h)^2 + k
+    // Normalized position t from -1 to 1
+    const t = nodes.length > 1 ? (i / (nodes.length - 1)) * 2 - 1 : 0
+    const yOffset = -curvature * (1 - t * t) // Parabolic curve peaking at center
+
+    return { x, y: baseY + yOffset, id: String(node.id) }
   })
 }
 
-/* ---------- Layout algorithm (Two-sided split) ---------- */
+/**
+ * Get children filtered by parent_id
+ * If parent_id is null, include if currentSpouseId matches
+ */
+function getFilteredChildren(
+  parentId: string | number | null,
+  allChildren: Person[],
+  currentSpouseId?: string | number | null,
+): Person[] {
+  if (parentId === null && currentSpouseId) {
+    // Children with no parent_id default to current spouse
+    return allChildren.filter(
+      (c) => !c.parent_id || String(c.parent_id) === String(currentSpouseId),
+    )
+  }
+  return allChildren.filter((c) => String(c.parent_id ?? '') === String(parentId))
+}
+
+/**
+ * Get relatives filtered by related_through
+ * Used for Aunts/Uncles and Grandparents based on parent supernode main node
+ */
+function getFilteredRelatives(
+  relatedThrough: string | null | undefined,
+  allRelatives: Person[],
+): Person[] {
+  if (!relatedThrough) return allRelatives
+  return allRelatives.filter((r) => String(r.related_through ?? '') === String(relatedThrough))
+}
+
+/**
+ * Rebuild payload from a focused person's perspective
+ */
+function rebuildPayloadForPerson(person: Person, originalPayload: Payload): Payload {
+  const personId = String(person.id)
+
+  // Find their children (cousins if A/U, nieces/nephews if sibling)
+  const children = [
+    ...getFilteredChildren(personId, originalPayload.cousins || [], null),
+    ...getFilteredChildren(personId, originalPayload.nieces_nephews || [], null),
+  ]
+
+  // Find their parent (for A/U, this is grandparent)
+  // Find their siblings (other A/Us + parent)
+  // This logic depends on the relationship type
+  const isAuntUncle = (originalPayload.aunts_uncles || []).some((au) => String(au.id) === personId)
+
+  if (isAuntUncle) {
+    const au = (originalPayload.aunts_uncles || []).find((au) => String(au.id) === personId)
+    const relatedThrough = au?.related_through
+
+    // Their parent is a grandparent
+    const parent = (originalPayload.grandparents || []).find(
+      (gp) => String(gp.id) === relatedThrough || gp.related_through === relatedThrough,
+    )
+
+    // Their siblings: other A/Us with same related_through + the parent
+    const siblings = [
+      ...(originalPayload.aunts_uncles || []).filter(
+        (a) => String(a.id) !== personId && a.related_through === relatedThrough,
+      ),
+      ...(originalPayload.parents || []).filter(
+        (p) => String(p.id) === relatedThrough || p.related_through === relatedThrough,
+      ),
+    ]
+
+    return {
+      self: person,
+      parents: parent ? [parent] : [],
+      siblings: siblings,
+      children: children,
+      grandparents: [],
+      grandchildren: [],
+      aunts_uncles: [],
+      cousins: [],
+      nieces_nephews: [],
+      spouse: [],
+      parents_in_law: [],
+      siblings_in_law: [],
+    }
+  }
+
+  // For siblings
+  const isSibling = (originalPayload.siblings || []).some((s) => String(s.id) === personId)
+  if (isSibling) {
+    return {
+      self: person,
+      parents: originalPayload.parents || [],
+      siblings: (originalPayload.siblings || []).filter((s) => String(s.id) !== personId),
+      children: children,
+      grandparents: originalPayload.grandparents || [],
+      grandchildren: [],
+      aunts_uncles: originalPayload.aunts_uncles || [],
+      cousins: [],
+      nieces_nephews: [],
+      spouse: [],
+      parents_in_law: [],
+      siblings_in_law: [],
+    }
+  }
+
+  // For spouse
+  const isSpouse = (originalPayload.spouse || []).some((s) => String(s.id) === personId)
+  if (isSpouse) {
+    return {
+      self: person,
+      parents: originalPayload.parents_in_law || [],
+      siblings: originalPayload.siblings_in_law || [],
+      children: getFilteredChildren(null, originalPayload.children || [], personId),
+      grandparents: [],
+      grandchildren: [],
+      aunts_uncles: [],
+      cousins: [],
+      nieces_nephews: [],
+      spouse: [],
+      parents_in_law: [],
+      siblings_in_law: [],
+    }
+  }
+
+  // Default: return minimal payload
+  return {
+    self: person,
+    parents: [],
+    siblings: [],
+    children: children,
+    grandparents: [],
+    grandchildren: [],
+    aunts_uncles: [],
+    cousins: [],
+    nieces_nephews: [],
+    spouse: [],
+    parents_in_law: [],
+    siblings_in_law: [],
+  }
+}
+
+/* ---------- Layout algorithm (Complete Implementation) ---------- */
 function buildLayout() {
   // Clear arrays
   nodes.value = []
@@ -467,434 +765,354 @@ function buildLayout() {
   parentConnectors.value = []
   generationRows.value = []
 
-  // If focusedPerson is set (uncle/aunt clicked), rebuild tree from their perspective
   let workingPayload = payload.value
-  if (focusedPerson.value) {
-    // Rebuild payload from focused person's perspective
-    const focused = focusedPerson.value
-    const focusedId = String(focused.id)
-    const originalPayload = payload.value
 
-    // Find their children (cousins from original tree that have this uncle/aunt as parent)
-    const focusedChildren = (originalPayload.cousins || []).filter(
-      (c) => String(c.parent_id || '') === focusedId,
-    )
+  // Handle drill-down views
+  if (focusedPerson.value && originalPayload.value) {
+    workingPayload = rebuildPayloadForPerson(focusedPerson.value, originalPayload.value)
+  }
 
-    // Find their parent: aunts/uncles are siblings of self's parents
-    // So the uncle/aunt's parent is the same as self's grandparent
-    // Find which parent the uncle/aunt is related through (father or mother)
-    const focusedUncleAunt = (originalPayload.aunts_uncles || []).find(
-      (au) => String(au.id) === focusedId,
-    )
+  const p = workingPayload
 
-    // The uncle/aunt's parent is a grandparent (parent of self's parent)
-    // Find the grandparent that matches the related_through
-    const focusedParent = (originalPayload.grandparents || []).find((gp) => {
-      // If uncle/aunt is related through father, find father's parent (grandfather)
-      // If uncle/aunt is related through mother, find mother's parent (grandmother)
-      return (
-        focusedUncleAunt?.related_through &&
-        (gp.related_through === focusedUncleAunt.related_through || !gp.related_through)
+  // Determine which spouse to display
+  const spouses = p.spouse || []
+  let primarySpouse: Person | null = null
+
+  if (selectedSpouse.value) {
+    primarySpouse = selectedSpouse.value
+  } else {
+    primarySpouse = spouses.find((s) => !s.is_former) || spouses[0] || p.self.spouse || null
+  }
+
+  const otherSpouses = primarySpouse
+    ? spouses.filter((s) => String(s.id) !== String(primarySpouse!.id))
+    : spouses
+
+  // Determine main parent for filtering relatives
+  const parents = p.parents || []
+  const mainParentId = parentSuperNodeMain.value
+    ? String(parentSuperNodeMain.value.id)
+    : parents.length > 0
+      ? String(parents[0]!.id)
+      : null
+
+  // Filter relatives based on main parent
+  // Show aunts/uncles if they're related to any parent, or if no related_through is set (show all)
+  const allAuntsUncles = p.aunts_uncles || []
+  const filteredAuntsUncles = mainParentId
+    ? allAuntsUncles.filter(
+        (au) =>
+          !au.related_through || // Show if no related_through specified
+          String(au.related_through) === mainParentId || // Or if matches main parent
+          (p.parents || []).some((par) => String(par.id) === String(au.related_through)), // Or if matches any parent
       )
-    })
+    : allAuntsUncles
 
-    // Find their siblings: other aunts/uncles who share the same parent (grandparent)
-    // Also include self's parent (since they're siblings)
-    const focusedSiblings = [
-      ...(originalPayload.aunts_uncles || []).filter((au) => {
-        return (
-          String(au.id) !== focusedId && au.related_through === focusedUncleAunt?.related_through
-        )
-      }),
-      ...(originalPayload.parents || []).filter((par) => {
-        return par.related_through === focusedUncleAunt?.related_through
-      }),
-    ]
+  const grandparents = mainParentId
+    ? getFilteredRelatives(mainParentId, p.grandparents || [])
+    : p.grandparents || []
 
-    // Rebuild payload with focused person as self
-    workingPayload = {
-      self: focused,
-      parents: focusedParent ? [focusedParent] : [],
-      siblings: focusedSiblings,
-      children: focusedChildren,
-      grandparents: [],
-      grandchildren: [],
-      aunts_uncles: [],
-      cousins: [],
-      nieces_nephews: [],
-      spouse: [],
-    }
-  }
+  // Filter children based on current spouse
+  const currentSpouseId = primarySpouse ? String(primarySpouse.id) : null
+  const children = getFilteredChildren(null, p.children || [], currentSpouseId)
 
-  // Layout constants
-  const rowHeight = 220
-  const startY = 100
-  const centerX = Math.max(900, svgWidth.value / 2)
-  const sideSpacing = 300 // Distance from center to each side
-  const leftSideX = centerX - sideSpacing
-  const rightSideX = centerX + sideSpacing
+  // Filter grandchildren
+  const grandchildren = p.grandchildren || []
 
-  // --- Separate data by side ---
-  // First, identify spouse-side members by related_through
-  const spouseSideMemberIds = new Set<string>()
-  ;(workingPayload.spouse || []).forEach((s) => spouseSideMemberIds.add(String(s.id)))
-  ;(workingPayload.parents || [])
-    .filter((par) => par.related_through === 'spouse')
-    .forEach((par) => spouseSideMemberIds.add(String(par.id)))
-  ;(workingPayload.siblings || [])
-    .filter((sib) => sib.related_through === 'spouse')
-    .forEach((sib) => spouseSideMemberIds.add(String(sib.id)))
-  ;(workingPayload.grandparents || [])
-    .filter((gp) => gp.related_through === 'spouse')
-    .forEach((gp) => spouseSideMemberIds.add(String(gp.id)))
+  // Layout Constants - 5 Generations
+  // Offset to start nodes after generation tags (tags are ~30px tall including padding)
+  const labelOffset = 40
+  const centerX = svgWidth.value / 2
+  const centerY = svgHeight.value / 2 + labelOffset
+  const rowHeight = 200
 
-  // Helper to check if a member ID belongs to spouse's side
-  const isSpouseSideMember = (memberId: string | number): boolean => {
-    return spouseSideMemberIds.has(String(memberId))
-  }
+  const yGen1 = centerY - rowHeight * 2 // Grandparents
+  const yGen2 = centerY - rowHeight // Parents
+  const yGen3 = centerY // Self & Spouse
+  const yGen4 = centerY + rowHeight // Children
+  const yGen5 = centerY + rowHeight * 2 // Grandchildren
 
-  // LEFT SIDE: Self + Self's relations
-  const selfGrandparents = (workingPayload.grandparents || []).filter(
-    (gp) => !gp.related_through || gp.related_through !== 'spouse',
-  )
-  const selfParents = (workingPayload.parents || []).filter(
-    (par) => !par.related_through || par.related_through !== 'spouse',
-  )
-  const selfAuntsUncles = (workingPayload.aunts_uncles || []).filter(
-    (au) => !au.related_through || au.related_through !== 'spouse',
-  )
-  const selfSiblings = (workingPayload.siblings || []).filter(
-    (sib) => !sib.related_through || sib.related_through !== 'spouse',
-  )
-  // Cousins are not shown in main tree - only when viewing an uncle/aunt's tree
-  const selfNiecesNephews = (workingPayload.nieces_nephews || []).filter(
-    (nn) => !nn.parent_id || !isSpouseSideMember(nn.parent_id),
-  )
+  const spacing = 200 // Spacing between Self and Spouse
+  const leftSideX = centerX - 400 // Left side for self's relations
+  const rightSideX = centerX + 400 // Right side for spouse's relations
 
-  // RIGHT SIDE: Spouse + Spouse's relations (in-laws)
-  const spouseInLaws = {
-    parents: (workingPayload.parents || []).filter((par) => par.related_through === 'spouse'),
-    grandparents: (workingPayload.grandparents || []).filter(
-      (gp) => gp.related_through === 'spouse',
-    ),
-    siblings: (workingPayload.siblings || []).filter((sib) => sib.related_through === 'spouse'),
-    cousins: (workingPayload.cousins || []).filter(
-      (co) => co.parent_id && isSpouseSideMember(co.parent_id),
-    ),
-    niecesNephews: (workingPayload.nieces_nephews || []).filter(
-      (nn) => nn.parent_id && isSpouseSideMember(nn.parent_id),
-    ),
-  }
+  // Add generation labels (positioned above nodes)
+  generationRows.value = [
+    { label: 'Generation 1', y: yGen1 - labelOffset },
+    { label: 'Generation 2', y: yGen2 - labelOffset },
+    { label: 'Generation 3', y: yGen3 - labelOffset },
+    { label: 'Generation 4', y: yGen4 - labelOffset },
+    { label: 'Generation 5', y: yGen5 - labelOffset },
+  ]
 
-  // Get primary spouse
-  const allSpouses = workingPayload.spouse || []
-  const primarySpouse =
-    allSpouses.find((s) => !s.is_former) || allSpouses[0] || workingPayload.self?.spouse || null
-  const otherSpouses =
-    primarySpouse && allSpouses.length > 1
-      ? allSpouses.filter((s) => String(s.id) !== String(primarySpouse.id))
-      : []
+  // === POSITION NODES ===
 
-  const selfNode = workingPayload.self
-  const children = workingPayload.children || []
-  const grandchildren = workingPayload.grandchildren || []
-
-  // --- Generation Y positions ---
-  const y1 = startY // Gen 1: Grandparents
-  const y2 = startY + rowHeight // Gen 2: Parents
-  const y3 = startY + 2 * rowHeight // Gen 3: Self & Spouse
-  const y4 = startY + 3 * rowHeight // Gen 4: Children
-  const y5 = startY + 4 * rowHeight // Gen 5: Grandchildren
-
-  // --- LEFT SIDE: Self + Self's Relations ---
-
-  // Gen 1: Self's Grandparents (LEFT)
-  // First person is main node, others are subnodes
-  if (selfGrandparents.length > 0) {
-    const main = selfGrandparents[0]
-    const sub = selfGrandparents.length > 1 ? selfGrandparents[1] : null
-    nodes.value.push({
-      id: main!.id,
-      x: leftSideX,
-      y: y1,
-      label: main!.full_name,
-      data: main as Person,
-      type: 'person',
-      role: 'grandparent',
-      side: 'self',
-      subNode: sub,
-    })
-    // Additional grandparents beyond the first two are also attached as subnodes
-    // (Note: UI only shows one subnode visually, but we store the second one)
-  }
-
-  // Gen 2: Self's Parents (LEFT)
-  // First person is main node, second is subnode, others beyond 2 are also subnodes
-  if (selfParents.length > 0) {
-    const main = selfParents[0]
-    const sub = selfParents.length > 1 ? selfParents[1] : null
-    nodes.value.push({
-      id: main!.id,
-      x: leftSideX,
-      y: y2,
-      label: main!.full_name,
-      data: main as Person,
-      type: 'person',
-      role: 'parent',
-      side: 'self',
-      subNode: sub,
-    })
-  }
-
-  // Gen 2: Self's Aunts/Uncles (LEFT) - curved arc
-  if (selfAuntsUncles.length > 0) {
-    const auPositions = arrangeInArc(selfAuntsUncles, leftSideX - 180, y2, 300, 25)
-    auPositions.forEach((pos, i) => {
-      const au = selfAuntsUncles[i]!
-      nodes.value.push({
-        id: pos.id,
-        x: pos.x,
-        y: pos.y,
-        label: au.full_name,
-        data: au,
-        type: 'person',
-        role: 'aunt_uncle',
-        side: 'self',
-        opacity: 0.7,
-      })
-    })
-  }
-
-  // Gen 3: Self (LEFT)
-  if (selfNode) {
-    nodes.value.push({
-      id: selfNode.id,
-      x: leftSideX,
-      y: y3,
-      label: 'You',
-      data: selfNode,
+  // Gen 3: Self Node (will be repositioned in siblings arc)
+  let selfLayoutNode: LayoutNode | null = null
+  if (p.self) {
+    selfLayoutNode = {
+      id: String(p.self.id),
+      x: centerX - (primarySpouse ? spacing / 2 : 0),
+      y: yGen3,
+      label: viewMode.value === 'main' ? 'You' : p.self.full_name || p.self.first_name,
+      data: p.self,
       type: 'person',
       role: 'self',
+      isSelf: viewMode.value === 'main',
+      subNodes: otherSpouses,
       side: 'self',
-      isSelf: true,
-      subNode: otherSpouses.length > 0 ? (otherSpouses[0] as Person) : null,
-    })
+    }
+    // Don't push yet - will be positioned in siblings arc
   }
 
-  // Gen 3: Self's Siblings (LEFT) - curved arc
-  if (selfSiblings.length > 0) {
-    const siblingPositions = arrangeInArc(selfSiblings, leftSideX - 150, y3, 350, 35)
-    siblingPositions.forEach((pos, i) => {
-      const sib = selfSiblings[i]!
-      nodes.value.push({
-        id: pos.id,
-        x: pos.x,
-        y: pos.y,
-        label: sib.full_name,
-        data: sib,
-        type: 'person',
-        role: 'sibling',
-        side: 'self',
-      })
-    })
-  }
-
-  // Gen 3: Self's Cousins (LEFT) - DO NOT SHOW in main tree
-  // Cousins will only show when viewing an uncle/aunt's tree (when focusedPerson is set)
-
-  // Gen 4: Self's Nieces/Nephews (LEFT) - curved arc grouped by parent
-  if (selfNiecesNephews.length > 0) {
-    const niecesByParent = new Map<string | number, Person[]>()
-    selfNiecesNephews.forEach((nn) => {
-      const parentId = nn.parent_id || 'unknown'
-      if (!niecesByParent.has(parentId)) {
-        niecesByParent.set(parentId, [])
-      }
-      niecesByParent.get(parentId)!.push(nn)
-    })
-
-    let arcOffset = 0
-    niecesByParent.forEach((nieces) => {
-      const positions = arrangeInArc(nieces, leftSideX - 200 - arcOffset, y4, 300, 30)
-      positions.forEach((pos, i) => {
-        const nn = nieces[i]!
-        nodes.value.push({
-          id: pos.id,
-          x: pos.x,
-          y: pos.y,
-          label: nn.full_name,
-          data: nn,
-          type: 'person',
-          role: 'niece_nephew',
-          side: 'self',
-          opacity: 0.6,
-        })
-      })
-      arcOffset += 350
-    })
-  }
-
-  // --- RIGHT SIDE: Spouse + Spouse's Relations ---
-
-  // Gen 3: Primary Spouse (RIGHT)
+  // Gen 3: Spouse Node (will be repositioned in spouse-side arc)
+  let spouseLayoutNode: LayoutNode | null = null
   if (primarySpouse) {
-    nodes.value.push({
-      id: primarySpouse.id,
-      x: rightSideX,
-      y: y3,
-      label: primarySpouse.full_name,
+    spouseLayoutNode = {
+      id: String(primarySpouse.id),
+      x: centerX + spacing / 2,
+      y: yGen3,
+      label: primarySpouse.full_name || primarySpouse.first_name,
       data: primarySpouse,
       type: 'person',
       role: 'spouse',
       side: 'spouse',
+    }
+    // Don't push yet - will be positioned in spouse-side arc
+  }
+
+  // Gen 2: Parents (SuperNode if multiple)
+  if (parents.length > 0) {
+    const mainParent = parents[0]!
+    const otherParents = parents.slice(1)
+
+    if (parents.length >= 2) {
+      const parentSuperNode: LayoutNode = {
+        id: String(mainParent.id),
+        x: leftSideX,
+        y: yGen2,
+        label: 'Parents',
+        data: mainParent,
+        type: 'person',
+        role: 'parent-super',
+        isSuperNode: true,
+        subNodes: otherParents,
+        side: 'self',
+      }
+      nodes.value.push(parentSuperNode)
+    } else {
+      const parentNode: LayoutNode = {
+        id: String(mainParent.id),
+        x: leftSideX,
+        y: yGen2,
+        label: mainParent.full_name || mainParent.first_name,
+        data: mainParent,
+        type: 'person',
+        role: 'parent',
+        isSuperNode: false,
+        side: 'self',
+      }
+      nodes.value.push(parentNode)
+    }
+  }
+
+  // Gen 1: Grandparents (filtered by main parent, positioned based on parent_id)
+  if (grandparents.length > 0) {
+    // Group grandparents by parent_id to position them correctly
+    const grandparentsByParent: Record<string, Person[]> = {}
+    const ungroupedGrandparents: Person[] = []
+
+    grandparents.forEach((gp) => {
+      if (gp.parent_id) {
+        const parentId = String(gp.parent_id)
+        if (!grandparentsByParent[parentId]) {
+          grandparentsByParent[parentId] = []
+        }
+        grandparentsByParent[parentId].push(gp)
+      } else {
+        ungroupedGrandparents.push(gp)
+      }
     })
 
-    // Heart icon between self and spouse
+    // Position grandparents based on their parent_id
+    let grandparentXOffset = leftSideX - 200
+    const grandparentSpacing = 300
+
+    // Add grandparents grouped by parent_id
+    Object.entries(grandparentsByParent).forEach(([, gps]) => {
+      if (gps.length >= 2) {
+        const mainGP = gps[0]!
+        const otherGPs = gps.slice(1)
+        const grandparentSuperNode: LayoutNode = {
+          id: String(mainGP.id),
+          x: grandparentXOffset,
+          y: yGen1,
+          label: 'Grandparents',
+          data: mainGP,
+          type: 'person',
+          role: 'grandparent',
+          isSuperNode: true,
+          subNodes: otherGPs,
+          side: 'self',
+        }
+        nodes.value.push(grandparentSuperNode)
+        grandparentXOffset += grandparentSpacing
+      } else if (gps.length === 1) {
+        const gp = gps[0]!
+        const grandparentNode: LayoutNode = {
+          id: String(gp.id),
+          x: grandparentXOffset,
+          y: yGen1,
+          label: gp.full_name || gp.first_name,
+          data: gp,
+          type: 'person',
+          role: 'grandparent',
+          isSuperNode: false,
+          side: 'self',
+        }
+        nodes.value.push(grandparentNode)
+        grandparentXOffset += grandparentSpacing
+      }
+    })
+
+    // Add ungrouped grandparents
+    if (ungroupedGrandparents.length > 0) {
+      const mainGP = ungroupedGrandparents[0]!
+      const otherGPs = ungroupedGrandparents.slice(1)
+      if (ungroupedGrandparents.length >= 2) {
+        const grandparentSuperNode: LayoutNode = {
+          id: String(mainGP.id),
+          x: grandparentXOffset,
+          y: yGen1,
+          label: 'Grandparents',
+          data: mainGP,
+          type: 'person',
+          role: 'grandparent',
+          isSuperNode: true,
+          subNodes: otherGPs,
+          side: 'self',
+        }
+        nodes.value.push(grandparentSuperNode)
+      } else {
+        const grandparentNode: LayoutNode = {
+          id: String(mainGP.id),
+          x: grandparentXOffset,
+          y: yGen1,
+          label: mainGP.full_name || mainGP.first_name,
+          data: mainGP,
+          type: 'person',
+          role: 'grandparent',
+          isSuperNode: false,
+          side: 'self',
+        }
+        nodes.value.push(grandparentNode)
+      }
+    }
+  }
+
+  // Gen 2: Aunts/Uncles (filtered, only show if not in drill-down) - includes parent in the arc
+  if (viewMode.value === 'main' && filteredAuntsUncles.length > 0) {
+    // Create array with parent and aunts/uncles for arc
+    const parentAndAuntsUncles: Person[] = []
+    if (parents.length > 0) {
+      parentAndAuntsUncles.push(parents[0]!)
+    }
+    parentAndAuntsUncles.push(...filteredAuntsUncles)
+
+    const arcWidth = Math.max(400, parentAndAuntsUncles.length * 100)
+    const leftAnchor = leftSideX - 200
+    const startX = leftAnchor - arcWidth / 2
+
+    const auPositions = arrangeInArc(parentAndAuntsUncles, startX, yGen2, arcWidth, 50)
+
+    auPositions.forEach((pos, i) => {
+      const person = parentAndAuntsUncles[i]!
+      // Skip if this is parent (already added above)
+      if (parents.length > 0 && String(person.id) === String(parents[0]!.id)) {
+        return
+      }
+      nodes.value.push({
+        id: pos.id,
+        x: pos.x,
+        y: pos.y,
+        label: person.full_name || person.first_name,
+        data: person,
+        type: 'person',
+        role: 'aunt_uncle',
+        side: 'self',
+      })
+    })
+  }
+
+  // Gen 3: Siblings (arc to the left of Self) - includes self in the arc
+  const siblings = p.siblings || []
+  const allSiblingsIncludingSelf: Person[] = []
+  if (p.self) {
+    allSiblingsIncludingSelf.push(p.self)
+  }
+  allSiblingsIncludingSelf.push(...siblings)
+
+  if (allSiblingsIncludingSelf.length > 0) {
+    const arcWidth = Math.max(500, allSiblingsIncludingSelf.length * 100)
+    const leftAnchor = centerX - (primarySpouse ? spacing : spacing / 2) - 150
+    const startX = leftAnchor - arcWidth / 2
+
+    const siblingPositions = arrangeInArc(allSiblingsIncludingSelf, startX, yGen3, arcWidth, 60)
+
+    siblingPositions.forEach((pos, i) => {
+      const person = allSiblingsIncludingSelf[i]!
+      // If this is self, update its position and add it
+      if (selfLayoutNode && String(person.id) === String(p.self?.id)) {
+        selfLayoutNode.x = pos.x
+        selfLayoutNode.y = pos.y
+        nodes.value.push(selfLayoutNode)
+      } else {
+        // Add sibling
+        nodes.value.push({
+          id: pos.id,
+          x: pos.x,
+          y: pos.y,
+          label: person.full_name || person.first_name,
+          data: person,
+          type: 'person',
+          role: 'sibling',
+          side: 'self',
+        })
+      }
+    })
+  } else if (selfLayoutNode) {
+    // If no siblings, just add self at default position
+    nodes.value.push(selfLayoutNode)
+  }
+
+  // Heart Icon between Self and Spouse (positioned at center)
+  if (selfLayoutNode && spouseLayoutNode) {
     nodes.value.push({
-      id: 'heart-union',
+      id: 'heart-main',
       x: centerX,
-      y: y3,
+      y: yGen3,
       type: 'heart',
       label: '',
     })
   }
 
-  // Gen 2: Spouse's Parents (In-Laws) (RIGHT)
-  // First person is main node, second is subnode
-  if (spouseInLaws.parents.length > 0) {
-    const main = spouseInLaws.parents[0]
-    const sub = spouseInLaws.parents.length > 1 ? spouseInLaws.parents[1] : null
-    nodes.value.push({
-      id: main!.id,
-      x: rightSideX,
-      y: y2,
-      label: main!.full_name,
-      data: main as Person,
-      type: 'person',
-      role: main!.relation_type === 'father-in-law' ? 'father-in-law' : 'mother-in-law',
-      side: 'spouse',
-      subNode: sub,
-    })
-  }
-
-  // Gen 1: Spouse's Grandparents (RIGHT)
-  if (spouseInLaws.grandparents.length > 0) {
-    const main = spouseInLaws.grandparents[0]
-    const sub = spouseInLaws.grandparents.length > 1 ? spouseInLaws.grandparents[1] : null
-    nodes.value.push({
-      id: main!.id,
-      x: rightSideX,
-      y: y1,
-      label: main!.full_name,
-      data: main as Person,
-      type: 'person',
-      role: 'grandparent',
-      side: 'spouse',
-      subNode: sub,
-    })
-  }
-
-  // Gen 3: Spouse's Siblings (In-Laws) (RIGHT) - curved arc
-  if (spouseInLaws.siblings.length > 0) {
-    const positions = arrangeInArc(spouseInLaws.siblings, rightSideX + 150, y3, 350, 35)
-    positions.forEach((pos, i) => {
-      const sib = spouseInLaws.siblings[i]!
-      nodes.value.push({
-        id: pos.id,
-        x: pos.x,
-        y: pos.y,
-        label: sib.full_name,
-        data: sib,
-        type: 'person',
-        role: sib.relation_type === 'brother-in-law' ? 'brother-in-law' : 'sister-in-law',
-        side: 'spouse',
-      })
-    })
-  }
-
-  // Gen 3: Spouse's Cousins (RIGHT) - curved arc grouped by parent
-  if (spouseInLaws.cousins.length > 0) {
-    const cousinsByParent = new Map<string | number, Person[]>()
-    spouseInLaws.cousins.forEach((co) => {
-      const parentId = co.parent_id || 'unknown'
-      if (!cousinsByParent.has(parentId)) {
-        cousinsByParent.set(parentId, [])
-      }
-      cousinsByParent.get(parentId)!.push(co)
-    })
-
-    let arcOffset = 0
-    cousinsByParent.forEach((cousins) => {
-      const positions = arrangeInArc(cousins, rightSideX + 300 + arcOffset, y3, 250, 25)
-      positions.forEach((pos, i) => {
-        const co = cousins[i]!
-        nodes.value.push({
-          id: pos.id,
-          x: pos.x,
-          y: pos.y,
-          label: co.full_name,
-          data: co,
-          type: 'person',
-          role: 'cousin',
-          side: 'spouse',
-          opacity: 0.6,
-        })
-      })
-      arcOffset += 300
-    })
-  }
-
-  // Gen 4: Spouse's Nieces/Nephews (RIGHT) - curved arc grouped by parent
-  if (spouseInLaws.niecesNephews.length > 0) {
-    const niecesByParent = new Map<string | number, Person[]>()
-    spouseInLaws.niecesNephews.forEach((nn) => {
-      const parentId = nn.parent_id || 'unknown'
-      if (!niecesByParent.has(parentId)) {
-        niecesByParent.set(parentId, [])
-      }
-      niecesByParent.get(parentId)!.push(nn)
-    })
-
-    let arcOffset = 0
-    niecesByParent.forEach((nieces) => {
-      const positions = arrangeInArc(nieces, rightSideX + 200 + arcOffset, y4, 300, 30)
-      positions.forEach((pos, i) => {
-        const nn = nieces[i]!
-        nodes.value.push({
-          id: pos.id,
-          x: pos.x,
-          y: pos.y,
-          label: nn.full_name,
-          data: nn,
-          type: 'person',
-          role: 'niece_nephew',
-          side: 'spouse',
-          opacity: 0.6,
-        })
-      })
-      arcOffset += 350
-    })
-  }
-
-  // --- SHARED: Children & Grandchildren (Center) ---
-
-  // Gen 4: Children (CENTER) - curved arc
+  // Gen 4: Children (arc below Self/Spouse)
   if (children.length > 0) {
     const childPositions = arrangeInArc(
       children,
       centerX,
-      y4,
-      Math.max(400, children.length * 120),
+      yGen4,
+      Math.max(500, children.length * 120),
       40,
     )
     childPositions.forEach((pos, i) => {
-      const ch = children[i]!
+      const child = children[i]!
       nodes.value.push({
         id: pos.id,
         x: pos.x,
         y: pos.y,
-        label: ch.full_name,
-        data: ch,
+        label: child.full_name || child.first_name,
+        data: child,
         type: 'person',
         role: 'child',
         side: 'shared',
@@ -902,248 +1120,358 @@ function buildLayout() {
     })
   }
 
-  // Gen 5: Grandchildren (CENTER) - curved arc grouped by parent
+  // Gen 5: Grandchildren (arc below children)
   if (grandchildren.length > 0) {
-    const gcByParent = new Map<string | number, Person[]>()
-    grandchildren.forEach((gc) => {
-      const parentId = gc.parent_id || 'unknown'
-      if (!gcByParent.has(parentId)) {
-        gcByParent.set(parentId, [])
-      }
-      gcByParent.get(parentId)!.push(gc)
+    const grandchildPositions = arrangeInArc(
+      grandchildren,
+      centerX,
+      yGen5,
+      Math.max(500, grandchildren.length * 120),
+      40,
+    )
+    grandchildPositions.forEach((pos, i) => {
+      const gc = grandchildren[i]!
+      nodes.value.push({
+        id: pos.id,
+        x: pos.x,
+        y: pos.y,
+        label: gc.full_name || gc.first_name,
+        data: gc,
+        type: 'person',
+        role: 'grandchild',
+        side: 'shared',
+      })
     })
+  }
 
-    let arcOffset = 0
-    gcByParent.forEach((gcs) => {
-      const positions = arrangeInArc(gcs, centerX - 200 + arcOffset, y5, 300, 35)
-      positions.forEach((pos, i) => {
-        const gc = gcs[i]!
+  // Spouse Side: Parents-in-Law (Gen 2)
+  const parentsInLaw = p.parents_in_law || []
+  if (primarySpouse && parentsInLaw.length > 0) {
+    const mainPIL = parentsInLaw[0]!
+    const otherPIL = parentsInLaw.slice(1)
+
+    if (parentsInLaw.length >= 2) {
+      const pilSuperNode: LayoutNode = {
+        id: String(mainPIL.id),
+        x: rightSideX,
+        y: yGen2,
+        label: 'Parents-in-Law',
+        data: mainPIL,
+        type: 'person',
+        role: 'parent-in-law',
+        isSuperNode: true,
+        subNodes: otherPIL,
+        side: 'spouse',
+      }
+      nodes.value.push(pilSuperNode)
+    } else {
+      const pilNode: LayoutNode = {
+        id: String(mainPIL.id),
+        x: rightSideX,
+        y: yGen2,
+        label: mainPIL.full_name || mainPIL.first_name,
+        data: mainPIL,
+        type: 'person',
+        role: 'parent-in-law',
+        isSuperNode: false,
+        side: 'spouse',
+      }
+      nodes.value.push(pilNode)
+    }
+  }
+
+  // Spouse Side: Spouse, Brother-in-Law, and Sister-in-Law (Gen 3, arc on spouse side)
+  const siblingsInLaw = p.siblings_in_law || []
+  const brothersInLaw = siblingsInLaw.filter(
+    (sil) => sil.relation_type === 'brother_in_law' || sil.relation_type === 'brother-in-law',
+  )
+  const sistersInLaw = siblingsInLaw.filter(
+    (sil) => sil.relation_type === 'sister_in_law' || sil.relation_type === 'sister-in-law',
+  )
+
+  // Create array with spouse, brothers-in-law, and sisters-in-law for arc
+  const spouseSideArc: Person[] = []
+  if (primarySpouse) {
+    spouseSideArc.push(primarySpouse)
+  }
+  spouseSideArc.push(...brothersInLaw)
+  spouseSideArc.push(...sistersInLaw)
+
+  if (spouseSideArc.length > 0) {
+    const arcWidth = Math.max(500, spouseSideArc.length * 100)
+    const rightAnchor = centerX + (primarySpouse ? spacing : spacing / 2) + 150
+    const startX = rightAnchor - arcWidth / 2
+
+    const spouseSidePositions = arrangeInArc(spouseSideArc, startX, yGen3, arcWidth, 60)
+
+    spouseSidePositions.forEach((pos, i) => {
+      const person = spouseSideArc[i]!
+      // If this is spouse, update its position and add it
+      if (spouseLayoutNode && primarySpouse && String(person.id) === String(primarySpouse.id)) {
+        spouseLayoutNode.x = pos.x
+        spouseLayoutNode.y = pos.y
+        nodes.value.push(spouseLayoutNode)
+      } else {
+        // Add brother-in-law or sister-in-law
+        const isBrother = brothersInLaw.some((bil) => String(bil.id) === String(person.id))
         nodes.value.push({
           id: pos.id,
           x: pos.x,
           y: pos.y,
-          label: gc.full_name,
-          data: gc,
+          label: person.full_name || person.first_name,
+          data: person,
           type: 'person',
-          role: 'grandchild',
-          side: 'shared',
-        })
-      })
-      arcOffset += 350
-    })
-  }
-
-  // GENERATION LABELS
-  const genLabels = ['1st', '2nd', '3rd', '4th', '5th']
-  const genYs = [y1, y2, y3, y4, y5]
-  genYs.forEach((gy, i) => {
-    generationRows.value.push({
-      label: `${genLabels[i]} Generation`,
-      y: gy,
-    })
-  })
-
-  // --- LINKS ---
-  const posOf = (id: string) => nodes.value.find((n) => String(n.id) === String(id))
-
-  // LEFT SIDE LINKS
-
-  // Grandparent -> Parent (Self's side)
-  if (selfGrandparents.length > 0 && selfParents.length > 0) {
-    const gp = posOf(selfGrandparents[0]!.id)
-    const par = posOf(selfParents[0]!.id)
-    if (gp && par) {
-      links.value.push({
-        id: `gp-p-self`,
-        path: wobblyPath(gp.x, gp.y, par.x, par.y, 101),
-        stroke: '#0B5132',
-        width: 3,
-        opacity: 1,
-      })
-    }
-  }
-
-  // Parent -> Self (Self's side)
-  if (selfParents.length > 0 && selfNode) {
-    const par = posOf(selfParents[0]!.id)
-    const slf = posOf(selfNode.id)
-    if (par && slf) {
-      links.value.push({
-        id: `p-self`,
-        path: wobblyPath(par.x, par.y, slf.x, slf.y, 202),
-        stroke: '#0B5132',
-        width: 3,
-        opacity: 1,
-      })
-    }
-  }
-
-  // Parent -> Siblings (Self's side) - connect parent to each sibling with curved lines
-  // Also connect parent to aunts/uncles (parent's siblings)
-  if (selfParents.length > 0) {
-    const par = posOf(selfParents[0]!.id)
-    if (par) {
-      // Connect parent to each sibling
-      const sibNodes = selfSiblings.map((s) => posOf(s.id)).filter((n): n is LayoutNode => !!n)
-      sibNodes.forEach((sib, i) => {
-        links.value.push({
-          id: `p-sib-${sib.id}`,
-          path: wobblyPath(par.x, par.y, sib.x, sib.y, 301 + i),
-          stroke: '#E7C19E',
-          width: 3,
-          opacity: 1,
-        })
-      })
-
-      // Connect parent to aunts/uncles (parent's siblings) with curved lines
-      const auNodes = selfAuntsUncles.map((au) => posOf(au.id)).filter((n): n is LayoutNode => !!n)
-      auNodes.forEach((au, i) => {
-        links.value.push({
-          id: `p-au-${au.id}`,
-          path: wobblyPath(par.x, par.y, au.x, au.y, 401 + i),
-          stroke: '#E7C19E',
-          width: 3,
-          opacity: 1,
-        })
-      })
-    }
-  }
-
-  // Aunt/Uncle -> Cousins links removed - cousins not shown in main tree
-
-  // Sibling -> Niece/Nephew (Self's side) - grouped by parent_id
-  if (selfSiblings.length > 0 && selfNiecesNephews.length > 0) {
-    selfNiecesNephews.forEach((nn) => {
-      if (nn.parent_id) {
-        const sib = posOf(String(nn.parent_id))
-        const niece = posOf(nn.id)
-        if (sib && niece) {
-          links.value.push({
-            id: `sib-niece-${nn.id}`,
-            path: wobblyPath(sib.x, sib.y, niece.x, niece.y, 501),
-            stroke: '#E7C19E',
-            width: 2,
-            opacity: 0.7,
-          })
-        }
-      }
-    })
-  }
-
-  // RIGHT SIDE LINKS
-
-  // Spouse's Grandparent -> Spouse's Parent
-  if (spouseInLaws.grandparents.length > 0 && spouseInLaws.parents.length > 0) {
-    const gp = posOf(spouseInLaws.grandparents[0]!.id)
-    const par = posOf(spouseInLaws.parents[0]!.id)
-    if (gp && par) {
-      links.value.push({
-        id: `gp-p-spouse`,
-        path: wobblyPath(gp.x, gp.y, par.x, par.y, 601),
-        stroke: '#0B5132',
-        width: 3,
-        opacity: 1,
-      })
-    }
-  }
-
-  // Spouse's Parent -> Spouse
-  if (spouseInLaws.parents.length > 0 && primarySpouse) {
-    const par = posOf(spouseInLaws.parents[0]!.id)
-    const sps = posOf(primarySpouse.id)
-    if (par && sps) {
-      links.value.push({
-        id: `p-spouse`,
-        path: wobblyPath(par.x, par.y, sps.x, sps.y, 602),
-        stroke: '#0B5132',
-        width: 3,
-        opacity: 1,
-      })
-    }
-  }
-
-  // Spouse's Parent -> Spouse's Siblings - connect parent to each sibling with curved lines
-  if (spouseInLaws.parents.length > 0 && spouseInLaws.siblings.length > 0) {
-    const par = posOf(spouseInLaws.parents[0]!.id)
-    const sibNodes = spouseInLaws.siblings
-      .map((s) => posOf(s.id))
-      .filter((n): n is LayoutNode => !!n)
-    if (par && sibNodes.length > 0) {
-      sibNodes.forEach((sib, i) => {
-        links.value.push({
-          id: `p-sib-spouse-${sib.id}`,
-          path: wobblyPath(par.x, par.y, sib.x, sib.y, 701 + i),
-          stroke: '#E7C19E',
-          width: 3,
-          opacity: 1,
-        })
-      })
-    }
-  }
-
-  // SHARED LINKS
-
-  // Self & Spouse -> Children
-  if (children.length > 0) {
-    const childNodes = children.map((c) => posOf(c.id)).filter((n): n is LayoutNode => !!n)
-    const slf = selfNode ? posOf(selfNode.id) : null
-    const sps = primarySpouse ? posOf(primarySpouse.id) : null
-
-    childNodes.forEach((child) => {
-      if (slf) {
-        links.value.push({
-          id: `self-child-${child.id}`,
-          path: wobblyPath(slf.x, slf.y, child.x, child.y, 801),
-          stroke: '#0B5132',
-          width: 3,
-          opacity: 1,
-        })
-      }
-      if (sps) {
-        links.value.push({
-          id: `spouse-child-${child.id}`,
-          path: wobblyPath(sps.x, sps.y, child.x, child.y, 802),
-          stroke: '#0B5132',
-          width: 3,
-          opacity: 1,
+          role: isBrother ? 'brother-in-law' : 'sister-in-law',
+          side: 'spouse',
         })
       }
     })
+  } else if (spouseLayoutNode) {
+    // If no siblings-in-law, just add spouse at default position
+    nodes.value.push(spouseLayoutNode)
   }
 
-  // Children -> Grandchildren - grouped by parent_id
-  if (children.length > 0 && grandchildren.length > 0) {
-    grandchildren.forEach((gc) => {
-      if (gc.parent_id) {
-        const child = posOf(String(gc.parent_id))
-        const grandchild = posOf(gc.id)
-        if (child && grandchild) {
-          links.value.push({
-            id: `child-gc-${gc.id}`,
-            path: wobblyPath(child.x, child.y, grandchild.x, grandchild.y, 901),
-            stroke: '#0B5132',
-            width: 2,
-            opacity: 1,
-          })
-        }
-      }
-    })
-  }
+  // Generate Connections
+  generateConnections(nodes.value, p, primarySpouse)
 
-  // Final Sizing
+  // Update SVG Size and bounds
+  recalculateSvgSize()
+}
+
+function recalculateSvgSize() {
   const xs = nodes.value.map((n) => n.x)
-  if (xs.length) {
-    const minX = Math.min(...xs)
-    const maxX = Math.max(...xs)
-    svgWidth.value = Math.max(1400, maxX - minX + 600)
+  const ys = nodes.value.map((n) => n.y)
+  if (xs.length && ys.length) {
+    const padding = 400
+    svgWidth.value = Math.max(1400, Math.max(...xs) - Math.min(...xs) + padding)
+    svgHeight.value = Math.max(1000, Math.max(...ys) - Math.min(...ys) + padding)
   }
-  svgHeight.value = Math.max(1000, startY + 5 * rowHeight + 200)
+}
+
+function generateConnections(
+  currentNodes: LayoutNode[],
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _payload: Payload,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _primarySpouse: Person | null,
+) {
+  links.value = []
+
+  const selfNode = currentNodes.find((n) => n.role === 'self')
+  const spouseNode = currentNodes.find((n) => n.role === 'spouse')
+  const parentNode = currentNodes.find((n) => n.role === 'parent' || n.role === 'parent-super')
+  const grandparentNodes = currentNodes.filter((n) => n.role === 'grandparent')
+  const siblingNodes = currentNodes.filter((n) => n.role === 'sibling')
+  const auntUncleNodes = currentNodes.filter((n) => n.role === 'aunt_uncle')
+  const childrenNodes = currentNodes.filter((n) => n.role === 'child')
+  const grandchildrenNodes = currentNodes.filter((n) => n.role === 'grandchild')
+  const brotherInLawNodes = currentNodes.filter((n) => n.role === 'brother-in-law')
+  const sisterInLawNodes = currentNodes.filter((n) => n.role === 'sister-in-law')
+  const parentInLawNode = currentNodes.find((n) => n.role === 'parent-in-law')
+
+  // 1. Self ↔ Spouse: Heart icon (visual only, no line needed)
+
+  // 2. Self and Siblings: Single line running through self and siblings
+  const allSiblingsIncludingSelf = selfNode ? [selfNode, ...siblingNodes] : siblingNodes
+  if (allSiblingsIncludingSelf.length > 1) {
+    const sorted = [...allSiblingsIncludingSelf].sort((a, b) => a.x - b.x)
+    let path = `M ${sorted[0]!.x} ${sorted[0]!.y}`
+    for (let i = 1; i < sorted.length; i++) {
+      path += ` L ${sorted[i]!.x} ${sorted[i]!.y}`
+    }
+    links.value.push({
+      id: 'self-siblings-line',
+      path: path,
+      stroke: '#E7C19E',
+      width: 2,
+      opacity: 0.8,
+    })
+  }
+
+  // 3. Parent ↔ Self: Vertical curved arc (green)
+  if (selfNode && parentNode) {
+    links.value.push({
+      id: 'parent-self',
+      path: wobblyPath(parentNode.x, parentNode.y, selfNode.x, selfNode.y, 100),
+      stroke: '#0B5132', // Green
+      width: 3,
+      opacity: 1,
+    })
+  }
+
+  // 4. Parent and Aunts/Uncles: Single line running through parent and aunts/uncles
+  const parentAndAuntsUncles = parentNode ? [parentNode, ...auntUncleNodes] : auntUncleNodes
+  if (parentAndAuntsUncles.length > 1) {
+    const sorted = [...parentAndAuntsUncles].sort((a, b) => a.x - b.x)
+    let path = `M ${sorted[0]!.x} ${sorted[0]!.y}`
+    for (let i = 1; i < sorted.length; i++) {
+      path += ` L ${sorted[i]!.x} ${sorted[i]!.y}`
+    }
+    links.value.push({
+      id: 'parent-aunts-uncles-line',
+      path: path,
+      stroke: '#E7C19E',
+      width: 2,
+      opacity: 0.8,
+    })
+  }
+
+  // 5. Grandparent ↔ Parent: Vertical curved arc (green)
+  // Connect each grandparent to their parent via parent_id
+  if (parentNode) {
+    grandparentNodes.forEach((gpNode) => {
+      if (gpNode.data?.parent_id) {
+        // Find the specific parent that matches this grandparent's parent_id
+        const targetParentId = String(gpNode.data.parent_id)
+        // Find the parent node (could be in parent node or aunt/uncle nodes)
+        let targetParent = parentNode
+        if (String(parentNode.data?.id) !== targetParentId) {
+          // Check if it's an aunt/uncle
+          const matchingAU = auntUncleNodes.find((au) => String(au.data?.id) === targetParentId)
+          if (matchingAU) {
+            targetParent = matchingAU
+          }
+        }
+        links.value.push({
+          id: `grandparent-${gpNode.id}-parent-${targetParent.id}`,
+          path: wobblyPath(gpNode.x, gpNode.y, targetParent.x, targetParent.y, 100),
+          stroke: '#0B5132',
+          width: 3,
+          opacity: 1,
+        })
+      } else {
+        // If no parent_id specified, connect to main parent node
+        links.value.push({
+          id: `grandparent-${gpNode.id}-parent`,
+          path: wobblyPath(gpNode.x, gpNode.y, parentNode.x, parentNode.y, 100),
+          stroke: '#0B5132',
+          width: 3,
+          opacity: 1,
+        })
+      }
+    })
+  }
+
+  // 6. Spouse, Brother-in-Law, and Sister-in-Law: Single line in arc
+  const spouseSideArc = []
+  if (spouseNode) spouseSideArc.push(spouseNode)
+  spouseSideArc.push(...brotherInLawNodes)
+  spouseSideArc.push(...sisterInLawNodes)
+
+  if (spouseSideArc.length > 1) {
+    const sorted = [...spouseSideArc].sort((a, b) => a.x - b.x)
+    let path = `M ${sorted[0]!.x} ${sorted[0]!.y}`
+    for (let i = 1; i < sorted.length; i++) {
+      path += ` L ${sorted[i]!.x} ${sorted[i]!.y}`
+    }
+    links.value.push({
+      id: 'spouse-siblings-in-law-line',
+      path: path,
+      stroke: '#E7C19E',
+      width: 2,
+      opacity: 0.8,
+    })
+
+    // Connect the last sibling-in-law (between brother and sister) to parent-in-law
+    if (parentInLawNode && sorted.length > 1) {
+      // Find the last sibling-in-law (not the spouse)
+      const lastSiblingInLaw = sorted
+        .slice(1)
+        .sort((a, b) => a.x - b.x)
+        .pop()
+      if (lastSiblingInLaw) {
+        links.value.push({
+          id: 'last-sibling-in-law-parent-in-law',
+          path: wobblyPath(
+            parentInLawNode.x,
+            parentInLawNode.y,
+            lastSiblingInLaw.x,
+            lastSiblingInLaw.y,
+            200,
+          ),
+          stroke: '#0B5132',
+          width: 3,
+          opacity: 1,
+        })
+      }
+    }
+  }
+
+  // 7. Self ↔ First Child: Vertical curved arc (green)
+  if (selfNode && childrenNodes.length > 0) {
+    const firstChild = childrenNodes[0]!
+    links.value.push({
+      id: 'self-child-first',
+      path: wobblyPath(selfNode.x, selfNode.y, firstChild.x, firstChild.y, 300),
+      stroke: '#0B5132',
+      width: 3,
+      opacity: 1,
+    })
+  }
+
+  // 8. Spouse ↔ Last Child: Vertical curved arc (green)
+  if (spouseNode && childrenNodes.length > 0) {
+    const lastChild = childrenNodes[childrenNodes.length - 1]!
+    links.value.push({
+      id: 'spouse-child-last',
+      path: wobblyPath(spouseNode.x, spouseNode.y, lastChild.x, lastChild.y, 301),
+      stroke: '#0B5132',
+      width: 3,
+      opacity: 1,
+    })
+  }
+
+  // 9. Line cutting through children (horizontal line connecting all children)
+  if (childrenNodes.length > 1) {
+    const sortedChildren = [...childrenNodes].sort((a, b) => a.x - b.x)
+    let path = `M ${sortedChildren[0]!.x} ${sortedChildren[0]!.y}`
+    for (let i = 1; i < sortedChildren.length; i++) {
+      path += ` L ${sortedChildren[i]!.x} ${sortedChildren[i]!.y}`
+    }
+    links.value.push({
+      id: 'children-line',
+      path: path,
+      stroke: '#E7C19E',
+      width: 2,
+      opacity: 0.8,
+    })
+  }
+
+  // 10. Children ↔ Grandchildren: Vertical curved arcs
+  if (childrenNodes.length > 0 && grandchildrenNodes.length > 0) {
+    // Connect first child to first grandchild, last child to last grandchild
+    const firstChild = childrenNodes[0]!
+    const lastChild = childrenNodes[childrenNodes.length - 1]!
+    const firstGrandchild = grandchildrenNodes[0]!
+    const lastGrandchild = grandchildrenNodes[grandchildrenNodes.length - 1]!
+
+    links.value.push({
+      id: 'child-grandchild-first',
+      path: wobblyPath(firstChild.x, firstChild.y, firstGrandchild.x, firstGrandchild.y, 400),
+      stroke: '#0B5132',
+      width: 3,
+      opacity: 1,
+    })
+
+    if (grandchildrenNodes.length > 1) {
+      links.value.push({
+        id: 'child-grandchild-last',
+        path: wobblyPath(lastChild.x, lastChild.y, lastGrandchild.x, lastGrandchild.y, 401),
+        stroke: '#0B5132',
+        width: 3,
+        opacity: 1,
+      })
+    }
+  }
+
+  // Note: No horizontal interconnections between siblings or children (removed per requirements)
 }
 
 /* ---------- Tooltip helpers ---------- */
 function relationText(node: LayoutNode) {
   if (node.isSelf) return 'You'
   if (node.role === 'parent') return node.data?.is_adoptive ? 'Adoptive Parent' : 'Parent'
+  if (node.role === 'parent-super') return 'Parents'
   if (node.role === 'sibling') return 'Sibling'
   if (node.role === 'child') return 'Child'
   if (node.role === 'aunt_uncle') return 'Aunt / Uncle'
@@ -1197,33 +1525,166 @@ function computeChildrenFor(node: LayoutNode) {
   selectedNodeChildren.value = children
 }
 
+/**
+ * Get children count for a person
+ */
+function getChildrenCount(personId: string | number): number {
+  const id = String(personId)
+  const p = payload.value
+
+  const allPotentialChildren: Person[] = [
+    ...(p.children || []),
+    ...(p.cousins || []),
+    ...(p.nieces_nephews || []),
+    ...(p.grandchildren || []),
+  ]
+
+  return allPotentialChildren.filter((m) => String(m.parent_id ?? '') === id).length
+}
+
+/**
+ * Get generation label based on role
+ */
+function getGenerationLabel(role: string | undefined): string {
+  if (!role) return 'Family Member'
+
+  const generationMap: Record<string, string> = {
+    grandparent: '1st Generation',
+    parent: '2nd Generation',
+    'parent-super': '2nd Generation',
+    'parent-in-law': '2nd Generation',
+    self: '3rd Generation',
+    spouse: '3rd Generation',
+    sibling: '3rd Generation',
+    'sibling-in-law': '3rd Generation',
+    aunt_uncle: '2nd Generation',
+    child: '4th Generation',
+    grandchild: '5th Generation',
+  }
+
+  return generationMap[role] || 'Family Member'
+}
+
+/**
+ * Convert LayoutNode to Member format for ViewMember component
+ */
+function nodeToMember(node: LayoutNode): {
+  name?: string
+  first_name?: string
+  last_name?: string
+  full_name?: string
+  avatar?: string | null
+  profile_picture_url?: string | null
+  generation?: string
+  familyName?: string
+  childrenCount?: number | string
+  relation?: string
+  profileUrl?: string
+  isSelf?: boolean
+  description?: string
+} {
+  if (!node.data) {
+    return {
+      name: node.label || 'Unknown',
+      relation: relationText(node),
+      generation: getGenerationLabel(node.role),
+    }
+  }
+
+  const person = node.data
+  const childrenCount = getChildrenCount(person.id)
+
+  return {
+    first_name: person.first_name,
+    last_name: person.last_name,
+    full_name: person.full_name,
+    profile_picture_url: person.profile_picture_url,
+    avatar: person.profile_picture_url,
+    generation: getGenerationLabel(node.role),
+    childrenCount: childrenCount,
+    relation: relationText(node),
+    isSelf: node.isSelf || false,
+    description: undefined, // Can be extended if description is available in Person type
+  }
+}
+
 function handleNodeClick(node: LayoutNode) {
   if (node.type === 'heart') return
 
-  // If clicking on an uncle/aunt, switch to their tree view
-  if (node.role === 'aunt_uncle' && node.data) {
-    // Store original payload if not already stored
-    if (!originalPayload.value) {
-      originalPayload.value = { ...payload.value }
-    }
-    focusedPerson.value = node.data
-    selectedNode.value = null
-    buildLayout()
-    return
+  // Store original payload if not already stored
+  if (!originalPayload.value) {
+    originalPayload.value = { ...payload.value }
   }
 
+  // Show member modal for all person nodes
+  if (node.data) {
+    selectedMemberForModal.value = node.data
+    selectedMemberRole.value = node.role || null
+    showMemberModal.value = true
+  }
+
+  // Self node: Show spouse selection modal if multiple spouses exist
+  if (node.role === 'self' && viewMode.value === 'main') {
+    const spouses = payload.value.spouse || []
+    if (spouses.length > 1) {
+      showSpouseSelectionModal.value = true
+      return
+    }
+  }
+
+  // Drill-down based on node role (still available via modal actions)
+  if (node.role === 'aunt_uncle' && node.data) {
+    // Aunt/Uncle: Show their tree with cousins as children
+    // This can be triggered from the modal if needed
+  }
+
+  if (node.role === 'sibling' && node.data) {
+    // Sibling: Show their tree
+    // This can be triggered from the modal if needed
+  }
+
+  if ((node.role === 'parent' || node.role === 'parent-super') && node.data) {
+    // Parent: Show split view (parent becomes self, show their siblings and parents)
+    // This can be triggered from the modal if needed
+  }
+
+  if (node.role === 'spouse' && node.data) {
+    // Spouse: Show their tree (spouse becomes self, show their relations)
+    // This can be triggered from the modal if needed
+  }
+
+  // For other nodes, show breakdown panel
   selectedNode.value = node
   computeChildrenFor(node)
 }
 
 function returnToMainTree() {
   focusedPerson.value = null
+  viewMode.value = 'main'
+  parentSuperNodeMain.value = null
+  selectedSpouse.value = null
   if (originalPayload.value) {
     payload.value = originalPayload.value
     originalPayload.value = null
   }
   selectedNode.value = null
   buildLayout()
+}
+
+function selectSpouse(spouse: Person) {
+  selectedSpouse.value = spouse
+  showSpouseSelectionModal.value = false
+  buildLayout()
+}
+
+function handleViewProfile() {
+  // Handle view profile action - can navigate to profile page or trigger other actions
+  if (selectedMemberForModal.value) {
+    // You can add navigation logic here
+    console.log('View profile for:', selectedMemberForModal.value)
+    // Example: router.push(`/profile/${selectedMemberForModal.value.id}`)
+  }
+  showMemberModal.value = false
 }
 
 /* ---------- Lifecycle ---------- */
