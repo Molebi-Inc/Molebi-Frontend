@@ -145,7 +145,7 @@ const renderCountryLabel = (option: SelectOption, selected: boolean) => {
     return code
   }
   // Dropdown option text
-  return opt.fullLabel || `${opt.countryName ?? ''} (${code})`
+  return `${opt.flag} ${opt.fullLabel || opt.countryName || ''}`
 }
 
 const filterCountryOptions = (pattern: string, option: CountrySelectOption): boolean => {

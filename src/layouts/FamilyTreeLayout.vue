@@ -8,12 +8,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import PageLoader from '@/components/common/PageLoader.vue'
-import { useGetFamilyMembersQuery } from '@/services/family-tree.service'
 import { handleApiError } from '@/helpers/error.helpers'
+import PageLoader from '@/components/common/PageLoader.vue'
+import { useFamilyTree } from '@/composables/family-tree.composables'
+import { useGetFamilyMembersQuery } from '@/services/family-tree.service'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -21,6 +22,7 @@ const message = useMessage()
 const isResolvingFlow = ref(true)
 
 const { refetch } = useGetFamilyMembersQuery({ enabled: false })
+const { fetchFamilyTrees } = useFamilyTree()
 
 const resolveFamilyTreeFlow = async () => {
   //   isResolvingFlow.value = true
@@ -49,4 +51,8 @@ watch(
   },
   { immediate: true },
 )
+
+onMounted(async () => {
+  await fetchFamilyTrees()
+})
 </script>

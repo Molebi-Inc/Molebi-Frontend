@@ -16,30 +16,9 @@ export const storageRoutes = [
       {
         path: '',
         name: 'App.StorageLayout',
+        redirect: { name: 'App.StorageFolderView' },
         component: StorageLayout,
         children: [
-          {
-            path: 'onboarding/welcome',
-            name: 'App.StorageWelcomeView',
-            component: StorageView,
-            meta: {
-              pageTitle: 'Storage',
-              hasLayoutLogo: true,
-              hasLayoutLeaf: false,
-              fullScreen: 'web',
-            },
-          },
-          {
-            path: 'onboarding/family-info',
-            name: 'App.StorageFamilyInfoView',
-            component: StorageView,
-            meta: {
-              hasLayoutLogo: true,
-              hasLayoutLeaf: true,
-              fullScreen: 'web',
-              pageTitle: 'Storage',
-            },
-          },
           {
             path: 'folders/:id?',
             name: 'App.StorageFolderView',

@@ -1,14 +1,21 @@
 <template>
   <div
-    class="col-span-1 bg-white md:border border-primary-400 rounded-2xl md:p-6 pt-0 h-[275px] md:overflow-y-auto"
+    class="col-span-1 bg-white md:border border-primary-400 rounded-2xl md:pb-6 md:px-6 pt-0 h-[275px] md:overflow-y-auto"
   >
+    <div class="md:mt-3 bg-white"></div>
     <div
       class="sticky top-0 bg-white z-10 pt-6 -mx-6 px-6 mb-3 md:mb-8 flex justify-between items-center"
     >
+      <div></div>
       <h4 :id="properties.id" class="text-gray-600 mb-0 font-medium uppercase tracking-wider">
         {{ properties.title }}
       </h4>
-      <MlbButton class="md:hidden!" text label="See all" @click="handleSeeAll" />
+      <MlbButton
+        class="font-bold!"
+        text
+        :label="isLargeScreen ? 'Add' : 'See all'"
+        @click="isLargeScreen ? handleAddOption() : handleSeeAll()"
+      />
     </div>
     <div>
       <div v-if="card_type === 'tradition'" class="flex justify-evenly items-center mb-4">
@@ -57,6 +64,13 @@ const props = withDefaults(
     loading: false,
   },
 )
+const $emit = defineEmits<{
+  (e: 'add-option', card_type: 'announcement' | 'family_tradition'): void
+}>()
+
+const handleAddOption = () => {
+  $emit('add-option', props.card_type === 'tradition' ? 'family_tradition' : 'announcement')
+}
 
 const handleSeeAll = () => {
   $router.push({ name: 'App.HomeCardView', params: { cardType: props.card_type } })

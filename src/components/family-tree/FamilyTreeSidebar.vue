@@ -183,10 +183,7 @@ const communityName = computed(() => {
 })
 
 const familyTreeCode = computed(() => {
-  if (familyTreeDetails.value) {
-    return (familyTreeDetails.value as any).unique_identifier
-  }
-  return 'N/A'
+  return profileStore.userDetails?.family_tree?.unique_identifier || 'N/A'
 })
 
 const handleScheduleMeeting = () => {

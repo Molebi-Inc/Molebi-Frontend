@@ -121,6 +121,7 @@ export const personalInformationValidation = () => {
     state_id: null,
     community_name: '',
     mother_family_name: '',
+    avatar: null,
   })
 
   const schema = z.object({
@@ -132,6 +133,7 @@ export const personalInformationValidation = () => {
     community_name: z.string().optional(),
     mother_family_name: z.string().optional(),
     nickname: z.string().optional(),
+    avatar: z.instanceof(File).optional(),
   })
 
   const rules = {
@@ -232,6 +234,20 @@ export const personalInformationValidation = () => {
             err instanceof z.ZodError
               ? err.issues?.[0]?.message
               : "Mother's family name is required."
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    avatar: {
+      required: false,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: File) => {
+        try {
+          schema.pick({ avatar: true }).parse({ avatar: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid avatar.'
           return Promise.reject(messageText)
         }
       },

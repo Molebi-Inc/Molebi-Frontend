@@ -11,19 +11,38 @@
     </div>
     <div
       v-if="!capsules.length && !loading"
-      class="flex items-center justify-center h-full min-h-[calc(100vh-200px)]"
+      class="min-h-screen flex flex-col items-center justify-center text-center gap-4"
     >
-      <EmptyComponent
-        icon="vuesax.broken.security-time"
-        :icon-size="250"
-        icon-color="#A1A1A1"
-        title="Nothing to see here yet"
+      <div class="mb-6">
+        <EmptyComponent
+          icon="vuesax.broken.security-time"
+          :icon-size="250"
+          icon-color="#A1A1A1"
+          title="Nothing to see here yet"
+        />
+      </div>
+      <MlbButton
+        v-if="isLargeScreen"
+        id="time-capsules-tour-step-2"
+        type="button"
+        label="Add capsule"
+        class="rounded-2xl! bg-green-700! text-white! w-100! cursor-pointer! h-13!"
+        @click="handleCreateCapsule"
       />
     </div>
     <div v-else-if="loading && !capsules.length">
       <SkeletalLoader :rows="2" :columns="isLargeScreen ? 5 : 2" :gap="4" height="160px" />
     </div>
     <div v-else>
+      <div class="md:flex justify-end hidden mb-6">
+        <MlbButton
+          id="time-capsules-tour-step-2"
+          type="button"
+          label="Add capsule"
+          class="rounded-2xl! bg-green-700! text-white! py-4! px-7! cursor-pointer! h-13!"
+          @click="handleCreateCapsule"
+        />
+      </div>
       <div class="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
         <TimeCapsuleCard
           v-for="capsule in capsules"
@@ -34,9 +53,9 @@
       </div>
     </div>
   </div>
-  <div class="hidden md:block absolute bottom-10 right-10">
+  <!-- <div class="hidden md:block absolute bottom-10 right-10">
     <n-button
-      id="time-capsules-tour-step-2"
+      
       class="rounded-full! bg-primary-500! text-white! w-20! h-20! shadow-[0px_6.33px_31.67px_0px_#16C4504D]!"
       @click="handleCreateCapsule()"
     >
@@ -44,7 +63,7 @@
         <MlbIcon name="vuesax.linear.add" :size="40" color="#ffffff" />
       </template>
     </n-button>
-  </div>
+  </div> -->
   <MlbModal
     v-model:show="showTimeCapsuleModal"
     :class="modalClass"
