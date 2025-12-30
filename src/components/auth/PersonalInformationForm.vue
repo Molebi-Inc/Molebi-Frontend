@@ -2,6 +2,18 @@
   <div>
     <n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
       <div class="flex flex-col gap-1 mb-11">
+        <n-form-item label="" path="avatar">
+          <n-upload
+            directory-dnd
+            :max="1"
+            @update:file-list="updateFileList"
+            list-type="image-card"
+            file-list-class="flex! justify-center items-center rounded-full!"
+            trigger-class="trigger4dragger"
+          >
+            Click to Upload
+          </n-upload>
+        </n-form-item>
         <n-form-item label="First Name" path="first_name">
           <MlbInput
             v-model="form.first_name"
@@ -116,18 +128,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import type { FormInst } from 'naive-ui'
-import { NForm, NFormItem, NDatePicker, useMessage, NSelect } from 'naive-ui'
-import MlbInput from '@/components/ui/MlbInput.vue'
 import { useRouter } from 'vue-router'
+import type { FormInst, UploadFileInfo } from 'naive-ui'
+import { ref, computed, onMounted } from 'vue'
+import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { handleApiError } from '@/helpers/error.helpers'
-import { useUpdateProfileMutation } from '@/services/authentication.services'
-import { personalInformationValidation } from '@/validations/authentication.validations'
 import { useGetStatesQuery } from '@/services/general.service'
 import type { StateInterface } from '@/types/general.types'
+import { useUpdateProfileMutation } from '@/services/authentication.services'
+import { personalInformationValidation } from '@/validations/authentication.validations'
+import { NForm, NFormItem, NDatePicker, useMessage, NSelect, NUpload } from 'naive-ui'
+import type { PersonalInformationFormValues } from '@/types/authentication.types'
 
 const $router = useRouter()
 const message = useMessage()
@@ -170,7 +183,21 @@ const onFormSubmit = async () => {
   })
 }
 
+const getValidFiles = (fileList: UploadFileInfo[]) =>
+  fileList
+    .map((file) => file.file)
+    .filter((maybeFile): maybeFile is File => maybeFile instanceof File)
+
+const updateFileList = (fileList: UploadFileInfo[]) => {
+  ;(form.value as PersonalInformationFormValues).avatar = getValidFiles(fileList)[0]
+}
+
 onMounted(async () => {
   await fetchStates()
 })
 </script>
+<style scoped>
+:deep(.trigger4dragger .n-upload-dragger) {
+  border-radius: 100% !important;
+}
+</style>

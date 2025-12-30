@@ -55,7 +55,9 @@ export const guestRoutes = {
     {
       path: '/auth/:provider(google|facebook|apple)',
       name: 'Guests.SocialAuthenticationView',
-      component: () => SocialAuthenticationView,
+      // Use the component directly so Vue Router doesn't treat it as an async loader
+      // that returns a non-promise value (which was causing c.then is not a function).
+      component: SocialAuthenticationView,
       meta: {
         layout: 'guest',
         requiresGuest: true,

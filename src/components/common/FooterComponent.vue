@@ -1,5 +1,5 @@
 <template>
-  <nav class="md:hidden fixed left-1/2 bottom-4 z-30 w-[92%] -translate-x-1/2">
+  <nav class="md:hidden fixed left-1/2 bottom-0 z-30 w-[92%] -translate-x-1/2">
     <div class="relative">
       <div
         class="absolute left-1/2 -translate-x-1/2 -top-4 w-10 h-10 rounded-full bg-primary-800 flex items-center justify-center shadow-[0px_10px_30px_rgba(16,111,75,0.35)] z-10"

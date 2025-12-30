@@ -31,6 +31,7 @@ const handleSocialAuthenticationRedirect = async () => {
     handleApiError(error, message)
   }
 }
+
 onMounted(async () => {
   await handleSocialAuthenticationRedirect()
 })

@@ -1,6 +1,7 @@
 import country from 'country-list-js'
 import type { SelectOption } from 'naive-ui'
 import type { Country } from '@/types/general.types'
+import { getCountryFlag } from 'country-phonecode-flag/dist'
 
 export const reoccurrenceOptions: SelectOption[] = [
   {
@@ -67,9 +68,10 @@ export const countryOptions = Object.entries(country.all as Record<string, Count
     const dialingCode =
       country.dialing_code.indexOf('+') === 0 ? country.dialing_code : `+${country.dialing_code}`
     const fullLabel = `${country.name} (${dialingCode})`
+    const flag = getCountryFlag(countryCode)
     return {
       // What is shown in the dropdown list
-      label: fullLabel,
+      label: `${flag ?? '🏁'} ${fullLabel}`,
       // Unique value (code + ISO) to avoid duplicate warnings
       // We still derive the pure dialing code from this in the form logic
       value: `${dialingCode}|${countryCode}`,
@@ -77,11 +79,13 @@ export const countryOptions = Object.entries(country.all as Record<string, Count
       countryName: country.name,
       dialingCode,
       fullLabel,
+      flag: flag ?? '🏁',
     } as SelectOption & {
       countryCode: string
       countryName: string
       dialingCode: string
       fullLabel: string
+      flag: string
     }
   })
   // Sort options alphabetically by country name

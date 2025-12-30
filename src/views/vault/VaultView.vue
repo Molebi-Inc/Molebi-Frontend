@@ -1,14 +1,40 @@
 <template>
   <div class="relative h-full">
-    <BackButton
-      v-if="
-        $route.name === 'App.VaultFolderView' ||
-        ($route.name === 'App.StorageFolderView' && $route.params.id)
-      "
-      icon="vuesax.linear.arrow-left"
-      :previous-route="false"
-      @update:go-back="handleVaultBackButtonClick"
-    />
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <BackButton
+          v-if="
+            $route.name === 'App.VaultFolderView' ||
+            ($route.name === 'App.StorageFolderView' && $route.params.id)
+          "
+          icon="vuesax.linear.arrow-left"
+          :previous-route="false"
+          @update:go-back="handleVaultBackButtonClick"
+        />
+      </div>
+      <div>
+        <div v-if="!!$route.params.id" class="text-2xl font-bold text-center">
+          {{
+            (archiveFolder as StorageFolderInterface)?.name ||
+            (archiveFolder as FolderInterface)?.title
+          }}
+        </div>
+      </div>
+      <div>
+        <div v-if="routeNames.includes(String($route.name))">
+          <MlbButton
+            type="button"
+            class="mb-4 rounded-2xl bg-green-700 py-4 px-7 text-white w-100 cursor-pointer!"
+            @click="handleModalAction"
+          >
+            <template #icon>
+              <MlbIcon name="vuesax.linear.add" :size="40" color="#ffffff" />
+            </template>
+            {{ !!$route.params.id ? 'Add media' : `Add ${capitalize(currentFlow)} Folder` }}
+          </MlbButton>
+        </div>
+      </div>
+    </div>
     <div
       v-if="emptyState"
       class="min-h-screen flex flex-col items-center justify-center text-center gap-4"
@@ -21,6 +47,16 @@
         "
       />
       <p v-html="emptyState.message"></p>
+      <MlbButton
+        type="button"
+        class="mb-4 rounded-2xl bg-green-700 py-4 px-7 text-white w-100 cursor-pointer!"
+        @click="handleModalAction"
+      >
+        <template #icon>
+          <MlbIcon name="vuesax.linear.add" :size="40" color="#ffffff" />
+        </template>
+        {{ !!$route.params.id ? 'Add media' : `Add ${capitalize(currentFlow)} Folder` }}
+      </MlbButton>
     </div>
     <div class="mt-4">
       <component
@@ -33,7 +69,7 @@
       />
     </div>
 
-    <div v-if="routeNames.includes(String($route.name))" class="absolute bottom-10 right-10">
+    <!-- <div v-if="routeNames.includes(String($route.name))" class="absolute bottom-10 right-10">
       <n-button
         class="rounded-full! bg-primary-500! text-white! w-20! h-20! shadow-[0px_6.33px_31.67px_0px_#16C4504D]!"
         @click="handleModalAction"
@@ -42,7 +78,7 @@
           <MlbIcon name="vuesax.linear.add" :size="40" color="#ffffff" />
         </template>
       </n-button>
-    </div>
+    </div> -->
 
     <MlbModal v-model:show="showVaultModal" class="rounded-3xl!">
       <template #header>
@@ -88,6 +124,7 @@ import CreateFolderForm from '@/components/vault/CreateFolderForm.vue'
 import { useDeleteFolderMediaMutation } from '@/services/storage.services'
 import type { FolderInterface, AttachmentInterface } from '@/types/vault.types'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
+import { capitalize } from '@/helpers/general.helpers'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -102,6 +139,7 @@ const {
   fetchArchiveFolders,
   fetchFolderMedia,
   fetchFolderDetails,
+  setSelectedFolder,
   clearFolderMedia,
 } = useArchive()
 const { loading: vaultLoading, fetchVaultFolder } = useVault()
@@ -136,7 +174,7 @@ const emptyState = computed(() => {
       !!$route.params.id &&
       !folderMediaLoading.value:
       return {
-        message: 'No media files uploaded yet! <br /> Use the “+” button to upload media files',
+        message: 'No media files uploaded yet!',
         image: 'images/empty-gallery.png',
       }
     default:
@@ -187,11 +225,13 @@ const viewComponent = computed(() => {
   }
 })
 
+const archiveFolder = computed(() => {
+  return currentFlow.value === 'vault' ? vaultStore.selectedFolder : storageStore.selectedFolder
+})
 const modalComponent = computed(() => {
   switch (true) {
     case routeNames.includes(String($route.name)) && !$route.params.id && !$route.query.action:
-      const archiveExist =
-        currentFlow.value === 'vault' ? vaultStore.selectedFolder : storageStore.selectedFolder
+      const archiveExist = archiveFolder.value
       return {
         component: CreateFolderForm,
         title: `${archiveExist ? 'Edit' : 'Create'} ${currentFlow.value === 'vault' ? 'Vault' : 'Storage'} Folder`,
@@ -253,9 +293,10 @@ const handleClickFolder = (event: { flow: string }) => {
 const handleVaultBackButtonClick = () => {
   if ($route.params.id) {
     clearFolderMedia()
-  }
-  if ($route.params.id && $route.name === 'App.VaultFolderView') {
-    $router.push({ name: 'App.VaultFolderView' })
+    setSelectedFolder(null)
+    $router.push({
+      name: currentFlow.value === 'vault' ? 'App.VaultFolderView' : 'App.StorageFolderView',
+    })
     return
   }
   $router.back()

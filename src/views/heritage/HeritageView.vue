@@ -6,7 +6,7 @@
     <div class="flex flex-col gap-6">
       <div class="border border-gray-200 rounded-3xl p-6 md:p-8">
         <h1 class="text-xl md:text-2xl font-semibold text-primary-500 mb-2">
-          Welcome to the Cultural heritage.
+          Welcome to the {{ heritageData?.community_name }} Cultural heritage.
         </h1>
         <p class="text-neutral-600 text-sm md:text-base leading-relaxed">
           The Cultural heritage helps you learn about your heritage, add new important information

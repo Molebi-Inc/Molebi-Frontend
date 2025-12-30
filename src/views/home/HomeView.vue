@@ -21,7 +21,7 @@
         </div>
 
         <div class="grid md:grid-cols-5 gap-4 items-stretch">
-          <div class="md:col-span-3">
+          <div class="md:col-span-4">
             <GrowthStageCard
               class="h-full"
               :stage-title="growthStage.stageTitle"
@@ -30,7 +30,7 @@
               :tasks="growthStage.tasks"
             />
           </div>
-          <div class="md:flex flex-col h-full">
+          <!-- <div class="md:flex flex-col h-full">
             <p class="text-sm text-gray-600 mb-2">Gender Distribution</p>
             <div ref="genderChartContainer" class="flex-1">
               <GenderChart
@@ -41,7 +41,7 @@
                 :width="!isLargeScreen ? chartWidth : 200"
               />
             </div>
-          </div>
+          </div> -->
           <div class="md:flex flex-col h-full">
             <div
               class="cursor-pointer border border-dashed border-gray-500 text-primary-900 rounded-2xl p-1 text-center h-full flex flex-col"
@@ -61,7 +61,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6">
           <!-- Announcement and Family Tradition -->
           <HomeCardWrapper
             :items="announcements"
@@ -75,10 +75,11 @@
             :items="familyTraditions"
             card_type="tradition"
             :loading="familyTraditionStore.loading"
+            @add-option="handleHomeFormModal"
           />
 
           <!-- Right Sidebar -->
-          <div class="hidden md:block col-span-1 space-y-4">
+          <!-- <div class="hidden md:block col-span-1 space-y-4">
             <div
               :id="isLargeScreen ? 'home-tour-step-4' : ''"
               class="cursor-pointer border border-dashed border-gray-500 text-white rounded-2xl p-1 text-center"
@@ -103,7 +104,7 @@
                 <p class="font-semibold">FAMILY TRADITION</p>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -174,7 +175,6 @@ import MlbButton from '@/components/ui/MlbButton.vue'
 import { useProfileStore } from '@/stores/profile.store'
 import { ref, computed, h, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import BackButton from '@/components/common/BackButton.vue'
-// import { useGetStatesQuery } from '@/services/general.service'
 import type { Announcement } from '@/types/announcement.types'
 import { useAnnouncementStore } from '@/stores/announcement.store'
 import GrowthStageCard from '@/components/home/GrowthStageCard.vue'
@@ -184,15 +184,9 @@ import type { FamilyTradition } from '@/types/family-tradition.types'
 import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
 import FamilyTraditionForm from '@/components/home/FamilyTraditionForm.vue'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
-import type {
-  FormType,
-  HomeFormConfig,
-  // , StateInterface
-} from '@/types/general.types'
+import type { FormType, HomeFormConfig } from '@/types/general.types'
 import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
-import { familyMemberGenderMap } from '@/helpers/family-tree.helpers'
-import GenderChart from '@/components/family-tree/GenderChart.vue'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -201,21 +195,8 @@ const { startTour: startTourAction } = useTour()
 const announcementStore = useAnnouncementStore()
 const familyTreesQuery = useGetFamilyTreesQuery()
 const familyTraditionStore = useFamilyTraditionStore()
-// const { refetch: refetchStates } = useGetStatesQuery()
 const { fetchAnnouncements, fetchFamilyTraditions } = useHome()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
-
-// const states = ref<{ label: string; value: number }[]>([])
-
-// onMounted(() => {
-//   refetchStates().then((response) => {
-//     states.value =
-//       response.data?.data?.map((state: StateInterface) => ({
-//         label: state.name,
-//         value: state.id,
-//       })) ?? []
-//   })
-// })
 
 const showHomeFormModal = ref<boolean>(false)
 const showStartTourModal = ref<boolean>(false)
@@ -252,8 +233,6 @@ const growthStage = ref({
 
 const announcements = computed<Announcement[]>(() => announcementStore.announcements)
 const familyTraditions = computed<FamilyTradition[]>(() => familyTraditionStore.familyTraditions)
-const menCount = computed(() => familyMemberCounts.value.men)
-const womenCount = computed(() => familyMemberCounts.value.women)
 
 const getHomeFormsMap = (): Record<FormType, HomeFormConfig> => {
   const isEditMode = !!$route.query.fid

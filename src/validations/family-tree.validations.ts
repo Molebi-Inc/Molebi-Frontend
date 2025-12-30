@@ -12,6 +12,12 @@ export const familyMemberValidation = () => {
     nickname: '',
     relation_type: null,
     // profile_picture: undefined,
+    gender: 'male',
+    related_through: null,
+    parent_id: null,
+    is_adoptive: false,
+    is_former: false,
+    is_deceased: false,
   })
 
   const schema = z.object({

@@ -111,6 +111,40 @@ export const useTourStore = defineStore('tour', () => {
         },
       ],
     },
+    vault: {
+      tour_name: 'vault',
+      tour_steps: [
+        {
+          target: '#vault-tour-step-1',
+          header: {
+            title: '🔒 Your Private Vault',
+          },
+          content:
+            'Store your most sensitive files here locked with your PIN.Only you can access them, but you can grant permissions if needed. <br/> Your default pin is 0000. You can reset your Vault PIN from settings.',
+        },
+      ],
+    },
+    storage: {
+      tour_name: 'storage',
+      tour_steps: [
+        {
+          target: '#storage-tour-step-1',
+          header: {
+            title: '📸 Your Family Library',
+          },
+          content:
+            'Here’s where all your <em>photos, videos, and voice notes</em> live.Organize them into folders and relive special memories anytime.',
+        },
+        {
+          target: '#storage-tour-step-2',
+          header: {
+            title: '📁 Keep memories safe here.',
+          },
+          content:
+            'Create folders for photos, voice notes, or documents organize your family’s history your way.',
+        },
+      ],
+    },
   }
 
   const currentTourKey = computed<string | undefined>(() => {

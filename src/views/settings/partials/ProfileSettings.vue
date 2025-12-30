@@ -7,15 +7,17 @@
     >
       <div class="shrink-0">
         <n-upload
+          ref="uploadRef"
           :max="1"
           :show-file-list="false"
           :default-upload="false"
+          accept="image/*"
           @change="handleFileChange"
           class="cursor-pointer inline-flex"
           :style="{ width: 'auto' }"
         >
           <div
-            class="w-13 h-13 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative group hover:opacity-90 transition-opacity"
+            class="w-13 h-13 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative group hover:opacity-90 transition-opacity cursor-pointer"
           >
             <img
               :src="profileStore.userAvatarUrl"
@@ -23,10 +25,11 @@
               class="w-12 h-12 rounded-full object-cover"
             />
             <div
-              class="absolute inset-0 bg-transparent bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-all"
+              class="absolute inset-0 bg-transparent bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-all cursor-pointer"
+              @click.stop="handleChangePhoto"
             >
               <span
-                class="text-gray-700 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
                 >Change</span
               >
             </div>
@@ -37,6 +40,11 @@
         <h2 class="text-lg font-medium text-gray-700">
           {{ displayName }}
         </h2>
+        <span
+          class="text-xs text-primary-500 cursor-pointer hover:underline"
+          @click="handleChangePhoto"
+          >Change Photo</span
+        >
       </div>
     </div>
     <!-- Personal Information -->
@@ -79,7 +87,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useMessage, NUpload } from 'naive-ui'
-import type { UploadFileInfo } from 'naive-ui'
+import type { UploadFileInfo, UploadInst } from 'naive-ui'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useProfileStore } from '@/stores/profile.store'
@@ -93,6 +101,7 @@ const profileStore = useProfileStore()
 const deleteProfileMutation = useDeleteProfileMutation()
 
 const isEditingProfile = ref<boolean>(false)
+const uploadRef = ref<UploadInst | null>(null)
 
 const displayName = computed(() => {
   const firstName = profileStore.user?.first_name?.trim()
@@ -116,6 +125,17 @@ const handleFileChange = async ({ file }: { file: UploadFileInfo }) => {
     return
   }
   await handlePhotoUpload(file.file)
+  // Clear the file list after upload
+  if (uploadRef.value) {
+    uploadRef.value.clear()
+  }
+}
+
+const handleChangePhoto = () => {
+  // Trigger the file input click
+  if (uploadRef.value) {
+    uploadRef.value.openOpenFileDialog()
+  }
 }
 
 const deleteAccount = async () => {

@@ -37,7 +37,7 @@
         </n-scrollbar>
       </div>
     </div>
-    <div>
+    <!-- <div>
       <MlbButton
         type="button"
         block
@@ -45,34 +45,34 @@
         class="rounded-2xl! bg-primary-50! h-13! text-primary-700!"
         @click="handleAddNewMemory"
       />
-    </div>
+    </div> -->
   </div>
 </template>
 <script setup lang="ts">
 import { NScrollbar } from 'naive-ui'
-import { useRoute, useRouter } from 'vue-router'
-import MlbButton from '@/components/ui/MlbButton.vue'
+// import { useRoute, useRouter } from 'vue-router'
+// import MlbButton from '@/components/ui/MlbButton.vue'
 import type { FamilyTradition } from '@/types/family-tradition.types'
-import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
+// import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
 
-const $route = useRoute()
-const $router = useRouter()
-const traditionStore = useFamilyTraditionStore()
+// const $route = useRoute()
+// const $router = useRouter()
+// const traditionStore = useFamilyTraditionStore()
 
-const props = defineProps<{
+defineProps<{
   tradition: FamilyTradition
 }>()
 
-const emit = defineEmits<{
-  (e: 'newMemory'): void
-}>()
+// const emit = defineEmits<{
+//   (e: 'newMemory'): void
+// }>()
 
-const handleAddNewMemory = () => {
-  emit('newMemory')
-  traditionStore.setStoreProp('selectedFamilyTradition', props.tradition)
-  $router.push({
-    name: $route.name,
-    query: { ftype: 'family_tradition_media' },
-  })
-}
+// const handleAddNewMemory = () => {
+//   emit('newMemory')
+//   traditionStore.setStoreProp('selectedFamilyTradition', props.tradition)
+//   $router.push({
+//     name: $route.name,
+//     query: { ftype: 'family_tradition_media' },
+//   })
+// }
 </script>

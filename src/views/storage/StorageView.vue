@@ -1,16 +1,5 @@
 <template>
   <section class="h-full">
-    <!-- <div  v-if="$route.name === 'App.StorageFamilyInfoView'">
-      <BackButton icon="vuesax.linear.arrow-left" :previous-route="true" />
-      <h1 class="text-neutral-900 font-semibold text-2xl mb-2 text-center">
-        More Family Information
-      </h1>
-      <p class="text-neutral-600 font-normal text-sm text-center mb-11">
-        Add more family information to your profile
-      </p>
-    </div>
-    <component :is="component" /> -->
-
     <div class="w-full">
       <div
         :class="['w-full', { 'md:flex justify-center items-center': !component?.has_full_page }]"
@@ -37,14 +26,6 @@
               { 'w-full': component?.has_full_page, 'md:px-4': !component?.has_full_page },
             ]"
           >
-            <div v-if="!component?.has_full_page">
-              <h1 class="text-neutral-900 font-semibold text-2xl mb-2 text-center">
-                {{ component?.title }}
-              </h1>
-              <p class="text-neutral-600 font-normal text-sm text-center">
-                {{ component?.description }}
-              </p>
-            </div>
             <component :is="component?.component" :key="String($route.params.module ?? '')" />
           </div>
         </div>
@@ -58,7 +39,6 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import BackButton from '@/components/common/BackButton.vue'
 import GrowingPhase from '@/components/storage/GrowingPhase.vue'
-import FamilyInfoForm from '@/components/storage/FamilyInfoForm.vue'
 
 const $route = useRoute()
 
@@ -68,12 +48,6 @@ const component = computed(() => {
       has_back_button: false,
       has_full_page: true,
       component: GrowingPhase,
-    },
-    'App.StorageFamilyInfoView': {
-      title: 'More Family Information',
-      description: 'Add more details about your family',
-      has_back_button: true,
-      component: FamilyInfoForm,
     },
   }[$route.name as string]
 })
