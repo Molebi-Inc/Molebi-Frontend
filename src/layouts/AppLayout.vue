@@ -79,14 +79,17 @@ import PageLoader from '@/components/common/PageLoader.vue'
 import { useProfile } from '@/composables/useProfile'
 import MlbTour from '@/components/ui/MlbTour.vue'
 import { useTour } from '@/composables/useTour'
+import { useHome } from '@/composables/useHome'
 
 const $route = useRoute()
 const profileStore = useProfileStore()
 const { skipTour, nextStep } = useTour()
 const { userProfileLoading, getProfile } = useProfile()
+const { fetchTourStages } = useHome()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 onMounted(async () => {
+  await fetchTourStages()
   if (profileStore.user) {
     return
   }

@@ -90,8 +90,8 @@ export const useTourStore = defineStore('tour', () => {
         },
       ],
     },
-    'time-capsules': {
-      tour_name: 'time-capsules',
+    'time-capsule': {
+      tour_name: 'time-capsule',
       tour_steps: [
         {
           target: '#time-capsules-tour-step-1',
@@ -166,9 +166,6 @@ export const useTourStore = defineStore('tour', () => {
     if (!currentTourKey.value) return undefined
     return tourList[currentTourKey.value as keyof typeof tourList]
   })
-  console.log('currentTourKey', currentTourKey.value)
-  console.log('getTourSteps', isLargeScreen.value)
-  console.log('route', route.meta?.mobileTour)
 
   return { getTourSteps }
 })

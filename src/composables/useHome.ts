@@ -22,6 +22,7 @@ import { handleApiError } from '@/helpers/error.helpers'
 import type { AnnouncementFormValues } from '@/types/announcement.types'
 import { useRoute, useRouter } from 'vue-router'
 import { AlertService } from '@/services/alert.service'
+import { useGetTourStagesQuery } from '@/services/general.service'
 
 export const useHome = () => {
   const $route = useRoute()
@@ -47,6 +48,7 @@ export const useHome = () => {
   const createFamilyTraditionMutation = useAddFamilyTraditionMutation()
   const updateFamilyTraditionMutation = useUpdateFamilyTraditionMutation()
   const deleteFamilyTraditionMutation = useDeleteFamilyTraditionMutation()
+  const { refetch: refetchTourStage } = useGetTourStagesQuery()
 
   const { refetch: refetchAnnouncements, isLoading: isLoadingAnnouncements } =
     useGetAnnouncementsQuery(announcementParams, $route.name === 'App.HomeView')
@@ -251,6 +253,11 @@ export const useHome = () => {
     generalStore.setStoreProp('familyMembers', response.data?.data || [])
   }
 
+  const fetchTourStages = async () => {
+    const response = await refetchTourStage()
+    generalStore.setStoreProp('tourStages', response.data?.data || [])
+  }
+
   watch(announcementParams, async () => await fetchAnnouncements(), { deep: true })
 
   watch(familyTraditionPath, async () => await fetchFamilyTraditions())
@@ -265,5 +272,6 @@ export const useHome = () => {
     createAnnouncement,
     deleteAnnouncement,
     deleteFamilyTradition,
+    fetchTourStages,
   }
 }

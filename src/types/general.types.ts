@@ -1,5 +1,6 @@
 import type { Component } from 'vue'
 import type { FamilyMemberInterface } from './family-tree.types'
+import type { TourStageInterface } from './tour.types'
 export interface Media {
   id: string
   url: string
@@ -51,6 +52,7 @@ export interface HomeFormConfig {
 export interface GeneralStoreInterface {
   familyMembers: FamilyMemberInterface[]
   flow: string
+  tourStages: TourStageInterface[]
 }
 
 export interface StateInterface {

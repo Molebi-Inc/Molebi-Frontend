@@ -451,7 +451,6 @@ watch(
   () => $route.query.tab,
   (newVal) => {
     if (newVal && $route.params.id) {
-      console.log('newVal', newVal)
       showVaultModal.value = true
     }
   },

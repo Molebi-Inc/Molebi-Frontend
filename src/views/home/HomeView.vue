@@ -4,11 +4,11 @@
     <div class="flex-1">
       <div class="md:p-8 space-y-8">
         <!-- Did you know card -->
-        <div class="w-full">
+        <!-- <div class="w-full">
           <img
             v-if="isLargeScreen"
             src="@/assets/images/welcome-banner.png
-            "
+          "
             alt="Did you know?"
             class="w-full h-full"
           />
@@ -17,6 +17,24 @@
             src="@/assets/images/welcome-banner-small.png"
             alt="Did you know?"
             @click="$router.push({ name: 'App.HeritageView' })"
+          />
+        </div> -->
+        <div
+          v-if="heritageData"
+          :style="bannerBackgroundStyle"
+          class="w-full h-[91px] md:h-[158px] bg-contain bg-no-repeat md:bg-cover md:px-[56px] px-4 md:py-[28px] py-2"
+        >
+          <VerticalTextScroller
+            :data="{
+              community_name: String(heritageData?.community_name || 'No information available'),
+              about: String(heritageData?.about || 'No information available'),
+              population: String(heritageData?.population || 'No information available'),
+              geographic_info: String(heritageData?.geographic_info || 'No information available'),
+              traditional_rulers: String(heritageData?.traditional_rulers || ''),
+              history: String(heritageData?.history || 'No information available'),
+              economy: String(heritageData?.economy || 'No information available'),
+            }"
+            :community="String(heritageData?.community_name)"
           />
         </div>
 
@@ -187,11 +205,20 @@ import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm
 import type { FormType, HomeFormConfig } from '@/types/general.types'
 import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
+import { useGetHeritageQuery } from '@/services/heritage.services'
+import { handleApiError } from '@/helpers/error.helpers'
+import { useMessage } from 'naive-ui'
+import VerticalTextScroller from '@/components/home/VerticalTextScroller.vue'
+import type { HeritageDataInterface } from '@/types/heritage.types'
+import welcomeBanner from '@/assets/images/welcome-banner.png'
+import welcomeBannerSmall from '@/assets/images/welcome-banner-small.png'
 
+const message = useMessage()
+const heritageData = ref<HeritageDataInterface | null>(null)
 const $route = useRoute()
 const $router = useRouter()
-const profileStore = useProfileStore()
-const { startTour: startTourAction } = useTour()
+const heritageQuery = useGetHeritageQuery()
+const { startTour: startTourAction, tourIsComplete } = useTour()
 const announcementStore = useAnnouncementStore()
 const familyTreesQuery = useGetFamilyTreesQuery()
 const familyTraditionStore = useFamilyTraditionStore()
@@ -200,8 +227,6 @@ const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const showHomeFormModal = ref<boolean>(false)
 const showStartTourModal = ref<boolean>(false)
-const tourStore = useTourStore()
-const steps = computed(() => tourStore.getTourSteps?.tour_steps ?? [])
 const familyMemberCounts = ref<{ men: number; women: number }>({ men: 0, women: 0 })
 const genderChartContainer = ref<HTMLElement | null>(null)
 const chartHeight = ref<number>(60)
@@ -322,6 +347,13 @@ const homeForm = computed(() => {
   return null
 })
 
+const bannerBackgroundStyle = computed(() => {
+  const imagePath = isLargeScreen.value ? welcomeBanner : welcomeBannerSmall
+  return {
+    backgroundImage: `url(${imagePath})`,
+  }
+})
+
 watch(
   () => $route.query.ftype,
   (newVal) => {
@@ -352,10 +384,20 @@ const updateChartWidth = () => {
   })
 }
 
+const fetchHeritage = async () => {
+  try {
+    const response = await heritageQuery.refetch()
+    heritageData.value = response.data?.data as unknown as HeritageDataInterface
+  } catch (error) {
+    handleApiError(error, message)
+  }
+}
+
 onMounted(() => {
   fetchFamilyMembers()
   fetchAnnouncements()
   fetchFamilyTraditions()
+  fetchHeritage()
 
   updateChartHeight()
   updateChartWidth()
@@ -365,8 +407,7 @@ onMounted(() => {
   window.addEventListener('resize', updateChartWidth)
 
   setTimeout(() => {
-    const tourStage = profileStore?.userDetails?.tour_stage
-    if (tourStage !== undefined && tourStage >= steps.value.length) return
+    if (tourIsComplete.value) return
     showStartTourModal.value = true
   }, 100)
 })

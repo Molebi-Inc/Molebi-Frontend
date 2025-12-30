@@ -1,6 +1,11 @@
-import { nextTick, type App as VueApp } from 'vue'
-import { useUpdateTourStageMutation, useSkipTourMutation } from '@/services/general.service'
 import { useProfile } from './useProfile'
+import { computed, nextTick, type App as VueApp } from 'vue'
+import { useUpdateTourStageMutation, useSkipTourMutation } from '@/services/general.service'
+import { useRoute } from 'vue-router'
+import { useMediaQuery } from '@vueuse/core'
+import type { TourStages } from '@/types/tour.types'
+import { useGeneralStore } from '@/stores/general.store'
+import { useTourStore } from '@/stores/tour'
 
 interface Tour {
   start: () => void
@@ -14,9 +19,13 @@ interface Tour {
 
 export function useTour(tourName?: string) {
   const { getProfile } = useProfile()
+  const generalStore = useGeneralStore()
+  const tourStore = useTourStore()
   const { mutate: updateTourStageMutation } = useUpdateTourStageMutation()
   const { mutate: skipTourMutation } = useSkipTourMutation()
 
+  const $route = useRoute()
+  const isLargeScreen = useMediaQuery('(min-width: 768px)')
   const getTours = (): Record<string, Tour> | null => {
     // Access the globally stored app instance from main.ts
     const app = (window as { __VUE_APP__?: VueApp }).__VUE_APP__
@@ -50,13 +59,23 @@ export function useTour(tourName?: string) {
   }
 
   const skipTour = async (tour: Tour) => {
-    await skipTourMutation()
+    await updateTourStageMutation({
+      tour_type: isLargeScreen
+        ? ($route.meta.tour as TourStages)
+        : (($route.meta.mobileTour as string).replace('-mobile', '') as TourStages),
+      action: 'skip',
+    })
     await getProfile()
     tour.skip()
   }
 
   const nextStep = async (lastStep: boolean, tour: Tour) => {
-    await updateTourStageMutation({ stage: tour.currentStep + 1 })
+    await updateTourStageMutation({
+      tour_type: isLargeScreen
+        ? ($route.meta.tour as TourStages)
+        : (($route.meta.mobileTour as string).replace('-mobile', '') as TourStages),
+      action: 'increment',
+    })
     await getProfile()
     if (lastStep) {
       tour.finish()
@@ -65,11 +84,38 @@ export function useTour(tourName?: string) {
     }
   }
 
+  const tourIsComplete = computed<boolean>(() => {
+    const tourType = isLargeScreen
+      ? ($route.meta.tour as TourStages)
+      : ($route.meta.mobileTour as string)
+    if (!tourType) {
+      return true
+    }
+    const tourStage = generalStore.tourStages.find(
+      (stage) => stage.tour_type === (tourType as TourStages),
+    )
+    if (!tourStage) {
+      return true
+    }
+
+    const routeTours = tourStore.getTourSteps?.tour_steps
+    if (!routeTours?.length) {
+      return true
+    }
+
+    if (routeTours.length > tourStage.current_stage) {
+      return false
+    }
+
+    return true
+  })
+
   return {
     startTour,
     stopTour,
     getTours,
     skipTour,
     nextStep,
+    tourIsComplete,
   }
 }

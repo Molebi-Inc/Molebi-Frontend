@@ -5,6 +5,7 @@ export const useGeneralStore = defineStore('general', {
   state: (): GeneralStoreInterface => ({
     familyMembers: [],
     flow: '',
+    tourStages: [],
   }),
 
   actions: {
