@@ -6,7 +6,22 @@
       </div>
       <div class="col-span-12 md:col-span-9">
         <div class="h-full flex flex-col relative overflow-hidden" :class="backgroundClass">
-          <TreeView v-if="treePayload" :payload="treePayload" />
+          <div class="flex justify-between items-center py-4 bg-brand-background">
+            <div class="text-neutral-900 font-semibold text-2xl">Personal Family Tree</div>
+            <div>
+              <MlbButton
+                text
+                label="Add Family Member"
+                secondary
+                class="text-sm font-semibold! bg-primary-700! text-white! rounded-2xl! h-13! p-4!"
+                @click="handleAddFirstMember"
+              >
+                <MlbIcon name="vuesax.linear.add" :size="24" />
+              </MlbButton>
+            </div>
+          </div>
+          <!-- <TreeView v-if="treePayload" :payload="treePayload" /> -->
+          <TreeView v-if="defaultPayload" :payload="defaultPayload" />
 
           <!-- Mobile Floating Action Button -->
           <!-- v-if="isMobile" -->
@@ -48,6 +63,7 @@ import type {
   TreeNode as TreeNodeType,
   TreeLayout,
   FamilyTreeInterface,
+  FamilyMemberInterface,
 } from '@/types/family-tree.types'
 import TreeView, { type Payload } from '@/views/family-tree/TreeView.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
@@ -206,35 +222,330 @@ watch(
 )
 
 const formatFamilyTreeData = (data: FamilyTreeInterface['familyTree']): Payload => {
-  const mapMember = (member: Partial<FamilyTreeInterface['familyTree']['self']>) => ({
-    id: String(member.id ?? ''),
-    first_name: member.first_name,
-    full_name: member.full_name ?? member.name,
-    profile_picture_url: member.profile_picture_url,
-  })
+  /**
+   * Preserve any extra relationship metadata coming from the API
+   * (e.g. relation_type, related_through, parent_id, is_adoptive, is_former)
+   * while normalising the core fields TreeView expects.
+   */
+  const mapMember = (member: Partial<FamilyMemberInterface> | null | undefined) => {
+    if (!member) return null
+    return {
+      ...member,
+      id: String(member.id ?? ''),
+      first_name: member.first_name,
+      full_name: (member as any).full_name ?? (member as any).name ?? member.first_name,
+      profile_picture_url: (member as any).profile_picture_url ?? null,
+      parent_id: (member as any).parent_id ?? null,
+      related_through: (member as any).related_through ?? null,
+      relation_type: (member as any).relation_type ?? null,
+      is_adoptive: (member as any).is_adoptive ?? false,
+      is_former: (member as any).is_former ?? false,
+    }
+  }
 
   return {
     self: {
-      ...mapMember(data.self),
-      spouse: data.spouse?.[0]
-        ? mapMember(data.spouse[0] as Partial<FamilyTreeInterface['familyTree']['self']>)
-        : null,
+      ...(mapMember(data.self?.[0]) as any),
+      /**
+       * Primary spouse used for the opposite side of the split tree.
+       * Additional spouses are still available on the top‑level `spouse` array
+       * and will be rendered as subnodes on the self node in TreeView.
+       */
+      spouse: data.spouse?.[0] ? (mapMember(data.spouse[0]) as any) : null,
     },
-    parents: data.parents.map((p) => mapMember(p)),
-    siblings: data.siblings.map((s) => mapMember(s)),
-    children: data.children.map((c) => mapMember(c)),
-    grandparents: data.grandparents.map((g) => mapMember(g)),
-    grandchildren: data.grandchildren.map((gc) => mapMember(gc)),
-    aunts_uncles: data.aunts_uncles.map((au) => mapMember(au)),
-    cousins: data.cousins.map((co) => mapMember(co)),
-    nieces_nephews: data.nieces_nephews.map((nn) => mapMember(nn)),
-    spouse: data.spouse.map((sp) => mapMember(sp)),
+    parents: data.parents.map((p) => mapMember(p) as any),
+    siblings: data.siblings.map((s) => mapMember(s) as any),
+    children: data.children.map((c) => mapMember(c) as any),
+    grandparents: data.grandparents.map((g) => mapMember(g) as any),
+    grandchildren: data.grandchildren.map((gc) => mapMember(gc) as any),
+    aunts_uncles: data.aunts_uncles.map((au) => mapMember(au) as any),
+    cousins: data.cousins.map((co) => mapMember(co) as any),
+    nieces_nephews: data.nieces_nephews.map((nn) => mapMember(nn) as any),
+    spouse: data.spouse.map((sp) => mapMember(sp) as any),
   }
 }
+const defaultPayload: Payload = {
+  self: {
+    id: '100',
+    first_name: 'Azeem',
+    last_name: 'Adenuga',
+    full_name: 'Azeem Adenuga',
+    profile_picture_url: null,
+  },
+  // Parents (3 parents - first 2 will be supernode, 3rd as subnode)
+  parents: [
+    {
+      id: '200',
+      first_name: 'Kashoggi',
+      last_name: 'Adenuga',
+      full_name: 'Kashoggi Adenuga',
+      is_adoptive: false,
+    },
+    {
+      id: '201',
+      first_name: 'Shade',
+      last_name: 'Adenuga',
+      full_name: 'Shade Adenuga',
+      is_adoptive: false,
+    },
+    {
+      id: '202',
+      first_name: 'Bola',
+      last_name: 'Adenuga',
+      full_name: 'Bola Adenuga',
+      is_adoptive: true,
+    },
+  ],
+  // Siblings (4 siblings for curved arc)
+  siblings: [
+    { id: '300', first_name: 'Brahime', last_name: 'Adenuga', full_name: 'Brahime Adenuga' },
+    { id: '301', first_name: 'Maryam', last_name: 'Adenuga', full_name: 'Maryam Adenuga' },
+    { id: '302', first_name: 'Fatima', last_name: 'Adenuga', full_name: 'Fatima Adenuga' },
+    { id: '303', first_name: 'Ibrahim', last_name: 'Adenuga', full_name: 'Ibrahim Adenuga' },
+  ],
+  // Children (5 children to test line cutting through)
+  children: [
+    {
+      id: '500',
+      first_name: 'Imran',
+      last_name: 'Adenuga',
+      full_name: 'Imran Adenuga',
+      parent_id: null,
+    },
+    {
+      id: '501',
+      first_name: 'Aisha',
+      last_name: 'Adenuga',
+      full_name: 'Aisha Adenuga',
+      parent_id: null,
+    },
+    {
+      id: '502',
+      first_name: 'Zainab',
+      last_name: 'Adenuga',
+      full_name: 'Zainab Adenuga',
+      parent_id: null,
+    },
+    {
+      id: '503',
+      first_name: 'Hassan',
+      last_name: 'Adenuga',
+      full_name: 'Hassan Adenuga',
+      parent_id: null,
+    },
+    {
+      id: '504',
+      first_name: 'Hussein',
+      last_name: 'Adenuga',
+      full_name: 'Hussein Adenuga',
+      parent_id: null,
+    },
+  ],
+  // Grandparents (2 grandparents - will be supernode)
+  grandparents: [
+    {
+      id: '600',
+      first_name: 'Grandpa',
+      last_name: 'Adenuga',
+      full_name: 'Grandpa Adenuga',
+      related_through: '200',
+    },
+    {
+      id: '601',
+      first_name: 'Grandma',
+      last_name: 'Adenuga',
+      full_name: 'Grandma Adenuga',
+      related_through: '200',
+    },
+  ],
+  // Grandchildren (3 grandchildren)
+  grandchildren: [
+    {
+      id: '700',
+      first_name: 'Little',
+      last_name: 'Adenuga',
+      full_name: 'Little Adenuga',
+      parent_id: '500',
+    },
+    {
+      id: '701',
+      first_name: 'Tiny',
+      last_name: 'Adenuga',
+      full_name: 'Tiny Adenuga',
+      parent_id: '501',
+    },
+    {
+      id: '702',
+      first_name: 'Mini',
+      last_name: 'Adenuga',
+      full_name: 'Mini Adenuga',
+      parent_id: '502',
+    },
+  ],
+  // Aunts/Uncles (4 aunts/uncles - related through parent 200)
+  aunts_uncles: [
+    {
+      id: '800',
+      first_name: 'Uncle',
+      last_name: 'Adenuga',
+      full_name: 'Uncle Adenuga',
+      related_through: '200',
+    },
+    {
+      id: '801',
+      first_name: 'Aunt',
+      last_name: 'Adenuga',
+      full_name: 'Aunt Adenuga',
+      related_through: '200',
+    },
+    {
+      id: '802',
+      first_name: 'Uncle',
+      last_name: 'Smith',
+      full_name: 'Uncle Smith',
+      related_through: '201',
+    },
+    {
+      id: '803',
+      first_name: 'Aunt',
+      last_name: 'Jones',
+      full_name: 'Aunt Jones',
+      related_through: '201',
+    },
+  ],
+  // Cousins (children of aunts/uncles - only show when clicking on A/U)
+  cousins: [
+    {
+      id: '900',
+      first_name: 'Cousin',
+      last_name: 'Adenuga',
+      full_name: 'Cousin Adenuga',
+      parent_id: '800',
+    },
+    {
+      id: '901',
+      first_name: 'Mousin',
+      last_name: 'Adenuga',
+      full_name: 'Mousin Adenuga',
+      parent_id: '800',
+    },
+    {
+      id: '902',
+      first_name: 'Cousin',
+      last_name: 'Smith',
+      full_name: 'Cousin Smith',
+      parent_id: '802',
+    },
+    {
+      id: '903',
+      first_name: 'Cousin',
+      last_name: 'Jones',
+      full_name: 'Cousin Jones',
+      parent_id: '803',
+    },
+  ],
+  // Nieces/Nephews (children of siblings)
+  nieces_nephews: [
+    {
+      id: '1000',
+      first_name: 'Niece',
+      last_name: 'Adenuga',
+      full_name: 'Niece Adenuga',
+      parent_id: '300',
+    },
+    {
+      id: '1001',
+      first_name: 'Nephew',
+      last_name: 'Adenuga',
+      full_name: 'Nephew Adenuga',
+      parent_id: '301',
+    },
+  ],
+  // Spouses (2 spouses - first is primary, second is subnode)
+  spouse: [
+    {
+      id: '400',
+      first_name: 'Khadijah',
+      last_name: 'Olawale',
+      full_name: 'Khadijah Olawale',
+      is_former: false,
+    },
+    {
+      id: '401',
+      first_name: 'Amina',
+      last_name: 'Hassan',
+      full_name: 'Amina Hassan',
+      is_former: true,
+    },
+  ],
+  // Parents-in-Law (spouse's parents)
+  parents_in_law: [
+    {
+      id: '1100',
+      first_name: 'Father-in-Law',
+      last_name: 'Olawale',
+      full_name: 'Father-in-Law Olawale',
+      related_through: '400',
+    },
+    {
+      id: '1101',
+      first_name: 'Mother-in-Law',
+      last_name: 'Olawale',
+      full_name: 'Mother-in-Law Olawale',
+      related_through: '400',
+    },
+  ],
+  // Siblings-in-Law (spouse's siblings)
+  siblings_in_law: [
+    {
+      id: '1200',
+      first_name: 'Brother-in-Law',
+      last_name: 'Olawale',
+      full_name: 'Brother-in-Law Olawale',
+      related_through: '400',
+    },
+    {
+      id: '1201',
+      first_name: 'Sister-in-Law',
+      last_name: 'Olawale',
+      full_name: 'Sister-in-Law Olawale',
+      related_through: '400',
+    },
+  ],
+  // Step-parents (only shown in parent view)
+  step_parents: [
+    {
+      id: '1300',
+      first_name: 'Step-Father',
+      last_name: 'Johnson',
+      full_name: 'Step-Father Johnson',
+      related_through: '201',
+    },
+  ],
+  // Step-siblings (only shown when step-parent is displayed)
+  step_siblings: [
+    {
+      id: '1400',
+      first_name: 'Step-Brother',
+      last_name: 'Johnson',
+      full_name: 'Step-Brother Johnson',
+      parent_id: '1300',
+      related_through: '201',
+    },
+    {
+      id: '1401',
+      first_name: 'Step-Sister',
+      last_name: 'Johnson',
+      full_name: 'Step-Sister Johnson',
+      parent_id: '1300',
+      related_through: '201',
+    },
+  ],
+}
 
-const treePayload = computed<Payload | undefined>(() =>
-  familyTreeData.value ? formatFamilyTreeData(familyTreeData.value.familyTree) : undefined,
-)
+// const treePayload = computed<Payload | undefined>(() =>
+//   familyTreeData.value ? formatFamilyTreeData(familyTreeData.value.familyTree) : undefined,
+// )
 
 const getNodeSize = (node: TreeNodeType): 'small' | 'medium' | 'large' => {
   if (node.generation === 0) return 'large'
