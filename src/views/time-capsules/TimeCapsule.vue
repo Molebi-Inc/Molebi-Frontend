@@ -18,7 +18,7 @@
           icon="vuesax.broken.security-time"
           :icon-size="250"
           icon-color="#A1A1A1"
-          title="Nothing to see here yet"
+          title="Create your first time capsule"
         />
       </div>
       <MlbButton
