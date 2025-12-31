@@ -42,26 +42,11 @@ export interface FamilyTreeDetails {
 }
 
 export interface FamilyMemberInterface {
-  // id: number
-  // name?: string
-  // email?: string
-  // avatar_url?: string
-  // first_name: string
-  // middle_name: string | null
-  // family_name: string
-  // gender: GenderType
-  // family_tree_id: number
-  // full_name?: string
-  // is_registered?: boolean
-  // profile_picture_url: string | null
-  // is_same_family_name: boolean
-  // nickname: string | null
-
   family_name: string
   first_name: string
   full_name: string
   gender: GenderType
-  id: number
+  id?: number
   is_registered: boolean
   middle_name: string | null
   nickname: string | null
@@ -77,7 +62,7 @@ export interface FamilyMemberInterface {
 
 // Family Tree Visualization Types
 export interface TreeNode {
-  id: number
+  id?: number
   member: FamilyMemberInterface
   generation: number
   x: number

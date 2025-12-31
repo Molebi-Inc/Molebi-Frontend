@@ -149,7 +149,7 @@ const addUser = (user: (typeof props.users)[number]): void => {
   const field = props.options.form_user_ids_field
   const fieldValue = props.form[field] as number[] | undefined
   const currentValue = fieldValue || []
-  if (!currentValue.some((m: number) => m === user.id)) {
+  if (user.id && !currentValue.some((m: number) => m === user.id)) {
     emit('update:selected-users', [...currentValue, user.id])
     userSearch.value = ''
     userSelectorDropdown.value = false

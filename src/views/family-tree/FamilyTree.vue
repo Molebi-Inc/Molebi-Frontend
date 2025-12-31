@@ -299,286 +299,286 @@ watch(
 //   { immediate: true },
 // )
 
-const defaultPayload: Payload = {
-  self: {
-    id: '100',
-    first_name: 'Azeem',
-    family_name: 'Adenuga',
-    full_name: 'Azeem Adenuga',
-    profile_picture_url: null,
-  },
-  // Parents (3 parents - first 2 will be supernode, 3rd as subnode)
-  parents: [
-    {
-      id: '200',
-      first_name: 'Kashoggi',
-      family_name: 'Adenuga',
-      full_name: 'Kashoggi Adenuga',
-      is_adoptive: false,
-    },
-    {
-      id: '201',
-      first_name: 'Shade',
-      family_name: 'Adenuga',
-      full_name: 'Shade Adenuga',
-      is_adoptive: false,
-    },
-    {
-      id: '202',
-      first_name: 'Bola',
-      family_name: 'Adenuga',
-      full_name: 'Bola Adenuga',
-      is_adoptive: true,
-    },
-  ],
-  // Siblings (4 siblings for curved arc)
-  siblings: [
-    { id: '300', first_name: 'Brahime', family_name: 'Adenuga', full_name: 'Brahime Adenuga' },
-    { id: '301', first_name: 'Maryam', family_name: 'Adenuga', full_name: 'Maryam Adenuga' },
-    { id: '302', first_name: 'Fatima', family_name: 'Adenuga', full_name: 'Fatima Adenuga' },
-    { id: '303', first_name: 'Ibrahim', family_name: 'Adenuga', full_name: 'Ibrahim Adenuga' },
-  ],
-  // Children (5 children to test line cutting through)
-  children: [
-    {
-      id: '500',
-      first_name: 'Imran',
-      family_name: 'Adenuga',
-      full_name: 'Imran Adenuga',
-      parent_id: null,
-    },
-    {
-      id: '501',
-      first_name: 'Aisha',
-      family_name: 'Adenuga',
-      full_name: 'Aisha Adenuga',
-      parent_id: null,
-    },
-    {
-      id: '502',
-      first_name: 'Zainab',
-      family_name: 'Adenuga',
-      full_name: 'Zainab Adenuga',
-      parent_id: null,
-    },
-    {
-      id: '503',
-      first_name: 'Hassan',
-      family_name: 'Adenuga',
-      full_name: 'Hassan Adenuga',
-      parent_id: null,
-    },
-    {
-      id: '504',
-      first_name: 'Hussein',
-      family_name: 'Adenuga',
-      full_name: 'Hussein Adenuga',
-      parent_id: null,
-    },
-  ],
-  // Grandparents (2 grandparents - will be supernode)
-  grandparents: [
-    {
-      id: '600',
-      first_name: 'Grandpa',
-      family_name: 'Adenuga',
-      full_name: 'Grandpa Adenuga',
-      related_through: '200',
-    },
-    {
-      id: '601',
-      first_name: 'Grandma',
-      family_name: 'Adenuga',
-      full_name: 'Grandma Adenuga',
-      related_through: '200',
-    },
-  ],
-  // Grandchildren (3 grandchildren)
-  grandchildren: [
-    {
-      id: '700',
-      first_name: 'Little',
-      family_name: 'Adenuga',
-      full_name: 'Little Adenuga',
-      parent_id: '500',
-    },
-    {
-      id: '701',
-      first_name: 'Tiny',
-      family_name: 'Adenuga',
-      full_name: 'Tiny Adenuga',
-      parent_id: '501',
-    },
-    {
-      id: '702',
-      first_name: 'Mini',
-      family_name: 'Adenuga',
-      full_name: 'Mini Adenuga',
-      parent_id: '502',
-    },
-  ],
-  // Aunts/Uncles (4 aunts/uncles - related through parent 200)
-  aunts_uncles: [
-    {
-      id: '800',
-      first_name: 'Uncle',
-      family_name: 'Adenuga',
-      full_name: 'Uncle Adenuga',
-      related_through: '200',
-    },
-    {
-      id: '801',
-      first_name: 'Aunt',
-      family_name: 'Adenuga',
-      full_name: 'Aunt Adenuga',
-      related_through: '200',
-    },
-    {
-      id: '802',
-      first_name: 'Uncle',
-      family_name: 'Smith',
-      full_name: 'Uncle Smith',
-      related_through: '201',
-    },
-    {
-      id: '803',
-      first_name: 'Aunt',
-      family_name: 'Jones',
-      full_name: 'Aunt Jones',
-      related_through: '201',
-    },
-  ],
-  // Cousins (children of aunts/uncles - only show when clicking on A/U)
-  cousins: [
-    {
-      id: '900',
-      first_name: 'Cousin',
-      family_name: 'Adenuga',
-      full_name: 'Cousin Adenuga',
-      parent_id: '800',
-    },
-    {
-      id: '901',
-      first_name: 'Mousin',
-      family_name: 'Adenuga',
-      full_name: 'Mousin Adenuga',
-      parent_id: '800',
-    },
-    {
-      id: '902',
-      first_name: 'Cousin',
-      family_name: 'Smith',
-      full_name: 'Cousin Smith',
-      parent_id: '802',
-    },
-    {
-      id: '903',
-      first_name: 'Cousin',
-      family_name: 'Jones',
-      full_name: 'Cousin Jones',
-      parent_id: '803',
-    },
-  ],
-  // Nieces/Nephews (children of siblings)
-  nieces_nephews: [
-    {
-      id: '1000',
-      first_name: 'Niece',
-      family_name: 'Adenuga',
-      full_name: 'Niece Adenuga',
-      parent_id: '300',
-    },
-    {
-      id: '1001',
-      first_name: 'Nephew',
-      family_name: 'Adenuga',
-      full_name: 'Nephew Adenuga',
-      parent_id: '301',
-    },
-  ],
-  // Spouses (2 spouses - first is primary, second is subnode)
-  spouse: [
-    {
-      id: '400',
-      first_name: 'Khadijah',
-      family_name: 'Olawale',
-      full_name: 'Khadijah Olawale',
-      is_former: false,
-    },
-    {
-      id: '401',
-      first_name: 'Amina',
-      family_name: 'Hassan',
-      full_name: 'Amina Hassan',
-      is_former: true,
-    },
-  ],
-  // Parents-in-Law (spouse's parents)
-  parents_in_law: [
-    {
-      id: '1100',
-      first_name: 'Father-in-Law',
-      family_name: 'Olawale',
-      full_name: 'Father-in-Law Olawale',
-      related_through: '400',
-    },
-    {
-      id: '1101',
-      first_name: 'Mother-in-Law',
-      family_name: 'Olawale',
-      full_name: 'Mother-in-Law Olawale',
-      related_through: '400',
-    },
-  ],
-  // Siblings-in-Law (spouse's siblings)
-  siblings_in_law: [
-    {
-      id: '1200',
-      first_name: 'Brother-in-Law',
-      family_name: 'Olawale',
-      full_name: 'Brother-in-Law Olawale',
-      related_through: '400',
-      parent_id: '1100',
-    },
-    {
-      id: '1201',
-      first_name: 'Sister-in-Law',
-      family_name: 'Olawale',
-      full_name: 'Sister-in-Law Olawale',
-      related_through: '400',
-      parent_id: '1100',
-    },
-  ],
-  // Step-parents (only shown in parent view)
-  step_parents: [
-    {
-      id: '1300',
-      first_name: 'Step-Father',
-      family_name: 'Johnson',
-      full_name: 'Step-Father Johnson',
-      related_through: '201',
-    },
-  ],
-  // Step-siblings (only shown when step-parent is displayed)
-  step_siblings: [
-    {
-      id: '1400',
-      first_name: 'Step-Brother',
-      family_name: 'Johnson',
-      full_name: 'Step-Brother Johnson',
-      parent_id: '1300',
-      related_through: '201',
-    },
-    {
-      id: '1401',
-      first_name: 'Step-Sister',
-      family_name: 'Johnson',
-      full_name: 'Step-Sister Johnson',
-      parent_id: '1300',
-      related_through: '201',
-    },
-  ],
-}
+// const defaultPayload: Payload = {
+//   self: {
+//     id: '100',
+//     first_name: 'Azeem',
+//     family_name: 'Adenuga',
+//     full_name: 'Azeem Adenuga',
+//     profile_picture_url: null,
+//   },
+//   // Parents (3 parents - first 2 will be supernode, 3rd as subnode)
+//   parents: [
+//     {
+//       id: '200',
+//       first_name: 'Kashoggi',
+//       family_name: 'Adenuga',
+//       full_name: 'Kashoggi Adenuga',
+//       is_adoptive: false,
+//     },
+//     {
+//       id: '201',
+//       first_name: 'Shade',
+//       family_name: 'Adenuga',
+//       full_name: 'Shade Adenuga',
+//       is_adoptive: false,
+//     },
+//     {
+//       id: '202',
+//       first_name: 'Bola',
+//       family_name: 'Adenuga',
+//       full_name: 'Bola Adenuga',
+//       is_adoptive: true,
+//     },
+//   ],
+//   // Siblings (4 siblings for curved arc)
+//   siblings: [
+//     { id: '300', first_name: 'Brahime', family_name: 'Adenuga', full_name: 'Brahime Adenuga' },
+//     { id: '301', first_name: 'Maryam', family_name: 'Adenuga', full_name: 'Maryam Adenuga' },
+//     { id: '302', first_name: 'Fatima', family_name: 'Adenuga', full_name: 'Fatima Adenuga' },
+//     { id: '303', first_name: 'Ibrahim', family_name: 'Adenuga', full_name: 'Ibrahim Adenuga' },
+//   ],
+//   // Children (5 children to test line cutting through)
+//   children: [
+//     {
+//       id: '500',
+//       first_name: 'Imran',
+//       family_name: 'Adenuga',
+//       full_name: 'Imran Adenuga',
+//       parent_id: null,
+//     },
+//     {
+//       id: '501',
+//       first_name: 'Aisha',
+//       family_name: 'Adenuga',
+//       full_name: 'Aisha Adenuga',
+//       parent_id: null,
+//     },
+//     {
+//       id: '502',
+//       first_name: 'Zainab',
+//       family_name: 'Adenuga',
+//       full_name: 'Zainab Adenuga',
+//       parent_id: null,
+//     },
+//     {
+//       id: '503',
+//       first_name: 'Hassan',
+//       family_name: 'Adenuga',
+//       full_name: 'Hassan Adenuga',
+//       parent_id: null,
+//     },
+//     {
+//       id: 504,
+//       first_name: 'Hussein',
+//       family_name: 'Adenuga',
+//       full_name: 'Hussein Adenuga',
+//       parent_id: null,
+//     },
+//   ],
+//   // Grandparents (2 grandparents - will be supernode)
+//   grandparents: [
+//     {
+//       id: 600,
+//       first_name: 'Grandpa',
+//       family_name: 'Adenuga',
+//       full_name: 'Grandpa Adenuga',
+//       related_through: 200,
+//     },
+//     {
+//       id: 601,
+//       first_name: 'Grandma',
+//       family_name: 'Adenuga',
+//       full_name: 'Grandma Adenuga',
+//       related_through: 200,
+//     },
+//   ],
+//   // Grandchildren (3 grandchildren)
+//   grandchildren: [
+//     {
+//       id: 700,
+//       first_name: 'Little',
+//       family_name: 'Adenuga',
+//       full_name: 'Little Adenuga',
+//       parent_id: 500,
+//     },
+//     {
+//       id: 701,
+//       first_name: 'Tiny',
+//       family_name: 'Adenuga',
+//       full_name: 'Tiny Adenuga',
+//       parent_id: 501,
+//     },
+//     {
+//       id: 702,
+//       first_name: 'Mini',
+//       family_name: 'Adenuga',
+//       full_name: 'Mini Adenuga',
+//       parent_id: 502,
+//     },
+//   ],
+//   // Aunts/Uncles (4 aunts/uncles - related through parent 200)
+//   aunts_uncles: [
+//     {
+//       id: 800,
+//       first_name: 'Uncle',
+//       family_name: 'Adenuga',
+//       full_name: 'Uncle Adenuga',
+//       related_through: 200,
+//     },
+//     {
+//       id: 801,
+//       first_name: 'Aunt',
+//       family_name: 'Adenuga',
+//       full_name: 'Aunt Adenuga',
+//       related_through: 200,
+//     },
+//     {
+//       id: '802',
+//       first_name: 'Uncle',
+//       family_name: 'Smith',
+//       full_name: 'Uncle Smith',
+//       related_through: '201',
+//     },
+//     {
+//       id: '803',
+//       first_name: 'Aunt',
+//       family_name: 'Jones',
+//       full_name: 'Aunt Jones',
+//       related_through: '201',
+//     },
+//   ],
+//   // Cousins (children of aunts/uncles - only show when clicking on A/U)
+//   cousins: [
+//     {
+//       id: 900,
+//       first_name: 'Cousin',
+//       family_name: 'Adenuga',
+//       full_name: 'Cousin Adenuga',
+//       parent_id: 800,
+//     },
+//     {
+//       id: '901',
+//       first_name: 'Mousin',
+//       family_name: 'Adenuga',
+//       full_name: 'Mousin Adenuga',
+//       parent_id: 800,
+//     },
+//     {
+//       id: 902,
+//       first_name: 'Cousin',
+//       family_name: 'Smith',
+//       full_name: 'Cousin Smith',
+//       parent_id: 802,
+//     },
+//     {
+//       id: 903,
+//       first_name: 'Cousin',
+//       family_name: 'Jones',
+//       full_name: 'Cousin Jones',
+//       parent_id: 803,
+//     },
+//   ],
+//   // Nieces/Nephews (children of siblings)
+//   nieces_nephews: [
+//     {
+//       id: 1000,
+//       first_name: 'Niece',
+//       family_name: 'Adenuga',
+//       full_name: 'Niece Adenuga',
+//       parent_id: 300,
+//     },
+//     {
+//       id: 1001,
+//       first_name: 'Nephew',
+//       family_name: 'Adenuga',
+//       full_name: 'Nephew Adenuga',
+//       parent_id: 301,
+//     },
+//   ],
+//   // Spouses (2 spouses - first is primary, second is subnode)
+//   spouse: [
+//     {
+//       id: 400,
+//       first_name: 'Khadijah',
+//       family_name: 'Olawale',
+//       full_name: 'Khadijah Olawale',
+//       is_former: false,
+//     },
+//     {
+//       id: 401,
+//       first_name: 'Amina',
+//       family_name: 'Hassan',
+//       full_name: 'Amina Hassan',
+//       is_former: true,
+//     },
+//   ],
+//   // Parents-in-Law (spouse's parents)
+//   parents_in_law: [
+//     {
+//       id: 1100,
+//       first_name: 'Father-in-Law',
+//       family_name: 'Olawale',
+//       full_name: 'Father-in-Law Olawale',
+//       related_through: 400,
+//     },
+//     {
+//       id: 1101,
+//       first_name: 'Mother-in-Law',
+//       family_name: 'Olawale',
+//       full_name: 'Mother-in-Law Olawale',
+//       related_through: 400,
+//     },
+//   ],
+//   // Siblings-in-Law (spouse's siblings)
+//   siblings_in_law: [
+//     {
+//       id: 1200,
+//       first_name: 'Brother-in-Law',
+//       family_name: 'Olawale',
+//       full_name: 'Brother-in-Law Olawale',
+//       related_through: 400,
+//       parent_id: 1100,
+//     },
+//     {
+//       id: 1201,
+//       first_name: 'Sister-in-Law',
+//       family_name: 'Olawale',
+//       full_name: 'Sister-in-Law Olawale',
+//       related_through: 400,
+//       parent_id: 1100,
+//     },
+//   ],
+//   // Step-parents (only shown in parent view)
+//   step_parents: [
+//     {
+//       id: 1300,
+//       first_name: 'Step-Father',
+//       family_name: 'Johnson',
+//       full_name: 'Step-Father Johnson',
+//       related_through: 201,
+//     },
+//   ],
+//   // Step-siblings (only shown when step-parent is displayed)
+//   step_siblings: [
+//     {
+//       id: 1400,
+//       first_name: 'Step-Brother',
+//       family_name: 'Johnson',
+//       full_name: 'Step-Brother Johnson',
+//       parent_id: 1300,
+//       related_through: 201,
+//     },
+//     {
+//       id: 1401,
+//       first_name: 'Step-Sister',
+//       family_name: 'Johnson',
+//       full_name: 'Step-Sister Johnson',
+//       parent_id: 1300,
+//       related_through: 201,
+//     },
+//   ],
+// }
 
 const handleAddFirstMember = () => {
   showFamilyTreeModal.value = true

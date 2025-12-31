@@ -55,8 +55,8 @@ export const buildTreeFromFamilyTree = (
 
   // Helper to create or get node
   const getOrCreateNode = (member: FamilyMemberInterface): TreeNode => {
-    if (nodeMap.has(member.id)) {
-      return nodeMap.get(member.id)!
+    if (nodeMap.has(member.id ?? 0)) {
+      return nodeMap.get(member.id ?? 0)!
     }
     const node: TreeNode = {
       id: member.id,
@@ -69,7 +69,7 @@ export const buildTreeFromFamilyTree = (
       displayName: getMemberDisplayName(member),
       avatarUrl: getMemberAvatarUrl(member),
     }
-    nodeMap.set(member.id, node)
+    nodeMap.set(member.id ?? 0, node)
     return node
   }
 
@@ -302,6 +302,7 @@ export const buildTreeFromMembers = (
 
   // Create nodes from members
   members.forEach((member) => {
+    if (!member.id) return
     const node: TreeNode = {
       id: member.id,
       member,
@@ -313,7 +314,7 @@ export const buildTreeFromMembers = (
       displayName: getMemberDisplayName(member),
       avatarUrl: getMemberAvatarUrl(member),
     }
-    nodeMap.set(member.id, node)
+    nodeMap.set(member?.id, node)
   })
 
   // Simple layout: organize into generations based on order
@@ -638,7 +639,9 @@ export function transformPayloadForMember(
   const memberId = String(selectedMemberId)
 
   // Find the selected member in the original payload
-  const findMember = (members: FamilyMemberInterface[] | undefined): FamilyMemberInterface | null => {
+  const findMember = (
+    members: FamilyMemberInterface[] | undefined,
+  ): FamilyMemberInterface | null => {
     if (!members) return null
     return members.find((m) => String(m.id) === memberId) || null
   }
@@ -776,9 +779,7 @@ export function transformPayloadForMember(
         ...filterByRelatedThrough(originalPayload.aunts_uncles, relatedThrough).filter(
           (au) => String(au.id) !== memberId,
         ),
-        ...(originalPayload.parents || []).filter(
-          (p) => String(p.id) === String(relatedThrough),
-        ),
+        ...(originalPayload.parents || []).filter((p) => String(p.id) === String(relatedThrough)),
       ]
       const auChildren = filterByParentId(originalPayload.cousins, memberId)
 
