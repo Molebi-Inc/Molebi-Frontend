@@ -26,17 +26,17 @@ export const familyTreeRoutes = [
               fullScreen: 'web',
             },
           },
-          {
-            path: 'onboarding/welcome',
-            name: 'App.FamilyTreeWelcomeView',
-            component: () => FamilyTreeOnboardingView,
-            meta: {
-              pageTitle: 'Family Tree',
-              hasLayoutLogo: true,
-              hasLayoutLeaf: false,
-              fullScreen: 'web',
-            },
-          },
+          // {
+          //   path: 'onboarding/welcome',
+          //   name: 'App.FamilyTreeWelcomeView',
+          //   component: () => FamilyTreeOnboardingView,
+          //   meta: {
+          //     pageTitle: 'Family Tree',
+          //     hasLayoutLogo: true,
+          //     hasLayoutLeaf: false,
+          //     fullScreen: 'web',
+          //   },
+          // },
         ],
       },
       {

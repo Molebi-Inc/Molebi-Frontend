@@ -111,9 +111,10 @@
                 >
                   <!-- SUPER NODE (e.g. Parents: Father & Mother) -->
                   <div v-if="node.isSuperNode" class="relative w-full h-full">
-                    <!-- Main person (Full size) -->
+                    <!-- Main person (Full size) - Clickable -->
                     <div
-                      class="absolute top-0 left-0 w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg bg-white z-10"
+                      class="absolute top-0 left-0 w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg bg-white z-10 cursor-pointer"
+                      @click.stop="handleNodeClick(node)"
                     >
                       <img
                         :src="
@@ -129,25 +130,32 @@
                       />
                     </div>
 
-                    <!-- Subnode (Mini circle overlapping bottom-right) -->
-                    <div
-                      v-if="node.subNodes && node.subNodes.length > 0"
-                      class="absolute bottom-0 right-0 w-[32px] h-[32px] rounded-full overflow-hidden border-2 border-white shadow-md bg-white z-20"
-                      :style="{ bottom: '-4px', right: '-4px' }"
-                    >
-                      <img
-                        :src="
-                          node.subNodes[0]?.profile_picture_url ||
-                          getUserAvatar(
-                            node.subNodes[0]?.first_name || 'User',
-                            node.subNodes[0]?.family_name || '',
-                            node.subNodes[0]?.profile_picture_url || undefined,
-                          )
-                        "
-                        class="object-cover w-full h-full"
-                        :title="node.subNodes[0]?.full_name"
-                      />
-                    </div>
+                    <!-- Subnode (Mini circle overlapping bottom-right) - Clickable -->
+                    <template v-if="node.subNodes && node.subNodes.length > 0">
+                      <div
+                        v-for="(subNode, subIdx) in node.subNodes"
+                        :key="subNode.id || subIdx"
+                        class="absolute bottom-0 right-0 w-[32px] h-[32px] rounded-full overflow-hidden border-2 border-white shadow-md bg-white z-20 cursor-pointer"
+                        :style="{
+                          bottom: `${-4 - subIdx * 8}px`,
+                          right: `${-4 - subIdx * 8}px`,
+                        }"
+                        @click.stop="handleSubNodeClick(subNode, node)"
+                      >
+                        <img
+                          :src="
+                            subNode.profile_picture_url ||
+                            getUserAvatar(
+                              subNode.first_name || 'User',
+                              subNode.family_name || '',
+                              subNode.profile_picture_url || undefined,
+                            )
+                          "
+                          class="object-cover w-full h-full"
+                          :title="subNode.full_name"
+                        />
+                      </div>
+                    </template>
                   </div>
 
                   <!-- STANDARD NODE -->
@@ -174,15 +182,16 @@
                       />
                     </div>
 
-                    <!-- Subnodes (e.g. other spouses) - Small badges -->
+                    <!-- Subnodes (e.g. other spouses) - Small badges - Clickable -->
                     <div
                       v-for="(sub, idx) in node.subNodes || []"
                       :key="sub.id || idx"
-                      class="absolute z-30 w-[40px] h-[40px] border-2 border-white rounded-full overflow-hidden shadow-md bg-white"
+                      class="absolute z-30 w-[40px] h-[40px] border-2 border-white rounded-full overflow-hidden shadow-md bg-white cursor-pointer"
                       :style="{
                         bottom: '-5px',
                         right: `${-15 - idx * 20}px`,
                       }"
+                      @click.stop="handleSubNodeClick(sub, node)"
                     >
                       <img
                         :src="
@@ -269,7 +278,7 @@
           >
             <span>{{ child.full_name || child.first_name }}</span>
             <span class="text-[11px] text-gray-400">
-              {{ child.relation_type === 'cousin' ? 'Cousin' : 'Child' }}
+              {{ child.relationship_metadata.relation_type === 'cousin' ? 'Cousin' : 'Child' }}
             </span>
           </li>
         </ul>
@@ -308,7 +317,7 @@
               {{ spouse.full_name || spouse.first_name }}
             </div>
             <div class="text-xs text-gray-500 mt-1">
-              {{ spouse.is_former ? 'Former Spouse' : 'Current Spouse' }}
+              {{ spouse.relationship_metadata.is_former ? 'Former Spouse' : 'Current Spouse' }}
             </div>
           </button>
         </div>
@@ -357,27 +366,9 @@ import { useRouter } from 'vue-router'
 import * as d3 from 'd3'
 import { getUserAvatar } from '@/helpers/general.helpers'
 import ViewMember from '@/components/family-tree/ViewMember.vue'
+import type { FamilyMemberInterface as Person, Payload } from '@/types/family-tree.types'
 
 /* ---------- Types ---------- */
-type Person = {
-  id?: string
-  first_name?: string
-  family_name?: string
-  full_name?: string
-  profile_picture_url?: string | null
-  /**
-   * For relationships that are defined via a parent link
-   * (children, cousins, nieces/nephews, grandchildren, etc.).
-   */
-  parent_id?: string | number | null
-  /**
-   * Optional relationship metadata from the API / form.
-   */
-  relation_type?: string | null
-  related_through?: string | null
-  is_adoptive?: boolean
-  is_former?: boolean
-}
 
 type LayoutNodeType = 'person' | 'heart'
 
@@ -403,88 +394,10 @@ type LayoutNode = {
   }
 }
 
-export type Payload = {
-  self: Person & { spouse?: Person | null }
-  parents?: Person[] // Gen 2: Father, Mother
-  siblings?: Person[] // Gen 3: Brothers, Sisters
-  children?: Person[] // Gen 4
-  grandparents?: Person[] // Gen 1
-  grandchildren?: Person[] // Gen 5
-  aunts_uncles?: Person[] // Gen 2: Aunts, Uncles (filtered by related_through)
-  cousins?: Person[] // Gen 3: Only shown in A/U tree view
-  nieces_nephews?: Person[] // Gen 4: Only shown in Cousin tree view
-  /**
-   * All spouses of the logged‑in user.
-   * - The primary / current spouse will be shown opposite the self node
-   * - Any additional spouses will appear as subnodes on the self node
-   */
-  spouse?: Person[]
-  /**
-   * Parents-in-Law (Father-in-Law, Mother-in-Law) - Gen 2, spouse side
-   */
-  parents_in_law?: Person[]
-  /**
-   * Siblings-in-Law (Brother-in-Law, Sister-in-Law) - Gen 3, spouse side
-   */
-  siblings_in_law?: Person[]
-  /**
-   * Step-Parents - Only shown when viewing parent's tree
-   */
-  step_parents?: Person[]
-  /**
-   * Step-Siblings / Half-Siblings - Only shown when step-parent is displayed
-   */
-  step_siblings?: Person[]
-}
-
 /* ---------- Props & sample data ---------- */
 const props = defineProps<{ payload?: Payload }>()
 
-const defaultPayload: Payload = {
-  self: {
-    id: '100',
-    first_name: 'Azeem',
-    full_name: 'Azeem Adenuga',
-    profile_picture_url: null,
-    spouse: {
-      id: '400',
-      first_name: 'Khadijah',
-      full_name: 'Khadijah Olawale',
-      profile_picture_url: null,
-    },
-  },
-  parents: [
-    { id: '200', first_name: 'Kashoggi', full_name: 'Kashoggi Adenuga' },
-    { id: '201', first_name: 'Shade', full_name: 'Shade Adenuga' },
-    { id: '202', first_name: 'Bola', full_name: 'Bola Adenuga' },
-  ],
-  siblings: [
-    { id: '300', first_name: 'Brahime', full_name: 'Brahime Adenuga' },
-    { id: '301', first_name: 'Maryam', full_name: 'Maryam Adenuga' },
-  ],
-  children: [
-    { id: '500', first_name: 'Imran', full_name: 'Imran Adenuga' },
-    { id: '501', first_name: 'Aisha', full_name: 'Aisha Adenuga' },
-  ],
-  grandparents: [
-    { id: '600', first_name: 'Grandpa', full_name: 'Grandpa Adenuga' },
-    { id: '601', first_name: 'Grandma', full_name: 'Grandma Adenuga' },
-  ],
-  grandchildren: [],
-  aunts_uncles: [{ id: '800', first_name: 'Uncle', full_name: 'Uncle Adenuga' }],
-  cousins: [
-    { id: '900', first_name: 'Cousin', full_name: 'Cousin Adenuga' },
-    { id: '900', first_name: 'Mousin', full_name: 'Mousin Adenuga' },
-  ],
-  spouse: [{ id: '400', first_name: 'Khadijah', full_name: 'Khadijah Olawale' }],
-  parents_in_law: [],
-  siblings_in_law: [],
-  step_parents: [],
-  step_siblings: [],
-}
-
-// const payload = ref<Payload>(props.payload ?? defaultPayload)
-const payload = ref<Payload>(props.payload ?? defaultPayload)
+const payload = ref<Payload | undefined>(props.payload)
 
 /* ---------- Visual constants & state ---------- */
 const nodeSize = 72
@@ -633,10 +546,14 @@ function getFilteredChildren(
   if (parentId === null && currentSpouseId) {
     // Children with no parent_id default to current spouse
     return allChildren.filter(
-      (c) => !c.parent_id || String(c.parent_id) === String(currentSpouseId),
+      (c) =>
+        !c.relationship_metadata.parent_id ||
+        String(c.relationship_metadata.parent_id) === String(currentSpouseId),
     )
   }
-  return allChildren.filter((c) => String(c.parent_id ?? '') === String(parentId))
+  return allChildren.filter(
+    (c) => String(c.relationship_metadata.parent_id ?? '') === String(parentId),
+  )
 }
 
 /**
@@ -648,7 +565,9 @@ function getFilteredRelatives(
   allRelatives: Person[],
 ): Person[] {
   if (!relatedThrough) return allRelatives
-  return allRelatives.filter((r) => String(r.related_through ?? '') === String(relatedThrough))
+  return allRelatives.filter(
+    (r) => String(r.relationship_metadata.related_through ?? '') === String(relatedThrough),
+  )
 }
 
 /**
@@ -670,20 +589,23 @@ function rebuildPayloadForPerson(person: Person, originalPayload: Payload): Payl
 
   if (isAuntUncle) {
     const au = (originalPayload.aunts_uncles || []).find((au) => String(au.id) === personId)
-    const relatedThrough = au?.related_through
+    const relatedThrough = au?.relationship_metadata.related_through
 
     // Their parent is a grandparent
     const parent = (originalPayload.grandparents || []).find(
-      (gp) => String(gp.id) === relatedThrough || gp.related_through === relatedThrough,
+      (gp) =>
+        gp.id === relatedThrough || gp.relationship_metadata.related_through === relatedThrough,
     )
 
     // Their siblings: other A/Us with same related_through + the parent
     const siblings = [
       ...(originalPayload.aunts_uncles || []).filter(
-        (a) => String(a.id) !== personId && a.related_through === relatedThrough,
+        (a) =>
+          String(a.id) !== personId && a.relationship_metadata.related_through === relatedThrough,
       ),
       ...(originalPayload.parents || []).filter(
-        (p) => String(p.id) === relatedThrough || p.related_through === relatedThrough,
+        (p) =>
+          p.id === relatedThrough || p.relationship_metadata.related_through === relatedThrough,
       ),
     ]
 
@@ -776,13 +698,17 @@ function buildLayout() {
   const p = workingPayload
 
   // Determine which spouse to display
-  const spouses = p.spouse || []
+  const spouses = p?.spouse || []
   let primarySpouse: Person | null = null
 
   if (selectedSpouse.value) {
     primarySpouse = selectedSpouse.value
   } else {
-    primarySpouse = spouses.find((s) => !s.is_former) || spouses[0] || p.self.spouse || null
+    primarySpouse =
+      spouses.find((s) => !s.relationship_metadata.is_former) ||
+      spouses[0] ||
+      p?.self?.spouse ||
+      null
   }
 
   const otherSpouses = primarySpouse
@@ -790,7 +716,7 @@ function buildLayout() {
     : spouses
 
   // Determine main parent for filtering relatives
-  const parents = p.parents || []
+  const parents = p?.parents || []
   const mainParentId = parentSuperNodeMain.value
     ? String(parentSuperNodeMain.value.id)
     : parents.length > 0
@@ -799,26 +725,28 @@ function buildLayout() {
 
   // Filter relatives based on main parent
   // Show aunts/uncles if they're related to any parent, or if no related_through is set (show all)
-  const allAuntsUncles = p.aunts_uncles || []
+  const allAuntsUncles = p?.aunts_uncles || []
   const filteredAuntsUncles = mainParentId
     ? allAuntsUncles.filter(
         (au) =>
-          !au.related_through || // Show if no related_through specified
-          String(au.related_through) === mainParentId || // Or if matches main parent
-          (p.parents || []).some((par) => String(par.id) === String(au.related_through)), // Or if matches any parent
+          !au.relationship_metadata.related_through || // Show if no related_through specified
+          String(au.relationship_metadata.related_through) === mainParentId || // Or if matches main parent
+          (p?.parents || []).some(
+            (par) => String(par.id) === String(au.relationship_metadata.related_through),
+          ), // Or if matches any parent
       )
     : allAuntsUncles
 
   const grandparents = mainParentId
-    ? getFilteredRelatives(mainParentId, p.grandparents || [])
-    : p.grandparents || []
+    ? getFilteredRelatives(mainParentId, p?.grandparents || [])
+    : p?.grandparents || []
 
   // Filter children based on current spouse
   const currentSpouseId = primarySpouse ? String(primarySpouse.id) : null
-  const children = getFilteredChildren(null, p.children || [], currentSpouseId)
+  const children = getFilteredChildren(null, p?.children || [], currentSpouseId)
 
   // Filter grandchildren
-  const grandchildren = p.grandchildren || []
+  const grandchildren = p?.grandchildren || []
 
   // Layout Constants - 5 Generations
   // Offset to start nodes after generation tags (tags are ~30px tall including padding)
@@ -851,13 +779,13 @@ function buildLayout() {
 
   // Gen 3: Self Node (will be repositioned in siblings arc)
   let selfLayoutNode: LayoutNode | null = null
-  if (p.self) {
+  if (p?.self) {
     selfLayoutNode = {
-      id: String(p.self.id),
+      id: String(p?.self?.id),
       x: centerX - (primarySpouse ? spacing / 2 : 0),
       y: yGen3,
-      label: viewMode.value === 'main' ? 'You' : p.self.full_name || p.self.first_name,
-      data: p.self,
+      label: viewMode.value === 'main' ? 'You' : p?.self?.full_name || p?.self?.first_name,
+      data: p?.self,
       type: 'person',
       role: 'self',
       isSelf: viewMode.value === 'main',
@@ -925,8 +853,8 @@ function buildLayout() {
     const ungroupedGrandparents: Person[] = []
 
     grandparents.forEach((gp) => {
-      if (gp.parent_id) {
-        const parentId = String(gp.parent_id)
+      if (gp.relationship_metadata.parent_id) {
+        const parentId = String(gp.relationship_metadata.parent_id)
         if (!grandparentsByParent[parentId]) {
           grandparentsByParent[parentId] = []
         }
@@ -1047,7 +975,7 @@ function buildLayout() {
   }
 
   // Gen 3: Siblings (arc to the left of Self) - self should be at the rightmost position
-  const siblings = p.siblings || []
+  const siblings = p?.siblings || []
 
   // Position self first at the rightmost position of the siblings arc
   const selfX = centerX - (primarySpouse ? spacing / 2 : 0)
@@ -1135,7 +1063,7 @@ function buildLayout() {
   }
 
   // Spouse Side: Parents-in-Law (Gen 2)
-  const parentsInLaw = p.parents_in_law || []
+  const parentsInLaw = p?.parents_in_law || []
   if (primarySpouse && parentsInLaw.length > 0) {
     const mainPIL = parentsInLaw[0]!
     const otherPIL = parentsInLaw.slice(1)
@@ -1171,16 +1099,18 @@ function buildLayout() {
   }
 
   // Spouse Side: Spouse, Brother-in-Law, and Sister-in-Law (Gen 3, arc on spouse side)
-  const siblingsInLaw = p.siblings_in_law || []
+  const siblingsInLaw = p?.siblings_in_law || []
   // Filter by relation_type if available, otherwise use all siblings-in-law
   const brothersInLaw = siblingsInLaw.filter(
     (sil) =>
-      !sil.relation_type ||
-      sil.relation_type === 'brother_in_law' ||
-      sil.relation_type === 'brother-in-law',
+      !sil.relationship_metadata.relation_type ||
+      sil.relationship_metadata.relation_type === 'brother_in_law' ||
+      sil.relationship_metadata.relation_type === 'brother-in-law',
   )
   const sistersInLaw = siblingsInLaw.filter(
-    (sil) => sil.relation_type === 'sister_in_law' || sil.relation_type === 'sister-in-law',
+    (sil) =>
+      sil.relationship_metadata.relation_type === 'sister_in_law' ||
+      sil.relationship_metadata.relation_type === 'sister-in-law',
   )
 
   // If filtering didn't work (no relation_type), use all siblings-in-law
@@ -1215,8 +1145,8 @@ function buildLayout() {
       if (person) {
         // Try to determine if it's a brother or sister based on relation_type
         const isBrother =
-          person.relation_type === 'brother_in_law' ||
-          person.relation_type === 'brother-in-law' ||
+          person.relationship_metadata.relation_type === 'brother_in_law' ||
+          person.relationship_metadata.relation_type === 'brother-in-law' ||
           brothersInLaw.some((bil) => String(bil.id) === pos.id)
         nodes.value.push({
           id: pos.id,
@@ -1257,7 +1187,7 @@ function buildLayout() {
   }
 
   // Generate Connections
-  generateConnections(nodes.value, p, primarySpouse)
+  generateConnections(nodes.value, p as Payload, primarySpouse)
 
   // Update SVG Size and bounds
   recalculateSvgSize()
@@ -1365,8 +1295,9 @@ function generateConnections(
       const targetGrandparent =
         grandparentNodes.find(
           (gp) =>
-            leftmostAuntUncle.data?.related_through &&
-            String(gp.data?.id) === String(leftmostAuntUncle.data.related_through),
+            leftmostAuntUncle.data?.relationship_metadata.related_through &&
+            String(gp.data?.id) ===
+              String(leftmostAuntUncle.data?.relationship_metadata.related_through),
         ) || grandparentNodes[0]
 
       if (targetGrandparent) {
@@ -1391,9 +1322,9 @@ function generateConnections(
   // Connect each grandparent to their parent via parent_id
   if (parentNode) {
     grandparentNodes.forEach((gpNode) => {
-      if (gpNode.data?.parent_id) {
+      if (gpNode.data?.relationship_metadata.parent_id) {
         // Find the specific parent that matches this grandparent's parent_id
-        const targetParentId = String(gpNode.data.parent_id)
+        const targetParentId = String(gpNode.data?.relationship_metadata?.parent_id)
         // Find the parent node (could be in parent node or aunt/uncle nodes)
         let targetParent = parentNode
         if (String(parentNode.data?.id) !== targetParentId) {
@@ -1552,7 +1483,8 @@ function generateConnections(
 /* ---------- Tooltip helpers ---------- */
 function relationText(node: LayoutNode) {
   if (node.isSelf) return 'You'
-  if (node.role === 'parent') return node.data?.is_adoptive ? 'Adoptive Parent' : 'Parent'
+  if (node.role === 'parent')
+    return node.data?.relationship_metadata.is_adoptive ? 'Adoptive Parent' : 'Parent'
   if (node.role === 'parent-super') return 'Parents'
   if (node.role === 'sibling') return 'Sibling'
   if (node.role === 'child') return 'Child'
@@ -1560,7 +1492,8 @@ function relationText(node: LayoutNode) {
   if (node.role === 'niece_nephew') return 'Niece / Nephew'
   if (node.role === 'grandparent') return 'Grandparent'
   if (node.role === 'grandchild') return 'Grandchild'
-  if (node.role === 'spouse') return node.data?.is_former ? 'Former Spouse' : 'Spouse'
+  if (node.role === 'spouse')
+    return node.data?.relationship_metadata.is_former ? 'Former Spouse' : 'Spouse'
   return 'Relative'
 }
 
@@ -1594,15 +1527,17 @@ function computeChildrenFor(node: LayoutNode) {
   const p = payload.value
 
   const allPotentialChildren: Person[] = [
-    ...(p.children || []),
-    ...(p.cousins || []),
-    ...(p.nieces_nephews || []),
-    ...(p.grandchildren || []),
+    ...(p?.children || []),
+    ...(p?.cousins || []),
+    ...(p?.nieces_nephews || []),
+    ...(p?.grandchildren || []),
   ]
 
   // Any member whose parent_id matches the clicked node is considered a "child"
   // for the drill‑down breakdown regardless of their high‑level bucket.
-  const children = allPotentialChildren.filter((m) => String(m.parent_id ?? '') === id)
+  const children = allPotentialChildren.filter(
+    (m) => String(m.relationship_metadata.parent_id ?? '') === id,
+  )
 
   selectedNodeChildren.value = children
 }
@@ -1615,13 +1550,14 @@ function getChildrenCount(personId: string | number): number {
   const p = payload.value
 
   const allPotentialChildren: Person[] = [
-    ...(p.children || []),
-    ...(p.cousins || []),
-    ...(p.nieces_nephews || []),
-    ...(p.grandchildren || []),
+    ...(p?.children || []),
+    ...(p?.cousins || []),
+    ...(p?.nieces_nephews || []),
+    ...(p?.grandchildren || []),
   ]
 
-  return allPotentialChildren.filter((m) => String(m.parent_id ?? '') === id).length
+  return allPotentialChildren.filter((m) => String(m.relationship_metadata.parent_id ?? '') === id)
+    .length
 }
 
 /**
@@ -1690,12 +1626,32 @@ function nodeToMember(node: LayoutNode): {
   }
 }
 
+/**
+ * Handle click on a subnode (e.g., other parent in supernode, other spouse)
+ */
+function handleSubNodeClick(subNode: Person, parentNode: LayoutNode) {
+  // Create a temporary LayoutNode from the subnode data
+  const subNodeLayout: LayoutNode = {
+    id: String(subNode.id),
+    x: parentNode.x,
+    y: parentNode.y,
+    label: subNode.full_name || subNode.first_name,
+    data: subNode,
+    type: 'person',
+    role: parentNode.role, // Inherit role from parent (e.g., 'parent', 'parent-in-law')
+    side: parentNode.side,
+    isSelf: false,
+    isSuperNode: false,
+  }
+  handleNodeClick(subNodeLayout)
+}
+
 function handleNodeClick(node: LayoutNode) {
   if (node.type === 'heart') return
 
   // Store original payload if not already stored
   if (!originalPayload.value) {
-    originalPayload.value = { ...payload.value }
+    originalPayload.value = { ...(payload.value as Payload) }
   }
 
   // Show member modal for all person nodes
@@ -1707,7 +1663,7 @@ function handleNodeClick(node: LayoutNode) {
 
   // Self node: Show spouse selection modal if multiple spouses exist
   if (node.role === 'self' && viewMode.value === 'main') {
-    const spouses = payload.value.spouse || []
+    const spouses = payload.value?.spouse || []
     if (spouses.length > 1) {
       showSpouseSelectionModal.value = true
       return

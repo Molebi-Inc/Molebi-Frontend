@@ -23,8 +23,22 @@
               >
                 <MlbIcon name="vuesax.linear.menu" :size="24" />
               </MlbButton>
+              <MlbButton
+                v-if="relativeMemberId"
+                text
+                class="p-2! text-neutral-900!"
+                @click="handleBackToMyTree"
+              >
+                <MlbIcon name="vuesax.linear.arrow-left" :size="24" />
+              </MlbButton>
               <div class="text-neutral-900 font-semibold text-sm md:text-2xl">
-                Personal Family Tree
+                {{
+                  relativeMemberId
+                    ? relativeMemberName
+                      ? `${relativeMemberName}'s Family Tree`
+                      : 'Family Tree'
+                    : 'Personal Family Tree'
+                }}
               </div>
             </div>
             <div>
@@ -95,12 +109,13 @@ import type {
   TreeLayout,
   FamilyTreeInterface,
   FamilyMemberInterface,
+  Payload,
 } from '@/types/family-tree.types'
-import TreeView, { type Payload } from '@/views/family-tree/TreeView.vue'
+import TreeView from '@/views/family-tree/TreeView.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import BackButton from '@/components/common/BackButton.vue'
 import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
-import { buildTreeFromFamilyTree } from '@/helpers/family-tree.helpers'
+import { buildTreeFromFamilyTree, transformPayloadForMember } from '@/helpers/family-tree.helpers'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useMessage, NDrawer, NDrawerContent } from 'naive-ui'
@@ -132,6 +147,19 @@ const relativeMemberId = computed(() => {
   const memberId = $route.query.relative_member_id
   return memberId ? String(memberId) : null
 })
+
+// Get the relative member's name from the payload when viewing their tree
+const relativeMemberName = computed(() => {
+  if (!relativeMemberId.value || !treePayload.value?.self) {
+    return null
+  }
+  return (
+    treePayload.value.self.full_name ||
+    `${treePayload.value.self.first_name || ''} ${treePayload.value.self.family_name || ''}`.trim() ||
+    'Family Member'
+  )
+})
+
 const familyTreesQuery = useGetFamilyTreesQuery({
   enabled: true,
   relativeMemberId: relativeMemberId,
@@ -557,6 +585,14 @@ const handleAddFirstMember = () => {
   $router.push({ name: 'App.FamilyTreeView', params: { module: 'add-member' } })
 }
 
+const handleBackToMyTree = () => {
+  // Remove relative_member_id from query to go back to own tree
+  $router.push({
+    name: 'App.FamilyTreeView',
+    query: {},
+  })
+}
+
 // Transform FamilyTreeInterface to Payload format
 const transformFamilyTreeToPayload = (
   familyTree: FamilyTreeInterface['familyTree'] | null | undefined,
@@ -583,77 +619,98 @@ const transformFamilyTreeToPayload = (
     return null
   }
 
-  // Get primary spouse (first element of spouse array, not former)
-  const spouseArray = familyTree.spouse || []
-  const primarySpouse =
-    spouseArray.find(
-      (s) => !(s as Partial<FamilyMemberInterface & { is_former?: boolean }>).is_former,
-    ) ||
-    spouseArray[0] ||
-    null
-
-  // Transform self to Person format with spouse
-  const self: Person & { spouse?: Person | null } = {
-    id: String(selfMember.id),
-    first_name: selfMember.first_name,
-    family_name: selfMember.family_name,
-    full_name: selfMember.full_name || `${selfMember.first_name} ${selfMember.family_name}`.trim(),
-    profile_picture_url: selfMember.profile_picture_url,
-    spouse: primarySpouse
-      ? {
-          id: String(primarySpouse.id),
-          first_name: primarySpouse.first_name,
-          family_name: primarySpouse.family_name,
-          full_name:
-            primarySpouse.full_name ||
-            `${primarySpouse.first_name} ${primarySpouse.family_name}`.trim(),
-          profile_picture_url: primarySpouse.profile_picture_url,
-        }
-      : null,
-  }
-
-  // Transform arrays to Person[] format
-  const transformPerson = (member: Partial<FamilyMemberInterface>): Person | null => {
+  // Transform arrays to FamilyMemberInterface[] format (full objects, not Person)
+  const transformPerson = (
+    member: Partial<FamilyMemberInterface>,
+  ): FamilyMemberInterface | null => {
     if (!member.id) {
       console.warn('transformPerson: member has no id', member)
       return null
     }
+    // Ensure we have a full FamilyMemberInterface with relationship_metadata
     return {
-      id: String(member.id),
-      first_name: member.first_name,
-      family_name: member.family_name,
+      id: member.id,
+      first_name: member.first_name || '',
+      family_name: member.family_name || '',
       full_name:
         member.full_name || `${member.first_name || ''} ${member.family_name || ''}`.trim(),
-      profile_picture_url: member.profile_picture_url,
+      profile_picture_url: member.profile_picture_url || null,
+      gender: member.gender || 'prefer_not_to_say',
+      is_registered: member.is_registered || false,
+      middle_name: member.middle_name || null,
+      nickname: member.nickname || null,
+      relationship_metadata: {
+        relation_type: member.relationship_metadata?.relation_type || '',
+        related_through: member.relationship_metadata?.related_through || null,
+        parent_id: member.relationship_metadata?.parent_id || null,
+        is_adoptive: member.relationship_metadata?.is_adoptive || false,
+        is_former: member.relationship_metadata?.is_former || false,
+      },
     }
   }
 
-  return {
+  // Get primary spouse (first element of spouse array, not former)
+  const spouseArray = familyTree.spouse || []
+  const primarySpouse =
+    spouseArray.find(
+      (s) => !(s as Partial<FamilyMemberInterface>).relationship_metadata?.is_former,
+    ) ||
+    spouseArray[0] ||
+    null
+
+  // Transform self to FamilyMemberInterface format with spouse
+  const selfTransformed = transformPerson(selfMember)
+  if (!selfTransformed) {
+    return null
+  }
+
+  const self: FamilyMemberInterface & { spouse?: FamilyMemberInterface | null } = {
+    ...selfTransformed,
+    spouse: primarySpouse ? transformPerson(primarySpouse) : null,
+  }
+
+  const basePayload: Payload = {
     self,
-    parents: familyTree.parents?.map(transformPerson).filter((p): p is Person => p !== null),
-    siblings: familyTree.siblings?.map(transformPerson).filter((p): p is Person => p !== null),
-    children: familyTree.children?.map(transformPerson).filter((p): p is Person => p !== null),
+    parents: familyTree.parents
+      ?.map(transformPerson)
+      .filter((p): p is FamilyMemberInterface => p !== null),
+    siblings: familyTree.siblings
+      ?.map(transformPerson)
+      .filter((p): p is FamilyMemberInterface => p !== null),
+    children: familyTree.children
+      ?.map(transformPerson)
+      .filter((p): p is FamilyMemberInterface => p !== null),
     grandparents: familyTree.grandparents
       ?.map(transformPerson)
-      .filter((p): p is Person => p !== null),
+      .filter((p): p is FamilyMemberInterface => p !== null),
     grandchildren: familyTree.grandchildren
       ?.map(transformPerson)
-      .filter((p): p is Person => p !== null),
+      .filter((p): p is FamilyMemberInterface => p !== null),
     aunts_uncles: familyTree.aunts_uncles
       ?.map(transformPerson)
-      .filter((p): p is Person => p !== null),
-    cousins: familyTree.cousins?.map(transformPerson).filter((p): p is Person => p !== null),
+      .filter((p): p is FamilyMemberInterface => p !== null),
+    cousins: familyTree.cousins
+      ?.map(transformPerson)
+      .filter((p): p is FamilyMemberInterface => p !== null),
     nieces_nephews: familyTree.nieces_nephews
       ?.map(transformPerson)
-      .filter((p): p is Person => p !== null),
-    spouse: spouseArray.map(transformPerson).filter((p): p is Person => p !== null),
-    parents_in_law: undefined, // Map from familyTree if available
-    siblings_in_law: undefined, // Map from familyTree if available
+      .filter((p): p is FamilyMemberInterface => p !== null),
+    spouse: spouseArray.map(transformPerson).filter((p): p is FamilyMemberInterface => p !== null),
+    parents_in_law: familyTree.parents_in_law
+      ?.map(transformPerson)
+      .filter((p): p is FamilyMemberInterface => p !== null),
+    siblings_in_law: familyTree.siblings_in_law
+      ?.map(transformPerson)
+      .filter((p): p is FamilyMemberInterface => p !== null),
     step_parents: familyTree.step_parents
       ?.map(transformPerson)
-      .filter((p): p is Person => p !== null),
-    step_siblings: undefined, // Map from familyTree if available
+      .filter((p): p is FamilyMemberInterface => p !== null),
+    step_siblings: familyTree.step_siblings
+      ?.map(transformPerson)
+      .filter((p): p is FamilyMemberInterface => p !== null),
   }
+
+  return basePayload
 }
 
 const fetchFamilyTrees = async () => {
@@ -661,7 +718,20 @@ const fetchFamilyTrees = async () => {
     // Update query with current relativeMemberId
     const res = await familyTreesQuery.refetch()
     familyTreeData.value = res.data?.data ?? null
-    const transformed = transformFamilyTreeToPayload(res.data?.data?.familyTree)
+    let transformed = transformFamilyTreeToPayload(res.data?.data?.familyTree)
+
+    // If viewing a specific member's tree, transform the payload for that member
+    if (transformed && relativeMemberId.value) {
+      const memberTransformed = transformPayloadForMember(transformed, relativeMemberId.value)
+      if (memberTransformed) {
+        transformed = memberTransformed
+      } else {
+        console.warn(
+          `Could not transform payload for member ${relativeMemberId.value}, using original payload`,
+        )
+      }
+    }
+
     console.log('fetchFamilyTrees: transformed payload', transformed)
     console.log('fetchFamilyTrees: raw familyTree', res.data?.data?.familyTree)
     treePayload.value = transformed

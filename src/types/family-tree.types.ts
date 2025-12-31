@@ -42,20 +42,37 @@ export interface FamilyTreeDetails {
 }
 
 export interface FamilyMemberInterface {
-  id: number
-  name?: string
-  email?: string
-  avatar_url?: string
-  first_name: string
-  middle_name: string | null
+  // id: number
+  // name?: string
+  // email?: string
+  // avatar_url?: string
+  // first_name: string
+  // middle_name: string | null
+  // family_name: string
+  // gender: GenderType
+  // family_tree_id: number
+  // full_name?: string
+  // is_registered?: boolean
+  // profile_picture_url: string | null
+  // is_same_family_name: boolean
+  // nickname: string | null
+
   family_name: string
+  first_name: string
+  full_name: string
   gender: GenderType
-  family_tree_id: number
-  full_name?: string
-  is_registered?: boolean
-  profile_picture_url: string | null
-  is_same_family_name: boolean
+  id: number
+  is_registered: boolean
+  middle_name: string | null
   nickname: string | null
+  profile_picture_url: string | null
+  relationship_metadata: {
+    relation_type: string
+    related_through: number | null
+    parent_id: number | null
+    is_adoptive: boolean
+    is_former: boolean
+  }
 }
 
 // Family Tree Visualization Types
@@ -92,6 +109,27 @@ export interface TreeLayout {
   rootNode?: TreeNode
 }
 
+// Single source of truth for family tree member types
+export const FAMILY_TREE_MEMBERS = [
+  'self',
+  'parents',
+  'siblings',
+  'spouse',
+  'grandparents',
+  'grandchildren',
+  'aunts_uncles',
+  'nieces_nephews',
+  'cousins',
+  'step_parents',
+  'children',
+  'parents_in_law',
+  'siblings_in_law',
+  'step_siblings',
+] as const
+
+// Derive the union type from the const array
+export type FamilyTreeMember = (typeof FAMILY_TREE_MEMBERS)[number]
+
 export interface FamilyTreeInterface {
   userId: string
   familyTree: {
@@ -99,21 +137,23 @@ export interface FamilyTreeInterface {
   }
 }
 
+// This will automatically include all keys from FamilyTreeInterface['familyTree']
+export type FamilyTreeMemberStructureInterface = keyof FamilyTreeInterface['familyTree']
+
+/**
+ * Payload type for TreeView component
+ * Dynamically generated from FAMILY_TREE_MEMBERS with special handling for 'self'
+ */
+export type Payload = {
+  // 'self' is special - it's a single Person with optional spouse, not an array
+  self: FamilyMemberInterface & { spouse?: FamilyMemberInterface | null }
+} & {
+  // All other members are optional arrays
+  [K in Exclude<FamilyTreeMember, 'self'>]?: FamilyMemberInterface[]
+}
+
 export interface FamilyTreeStoreInterface {
   familyTreeData: FamilyTreeInterface | null
   loading: boolean
   error: string | null
 }
-
-export type FamilyTreeMember =
-  | 'self'
-  | 'parents'
-  | 'siblings'
-  | 'spouse'
-  | 'grandparents'
-  | 'grandchildren'
-  | 'aunts_uncles'
-  | 'nieces_nephews'
-  | 'cousins'
-  | 'step_parents'
-  | 'children'
