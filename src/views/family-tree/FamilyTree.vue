@@ -14,15 +14,25 @@
             ref="headerRef"
             class="flex justify-between items-center py-4 px-4 md:px-6 bg-brand-background sticky top-0 z-10 shrink-0"
           >
-            <div class="text-neutral-900 font-semibold text-xl md:text-2xl hidden md:block">
-              Personal Family Tree
+            <div class="flex items-center gap-3">
+              <MlbButton
+                v-if="!isLargeScreen"
+                text
+                class="p-2! text-neutral-900!"
+                @click="showSidebarDrawer = true"
+              >
+                <MlbIcon name="vuesax.linear.menu" :size="24" />
+              </MlbButton>
+              <div class="text-neutral-900 font-semibold text-sm md:text-2xl">
+                Personal Family Tree
+              </div>
             </div>
             <div>
               <MlbButton
                 text
-                label="Add Family Member"
+                :label="!isLargeScreen ? 'Add' : 'Add Family Member'"
                 secondary
-                class="text-sm font-semibold! bg-primary-700! text-white! rounded-2xl! h-13! p-4!"
+                class="md:text-sm text-xs font-semibold! bg-primary-700! text-white! rounded-2xl! h-8! md:h-13! p-4!"
                 @click="handleAddFirstMember"
               >
                 <MlbIcon name="vuesax.linear.add" :size="24" />
@@ -63,6 +73,19 @@
         </div>
       </div>
     </div>
+
+    <!-- Mobile Sidebar Drawer -->
+    <n-drawer
+      v-model:show="showSidebarDrawer"
+      :width="320"
+      placement="left"
+      :mask-closable="true"
+      class="md:hidden"
+    >
+      <n-drawer-content :body-content-style="{ padding: 0 }" closable>
+        <FamilyTreeSidebar />
+      </n-drawer-content>
+    </n-drawer>
   </section>
 </template>
 
@@ -80,15 +103,18 @@ import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
 import { buildTreeFromFamilyTree } from '@/helpers/family-tree.helpers'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import { useMessage } from 'naive-ui'
+import { useMessage, NDrawer, NDrawerContent } from 'naive-ui'
 import { useRouter, useRoute } from 'vue-router'
 import { handleApiError } from '@/helpers/error.helpers'
 import FamilyMemberForm from '@/components/family-tree/FamilyMemberForm.vue'
 import FamilyTreeSidebar from '@/components/family-tree/FamilyTreeSidebar.vue'
+import { useMediaQuery } from '@vueuse/core'
 
 const message = useMessage()
 const $router = useRouter()
 const $route = useRoute()
+
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 // Refs
 const treeContainerRef = ref<HTMLElement | null>(null)
 const scrollContainerRef = ref<HTMLElement | null>(null)
@@ -100,6 +126,7 @@ const svgWidth = ref(2000)
 const svgHeight = ref(2000)
 const isLoading = ref(false)
 const showFamilyTreeModal = ref(false)
+const showSidebarDrawer = ref(false)
 const treePayload = ref<Payload | null>(null)
 const relativeMemberId = computed(() => {
   const memberId = $route.query.relative_member_id

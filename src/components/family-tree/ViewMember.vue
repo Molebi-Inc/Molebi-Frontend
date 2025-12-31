@@ -189,7 +189,7 @@ const displayMember = computed(() => {
       base.description ||
       'Brief description on the user, or any other thing we feel we should add here, but that would all depend on what the user is inputing on the onboarding mode',
     generation: base.generation || '3rd Generation',
-    familyName: base.family_name + "' Family'" || "Tunde's Family",
+    familyName: base.family_name + "'s Family" || "Tunde's Family",
     childrenCount:
       base.childrenCount !== undefined && base.childrenCount !== null
         ? `${base.childrenCount} ${Number(base.childrenCount) === 1 ? 'Child' : 'Children'}`
