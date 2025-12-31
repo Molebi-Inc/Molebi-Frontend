@@ -6,13 +6,14 @@ export interface FamilyMemberFormValues {
   is_same_family_name: boolean
   nickname: string
   relation_type: string | null
-  profile_picture?: File | null | string
+  profile_picture?: File | null
   gender: GenderType
   related_through: number | null
   parent_id: number | null
   is_adoptive: boolean
   is_former: boolean
   is_deceased: boolean
+  date_of_birth: string | null
 }
 
 export type GenderType = 'male' | 'female' | 'other' | 'prefer_not_to_say'

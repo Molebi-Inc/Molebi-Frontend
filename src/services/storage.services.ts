@@ -111,7 +111,6 @@ export const useAddFilesMutation = () => {
       const formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
         if (key === 'media') {
-          console.log('value', value)
           value.forEach((file: File) => {
             formData.append(`files[]`, file)
           })

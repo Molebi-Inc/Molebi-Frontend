@@ -4,7 +4,7 @@ import type { ApiResponse, ValidationErrorResponse } from '@/types/general.types
 import type { AxiosError } from 'axios'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/config/axios.config'
-import { toValue } from 'vue'
+import { computed, toValue } from 'vue'
 import type { MaybeRef } from 'vue'
 import type {
   FamilyMemberFormValues,
@@ -126,13 +126,23 @@ export const useGetFamilyMembersByIdentifierQuery = (
   })
 }
 
-export const useGetFamilyTreesQuery = (options?: { enabled?: boolean }) => {
+export const useGetFamilyTreesQuery = (options?: {
+  enabled?: boolean
+  relativeMemberId?: MaybeRef<string | number | null>
+}) => {
+  const memberId = computed(() => toValue(options?.relativeMemberId))
   return useQuery<ApiResponse<FamilyTreeInterface>, AxiosError<ValidationErrorResponse>>({
-    queryKey: ['family-trees'],
+    queryKey: ['family-trees', memberId],
     queryFn: async () => {
+      const currentMemberId = toValue(options?.relativeMemberId)
+      const params: Record<string, string | number> = {}
+      if (currentMemberId) {
+        params.relative_member_id = currentMemberId
+      }
       const response = await axiosInstance.get<ApiResponse<FamilyTreeInterface>>(
         '/api/user/family-trees',
         {
+          params,
           headers: {
             Authorization: `Bearer ${authConfig.getToken()}`,
           },

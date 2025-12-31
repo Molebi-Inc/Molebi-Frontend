@@ -18,6 +18,7 @@
         :is="component"
         class="w-full mt-6"
         :relationship-options="relationshipOptions"
+        v-bind="tab.props"
         @close="$emit('close')"
       />
     </n-tab-pane>
@@ -28,12 +29,14 @@
 import { onMounted, ref, watch, computed } from 'vue'
 import { NTabs, NTabPane } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
-import NewMemberForm from '@/components/family-tree/NewMemberForm.vue'
-import ExistingFamilyForm from '@/components/family-tree/ExistingFamilyForm.vue'
 import { useGetRelationshipsQuery } from '@/services/general.service'
+import NewMemberForm from '@/components/family-tree/NewMemberForm2.vue'
+import ExistingFamilyForm from '@/components/family-tree/ExistingFamilyForm.vue'
+import { useFamilyTreeStore } from '@/stores/family-tree.store'
 
 const $route = useRoute()
 const $router = useRouter()
+const familyTreeStore = useFamilyTreeStore()
 const $emit = defineEmits<{
   (e: 'close'): void
 }>()
@@ -44,6 +47,9 @@ const tabs = ref([
     name: 'add-member',
     label: 'Add New Member',
     component: NewMemberForm,
+    props: {
+      familyTreeData: familyTreeStore.familyTreeData,
+    },
   },
   {
     name: 'join-family',

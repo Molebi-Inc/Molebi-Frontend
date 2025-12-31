@@ -18,7 +18,7 @@
           icon="vuesax.broken.security-time"
           :icon-size="250"
           icon-color="#A1A1A1"
-          title="Nothing to see here yet"
+          title="Create your first time capsule"
         />
       </div>
       <MlbButton
@@ -175,7 +175,7 @@ import { useTimeCapsuleStore } from '@/stores/time-capsule.store'
 const $route = useRoute()
 const $router = useRouter()
 const message = useMessage()
-const { startTour } = useTour()
+const { startTour, tourIsComplete } = useTour()
 const getTimeCapsules = useGetTimeCapsulesQuery()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const timeCapsuleStore = useTimeCapsuleStore()
@@ -292,7 +292,9 @@ const handleGoBack = () => {
 
 onMounted(async () => {
   await fetchTimeCapsules()
-  startTour('time-capsules')
+  if (!tourIsComplete.value) {
+    startTour('time-capsule')
+  }
   timeCapsuleStore.setStoreProp('selectedTimeCapsule', null)
 })
 

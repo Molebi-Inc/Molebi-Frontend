@@ -11,7 +11,7 @@
         :options="relationshipOptions"
         placeholder="Select Relationship"
         size="large"
-        class="w-full"
+        class="w-full mlb-select"
       >
         <template #arrow>
           <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />

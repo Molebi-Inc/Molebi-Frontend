@@ -25,9 +25,9 @@ export const useGetRelationshipsQuery = ({ enabled = true }: { enabled?: boolean
 }
 
 export const useUpdateTourStageMutation = () => {
-  return useMutation<ApiResponse, AxiosError<ValidationErrorResponse>, { stage: number }>({
-    mutationFn: async (data: { stage: number }) => {
-      const response = await axiosInstance.post<ApiResponse>('/api/user/tour/stage', data, {
+  return useMutation<ApiResponse, AxiosError<ValidationErrorResponse>, TourUpdateTypeInterface>({
+    mutationFn: async (data: TourUpdateTypeInterface) => {
+      const response = await axiosInstance.post<ApiResponse>('/api/user/tour-stages', data, {
         headers: {
           Authorization: `Bearer ${authConfig.getToken()}`,
         },
@@ -75,7 +75,7 @@ export const useGetTourStagesQuery = ({ enabled = true }: { enabled?: boolean } 
     enabled,
     queryFn: async () => {
       const response = await axiosInstance.get<ApiResponse<TourStageInterface[]>>(
-        '/api/user/tour/stages',
+        '/api/user/tour-stages',
         {
           headers: {
             Authorization: `Bearer ${authConfig.getToken()}`,

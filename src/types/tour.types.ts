@@ -15,5 +15,5 @@ export interface TourStageInterface {
 
 export interface TourUpdateTypeInterface {
   tour_type: TourStages
-  current_stage: 'increment' | 'skip'
+  action: 'increment' | 'skip'
 }

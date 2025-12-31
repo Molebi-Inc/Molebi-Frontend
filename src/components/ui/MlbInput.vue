@@ -70,5 +70,4 @@ const onUpdate = (value: string | null) => {
     </template>
   </NInput>
 </template>
-
 <style scoped></style>

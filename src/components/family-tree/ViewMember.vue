@@ -25,7 +25,7 @@
             {{ displayMember.name }}
           </h2>
           <p class="text-neutral-500 text-base">{{ displayMember.relation }}</p>
-          <RouterLink
+          <!-- <RouterLink
             v-if="displayMember.profileUrl"
             :to="displayMember.profileUrl"
             class="text-primary-700 font-medium underline underline-offset-4"
@@ -40,7 +40,7 @@
             @click="emitProfile"
           >
             Go to profile
-          </button>
+          </button> -->
         </div>
       </div>
 
@@ -53,9 +53,13 @@
         </span>
       </div>
 
-      <p class="text-neutral-600 text-sm md:text-base leading-6 max-w-2xl mx-auto">
-        {{ displayMember.description }}
-      </p>
+      <div>
+        <MlbButton
+          label="View Family Tree"
+          class="w-full! rounded-xl! bg-primary-700! h-12! text-white! hover:bg-primary-700!"
+          @click="emitProfile"
+        />
+      </div>
     </div>
 
     <!-- Variant: compact sheet (for drawers/modals) -->
@@ -63,7 +67,7 @@
       v-else
       class="max-w-3xl mx-auto bg-white/80 backdrop-blur rounded-2xl border border-[#E5D9C9] px-6 py-7 text-center space-y-5 shadow-sm"
     >
-      <div class="flex items-center justify-between">
+      <!-- <div class="flex items-center justify-between">
         <BackButton
           v-if="showBack"
           icon="vuesax.linear.arrow-left"
@@ -87,7 +91,7 @@
         >
           Go to profile
         </button>
-      </div>
+      </div> -->
 
       <div class="flex flex-col items-center space-y-3">
         <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md">
@@ -113,16 +117,20 @@
         </span>
       </div>
 
-      <p class="text-neutral-600 text-sm leading-6 max-w-2xl mx-auto">
-        {{ displayMember.description }}
-      </p>
+      <div>
+        <MlbButton
+          label="View Family Tree"
+          class="w-full rounded-xl! bg-primary-700! h-12! text-white! hover:bg-primary-700!"
+          @click="emitProfile"
+        />
+      </div>
     </div>
   </section>
 </template>
 
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import MlbButton from '@/components/ui/MlbButton.vue'
 import BackButton from '@/components/common/BackButton.vue'
 import { getUserAvatar } from '@/helpers/general.helpers'
 
@@ -134,7 +142,7 @@ type Member = {
   avatar?: string | null
   profile_picture_url?: string | null
   generation?: string
-  familyName?: string
+  family_name?: string
   childrenCount?: number | string
   relation?: string
   profileUrl?: string
@@ -156,10 +164,8 @@ const props = withDefaults(
       relation: 'You',
       profileUrl: '',
       generation: '3rd Generation',
-      familyName: "Tunde's Family",
+      family_name: "Tunde's Family",
       childrenCount: '6 Children',
-      description:
-        'Brief description on the user, or any other thing we feel we should add here, but that would all depend on what the user is inputing on the onboarding mode',
       profile_picture_url:
         'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=500&q=80',
     }),
@@ -183,7 +189,7 @@ const displayMember = computed(() => {
       base.description ||
       'Brief description on the user, or any other thing we feel we should add here, but that would all depend on what the user is inputing on the onboarding mode',
     generation: base.generation || '3rd Generation',
-    familyName: base.familyName || "Tunde's Family",
+    familyName: base.family_name + "' Family'" || "Tunde's Family",
     childrenCount:
       base.childrenCount !== undefined && base.childrenCount !== null
         ? `${base.childrenCount} ${Number(base.childrenCount) === 1 ? 'Child' : 'Children'}`
