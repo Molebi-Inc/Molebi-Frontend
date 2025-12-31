@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4 p-4">
-    <div>
+    <div class="hidden md:block">
       <BackButton
         icon="vuesax.linear.arrow-left"
         class="mb-6"
