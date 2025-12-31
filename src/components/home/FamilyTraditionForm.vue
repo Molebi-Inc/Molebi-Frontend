@@ -45,7 +45,7 @@
             placeholder="Select Time"
             :options="timeOptions"
             size="large"
-            class="w-full rounded!"
+            class="w-full mlb-select"
           />
         </n-form-item>
       </n-input-group>
@@ -62,7 +62,7 @@
           placeholder="Select Reoccurrence"
           :options="reoccurrenceOptions"
           size="large"
-          class="w-full rounded!"
+          class="w-full mlb-select"
         />
       </n-form-item>
 
@@ -81,7 +81,7 @@
           :options="dateModeOptions"
           placeholder="Select Date Mode"
           size="large"
-          class="w-full rounded!"
+          class="w-full mlb-select"
         />
       </n-form-item>
 

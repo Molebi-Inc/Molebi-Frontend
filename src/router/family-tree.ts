@@ -1,3 +1,7 @@
+import FamilyTree from '@/views/family-tree/FamilyTree.vue'
+import FamilyTreeLayout from '@/layouts/FamilyTreeLayout.vue'
+import FamilyTreeOnboardingView from '@/views/family-tree/FamilyTreeOnboardingView.vue'
+
 export const familyTreeRoutes = [
   {
     path: '/family-trees',
@@ -11,12 +15,12 @@ export const familyTreeRoutes = [
       {
         path: '',
         name: 'App.FamilyTreeLayout',
-        component: () => import('@/layouts/FamilyTreeLayout.vue'),
+        component: () => FamilyTreeLayout,
         children: [
           {
             path: ':module(add-member|join-family|edit-member)?',
             name: 'App.FamilyTreeView',
-            component: () => import('@/views/family-tree/FamilyTree.vue'),
+            component: () => FamilyTree,
             meta: {
               pageTitle: 'Family Tree',
               fullScreen: 'web',
@@ -25,7 +29,7 @@ export const familyTreeRoutes = [
           {
             path: 'onboarding/welcome',
             name: 'App.FamilyTreeWelcomeView',
-            component: () => import('@/views/family-tree/FamilyTreeOnboardingView.vue'),
+            component: () => FamilyTreeOnboardingView,
             meta: {
               pageTitle: 'Family Tree',
               hasLayoutLogo: true,
@@ -38,7 +42,7 @@ export const familyTreeRoutes = [
       {
         path: ':id',
         name: 'App.FamilyTreeDetailView',
-        component: () => import('@/views/family-tree/FamilyTree.vue'),
+        component: () => FamilyTree,
         meta: {
           pageTitle: 'Family Tree',
         },
@@ -46,7 +50,7 @@ export const familyTreeRoutes = [
       {
         path: 'onboarding/:module(add-member|join-family|complete)',
         name: 'App.FamilyTreeOnboardingView',
-        component: () => import('@/views/family-tree/FamilyTreeOnboardingView.vue'),
+        component: () => FamilyTreeOnboardingView,
         meta: {
           pageTitle: 'Family Tree Onboarding',
           hasLayoutLogo: true,

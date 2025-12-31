@@ -182,7 +182,6 @@
   </MlbModal>
 </template>
 <script setup lang="ts">
-import { useTourStore } from '@/stores/tour'
 import { useMediaQuery } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import { useTour } from '@/composables/useTour'
@@ -190,7 +189,6 @@ import { useHome } from '@/composables/useHome'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
-import { useProfileStore } from '@/stores/profile.store'
 import { ref, computed, h, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import BackButton from '@/components/common/BackButton.vue'
 import type { Announcement } from '@/types/announcement.types'

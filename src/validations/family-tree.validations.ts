@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { ref } from 'vue'
 import type { FormItemRule } from 'naive-ui'
 import type { FamilyMemberFormValues, FamilyRequestFormValues } from '@/types/family-tree.types'
+import { useMemberForm } from '@/composables/member-form.composables'
 
 export const familyMemberValidation = () => {
   const form = ref<FamilyMemberFormValues>({
@@ -11,24 +12,83 @@ export const familyMemberValidation = () => {
     is_same_family_name: false,
     nickname: '',
     relation_type: null,
-    // profile_picture: undefined,
+    profile_picture: null,
     gender: 'male',
     related_through: null,
     parent_id: null,
     is_adoptive: false,
     is_former: false,
     is_deceased: false,
+    date_of_birth: null,
   })
 
-  const schema = z.object({
-    first_name: z.string().min(1, { message: 'First name is required.' }),
-    middle_name: z.string().optional(),
-    family_name: z.string().optional(),
-    is_same_family_name: z.boolean(),
-    nickname: z.string().optional(),
-    relation_type: z.string().min(1, { message: 'Relation type is required.' }),
-    profile_picture: z.instanceof(File).optional().nullable(),
-  })
+  const { relationshipsRequiringRelatedThrough, relationshipsRequiringParentId, getDefaultGender } =
+    useMemberForm(String(form.value.relation_type))
+
+  const schema = z
+    .object({
+      first_name: z.string().min(1, { message: 'First name is required.' }),
+      middle_name: z.string().optional(),
+      family_name: z.string().optional(),
+      is_same_family_name: z.boolean(),
+      nickname: z.string().optional(),
+      relation_type: z.string().min(1, { message: 'Relation type is required.' }),
+      profile_picture: z.instanceof(File).optional(),
+      gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
+      related_through: z.number().optional(),
+      parent_id: z.number().optional(),
+      is_adoptive: z.boolean(),
+      is_former: z.boolean(),
+      is_deceased: z.boolean(),
+      date_of_birth: z.string().optional(),
+    })
+    .refine(
+      (data) => {
+        // If is_same_family_name is false, family_name is required
+        if (!data.is_same_family_name) {
+          return data.family_name && data.family_name.trim().length > 0
+        }
+        return true
+      },
+      {
+        message: 'Family name is required when not using the same family name.',
+        path: ['family_name'],
+      },
+    )
+    .refine(
+      (data) => {
+        // If relation_type requires related_through, it must be provided
+        if (
+          data.relation_type &&
+          relationshipsRequiringRelatedThrough.value.includes(
+            data.relation_type as (typeof relationshipsRequiringRelatedThrough.value)[number],
+          )
+        ) {
+          return data.related_through !== null && data.related_through !== undefined
+        }
+        return true
+      },
+      {
+        message: 'Related through is required for this relationship type.',
+        path: ['related_through'],
+      },
+    )
+    .refine(
+      (data) => {
+        // If relation_type requires parent_id, it must be provided
+        if (
+          data.relation_type &&
+          relationshipsRequiringParentId.value.includes(data.relation_type as string)
+        ) {
+          return data.parent_id !== null && data.parent_id !== undefined
+        }
+        return true
+      },
+      {
+        message: 'Parent id is required for this relationship type.',
+        path: ['parent_id'],
+      },
+    )
   const rules = {
     first_name: {
       required: true,
@@ -60,9 +120,19 @@ export const familyMemberValidation = () => {
     },
     family_name: {
       required: false,
-      trigger: 'input',
+      trigger: ['input', 'change'],
       validator: async (_rule: FormItemRule, value: string) => {
         try {
+          // Get the current form values to check is_same_family_name
+          const isSameFamilyName = form.value.is_same_family_name
+
+          // If is_same_family_name is false, family_name is required
+          if (!isSameFamilyName) {
+            if (!value || value.trim().length === 0) {
+              return Promise.reject('Family name is required when not using the same family name.')
+            }
+          }
+
           schema.pick({ family_name: true }).parse({ family_name: value })
           return Promise.resolve()
         } catch (err: unknown) {
@@ -112,6 +182,64 @@ export const familyMemberValidation = () => {
         } catch (err: unknown) {
           const messageText =
             err instanceof z.ZodError ? err.issues?.[0]?.message : 'Relation type is required.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    related_through: {
+      required: !!(
+        form.value.relation_type &&
+        relationshipsRequiringRelatedThrough.value.includes(form.value.relation_type as string)
+      ),
+      trigger: ['input', 'change'],
+      validator: async (_rule: FormItemRule, value: number | null) => {
+        try {
+          const relationType = form.value.relation_type
+
+          // Check if this relation type requires related_through
+          if (
+            relationType &&
+            relationshipsRequiringRelatedThrough.value.includes(relationType as string)
+          ) {
+            if (value === null || value === undefined) {
+              return Promise.reject('Related through is required for this relationship type.')
+            }
+          }
+
+          schema.pick({ related_through: true }).parse({ related_through: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid related through value.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
+    parent_id: {
+      required: !!(
+        form.value.relation_type &&
+        relationshipsRequiringParentId.value.includes(form.value.relation_type as string)
+      ),
+      trigger: ['input', 'change'],
+      validator: async (_rule: FormItemRule, value: number | null) => {
+        try {
+          const relationType = form.value.relation_type
+
+          // Check if this relation type requires parent_id
+          if (
+            relationType &&
+            relationshipsRequiringParentId.value.includes(relationType as string)
+          ) {
+            if (value === null || value === undefined) {
+              return Promise.reject('Parent id is required for this relationship type.')
+            }
+          }
+
+          schema.pick({ parent_id: true }).parse({ parent_id: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid parent id value.'
           return Promise.reject(messageText)
         }
       },

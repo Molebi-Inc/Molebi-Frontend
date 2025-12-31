@@ -32,8 +32,10 @@
         </header>
         <section
           :class="[
-            isLargeScreen ? 'h-full' : '',
-            $route.meta.fullScreen === 'web' ? 'flex items-center justify-center' : '',
+            $route.name !== 'App.FamilyTreeView' && isLargeScreen ? 'h-full' : '',
+            $route.name !== 'App.FamilyTreeView' && $route.meta.fullScreen === 'web'
+              ? 'flex items-center justify-center'
+              : '',
           ]"
         >
           <router-view />

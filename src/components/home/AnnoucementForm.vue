@@ -49,7 +49,7 @@
           :options="formattedPriorityOptions"
           placeholder="Select Priority"
           size="large"
-          class="w-full rounded!"
+          class="w-full mlb-select"
         />
       </n-form-item>
 

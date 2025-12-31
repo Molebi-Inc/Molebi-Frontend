@@ -89,3 +89,15 @@ export interface NotificationItem {
   type?: NotificationType
   actions?: NotificationAction[]
 }
+
+export interface GrowthStage {
+  id: string
+  label: string
+  tasks: GrowthTask[]
+}
+
+export interface GrowthTask {
+  label: string
+  value: boolean
+  count: number
+}

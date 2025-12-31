@@ -320,7 +320,6 @@ export const buildTreeFromMembers = (
   const nodes = Array.from(nodeMap.values())
   const rootId = members[0]?.id //currentUserId ||
   const rootNode = rootId ? nodeMap.get(rootId) : nodes[0]
-  // console.log('rootNode', rootId, nodeMap)
   if (!rootNode) {
     return {
       nodes: [],
