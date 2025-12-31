@@ -5,6 +5,7 @@ import type {
   Generation,
   TreeLayout,
   FamilyTreeInterface,
+  Payload,
 } from '@/types/family-tree.types'
 // D3 imports removed - using custom smooth curve implementation for better control
 
@@ -54,8 +55,8 @@ export const buildTreeFromFamilyTree = (
 
   // Helper to create or get node
   const getOrCreateNode = (member: FamilyMemberInterface): TreeNode => {
-    if (nodeMap.has(member.id)) {
-      return nodeMap.get(member.id)!
+    if (nodeMap.has(member.id ?? 0)) {
+      return nodeMap.get(member.id ?? 0)!
     }
     const node: TreeNode = {
       id: member.id,
@@ -68,7 +69,7 @@ export const buildTreeFromFamilyTree = (
       displayName: getMemberDisplayName(member),
       avatarUrl: getMemberAvatarUrl(member),
     }
-    nodeMap.set(member.id, node)
+    nodeMap.set(member.id ?? 0, node)
     return node
   }
 
@@ -301,6 +302,7 @@ export const buildTreeFromMembers = (
 
   // Create nodes from members
   members.forEach((member) => {
+    if (!member.id) return
     const node: TreeNode = {
       id: member.id,
       member,
@@ -312,7 +314,7 @@ export const buildTreeFromMembers = (
       displayName: getMemberDisplayName(member),
       avatarUrl: getMemberAvatarUrl(member),
     }
-    nodeMap.set(member.id, node)
+    nodeMap.set(member?.id, node)
   })
 
   // Simple layout: organize into generations based on order
@@ -623,4 +625,321 @@ export const familyMemberGenderMap = (relationship: string): string => {
   if (maleRelationship.includes(relationship)) return 'male'
   if (femaleRelationship.includes(relationship)) return 'female'
   return 'unknown'
+}
+
+/**
+ * Transform payload to view a specific member's family tree
+ * This function reorganizes the payload so the selected member becomes "self"
+ * and relationships are restructured according to the TODO guidelines
+ */
+export function transformPayloadForMember(
+  originalPayload: Payload,
+  selectedMemberId: string | number,
+): Payload | null {
+  const memberId = String(selectedMemberId)
+
+  // Find the selected member in the original payload
+  const findMember = (
+    members: FamilyMemberInterface[] | undefined,
+  ): FamilyMemberInterface | null => {
+    if (!members) return null
+    return members.find((m) => String(m.id) === memberId) || null
+  }
+
+  // Check all member arrays to find the selected member
+  const selectedMember =
+    findMember(originalPayload.parents) ||
+    findMember(originalPayload.siblings) ||
+    findMember(originalPayload.spouse) ||
+    findMember(originalPayload.children) ||
+    findMember(originalPayload.grandparents) ||
+    findMember(originalPayload.grandchildren) ||
+    findMember(originalPayload.aunts_uncles) ||
+    findMember(originalPayload.nieces_nephews) ||
+    findMember(originalPayload.cousins) ||
+    findMember(originalPayload.step_parents) ||
+    findMember(originalPayload.parents_in_law) ||
+    findMember(originalPayload.siblings_in_law) ||
+    findMember(originalPayload.step_siblings) ||
+    (String(originalPayload.self.id) === memberId ? originalPayload.self : null)
+
+  if (!selectedMember) {
+    console.warn(`Member with id ${memberId} not found in payload`)
+    return null
+  }
+
+  // If already self, return original payload
+  if (String(originalPayload.self.id) === memberId) {
+    return originalPayload
+  }
+
+  const relationType = selectedMember.relationship_metadata.relation_type
+  const relatedThrough = selectedMember.relationship_metadata.related_through
+  const parentId = selectedMember.relationship_metadata.parent_id
+
+  // Helper to filter by parent_id
+  const filterByParentId = (
+    members: FamilyMemberInterface[] | undefined,
+    targetParentId: string | number | null,
+  ): FamilyMemberInterface[] => {
+    if (!members) return []
+    if (targetParentId === null) return members
+    return members.filter(
+      (m) => String(m.relationship_metadata.parent_id ?? '') === String(targetParentId),
+    )
+  }
+
+  // Helper to filter by related_through
+  const filterByRelatedThrough = (
+    members: FamilyMemberInterface[] | undefined,
+    targetRelatedThrough: string | number | null,
+  ): FamilyMemberInterface[] => {
+    if (!members) return []
+    if (targetRelatedThrough === null) return members
+    return members.filter(
+      (m) => String(m.relationship_metadata.related_through ?? '') === String(targetRelatedThrough),
+    )
+  }
+
+  // Helper to find member by id
+  const findById = (members: FamilyMemberInterface[] | undefined, id: string | number) => {
+    if (!members) return null
+    return members.find((m) => String(m.id) === String(id)) || null
+  }
+
+  // Transform based on relationship type
+  switch (relationType) {
+    case 'parent':
+    case 'father':
+    case 'mother': {
+      // Parent view: Show their parents (grandparents), siblings (aunts/uncles), and children (self + siblings)
+      const parentGrandparents = filterByRelatedThrough(
+        originalPayload.grandparents,
+        relatedThrough,
+      )
+      const parentSiblings = filterByRelatedThrough(originalPayload.aunts_uncles, relatedThrough)
+      const parentChildren = [
+        originalPayload.self,
+        ...(originalPayload.siblings || []).filter(
+          (s) => String(s.relationship_metadata.parent_id ?? '') === memberId,
+        ),
+      ]
+
+      return {
+        self: selectedMember,
+        parents: parentGrandparents.length > 0 ? parentGrandparents : undefined,
+        siblings: parentSiblings.length > 0 ? parentSiblings : undefined,
+        children: parentChildren.length > 0 ? parentChildren : undefined,
+        spouse: originalPayload.parents?.filter((p) => String(p.id) !== memberId) || undefined,
+      }
+    }
+
+    case 'spouse': {
+      // Spouse view: Show their parents (parents-in-law), siblings (siblings-in-law), and children
+      const spouseParents = filterByRelatedThrough(originalPayload.parents_in_law, relatedThrough)
+      const spouseSiblings = filterByRelatedThrough(originalPayload.siblings_in_law, relatedThrough)
+      const spouseChildren = filterByParentId(originalPayload.children, null).filter(
+        (c) => String(c.relationship_metadata.related_through ?? '') === String(relatedThrough),
+      )
+
+      return {
+        self: selectedMember,
+        parents: spouseParents.length > 0 ? spouseParents : undefined,
+        siblings: spouseSiblings.length > 0 ? spouseSiblings : undefined,
+        children: spouseChildren.length > 0 ? spouseChildren : undefined,
+        spouse: [originalPayload.self], // Original self becomes spouse
+      }
+    }
+
+    case 'sibling':
+    case 'brother':
+    case 'sister': {
+      // Sibling view: Show shared parents, other siblings, and their children (nieces/nephews)
+      const siblingParents = originalPayload.parents || []
+      const siblingSiblings = (originalPayload.siblings || []).filter(
+        (s) => String(s.id) !== memberId,
+      )
+      const siblingChildren = filterByParentId(originalPayload.nieces_nephews, memberId)
+
+      return {
+        self: selectedMember,
+        parents: siblingParents.length > 0 ? siblingParents : undefined,
+        siblings: [...siblingSiblings, originalPayload.self].filter((s) => s),
+        children: siblingChildren.length > 0 ? siblingChildren : undefined,
+        grandparents: originalPayload.grandparents,
+      }
+    }
+
+    case 'aunt':
+    case 'uncle':
+    case 'aunt_uncle': {
+      // Aunt/Uncle view: Show their parents (grandparents), siblings (other aunts/uncles + parent), and children (cousins)
+      const auGrandparents = filterByRelatedThrough(originalPayload.grandparents, relatedThrough)
+      const auSiblings = [
+        ...filterByRelatedThrough(originalPayload.aunts_uncles, relatedThrough).filter(
+          (au) => String(au.id) !== memberId,
+        ),
+        ...(originalPayload.parents || []).filter((p) => String(p.id) === String(relatedThrough)),
+      ]
+      const auChildren = filterByParentId(originalPayload.cousins, memberId)
+
+      return {
+        self: selectedMember,
+        parents: auGrandparents.length > 0 ? auGrandparents : undefined,
+        siblings: auSiblings.length > 0 ? auSiblings : undefined,
+        children: auChildren.length > 0 ? auChildren : undefined,
+      }
+    }
+
+    case 'cousin': {
+      // Cousin view: Show their parent (aunt/uncle), siblings (other cousins), and children
+      const cousinParent = findById(originalPayload.aunts_uncles, parentId || '')
+      const cousinSiblings = filterByParentId(originalPayload.cousins, parentId).filter(
+        (c) => String(c.id) !== memberId,
+      )
+
+      return {
+        self: selectedMember,
+        parents: cousinParent ? [cousinParent] : undefined,
+        siblings: cousinSiblings.length > 0 ? cousinSiblings : undefined,
+        children: undefined,
+      }
+    }
+
+    case 'grandparent':
+    case 'grandfather':
+    case 'grandmother': {
+      // Grandparent view: Show their spouse (other grandparent), children (parents + aunts/uncles), and grandchildren
+      const gpSpouse = filterByRelatedThrough(originalPayload.grandparents, relatedThrough).find(
+        (gp) => String(gp.id) !== memberId,
+      )
+      const gpChildren = [
+        ...filterByRelatedThrough(originalPayload.parents, relatedThrough),
+        ...filterByRelatedThrough(originalPayload.aunts_uncles, relatedThrough),
+      ]
+
+      return {
+        self: selectedMember,
+        spouse: gpSpouse ? [gpSpouse] : undefined,
+        children: gpChildren.length > 0 ? gpChildren : undefined,
+        grandchildren: originalPayload.grandchildren,
+      }
+    }
+
+    case 'niece':
+    case 'nephew': {
+      // Niece/Nephew view: Show their parents, siblings (other nieces/nephews), and children
+      const nnParent = findById(originalPayload.siblings, parentId || '')
+      const nnSiblings = filterByParentId(originalPayload.nieces_nephews, parentId).filter(
+        (nn) => String(nn.id) !== memberId,
+      )
+
+      return {
+        self: selectedMember,
+        parents: nnParent ? [nnParent] : undefined,
+        siblings: nnSiblings.length > 0 ? nnSiblings : undefined,
+        children: undefined,
+      }
+    }
+
+    case 'step_parent':
+    case 'step_father':
+    case 'step_mother': {
+      // Step-Parent view: Show their spouse (parent), children (step-siblings), and self's parent
+      const spSpouse = findById(originalPayload.parents, relatedThrough || '')
+      const spChildren = filterByParentId(originalPayload.step_siblings, memberId)
+
+      return {
+        self: selectedMember,
+        spouse: spSpouse ? [spSpouse] : undefined,
+        children: spChildren.length > 0 ? spChildren : undefined,
+      }
+    }
+
+    case 'step_sibling':
+    case 'half_sibling': {
+      // Step-Sibling view: Show their parents (step-parent + original parent), siblings (other step-siblings), and children
+      const ssStepParent = findById(originalPayload.step_parents, parentId || '')
+      const ssOriginalParent = findById(originalPayload.parents, relatedThrough || '')
+      const ssSiblings = filterByParentId(originalPayload.step_siblings, parentId).filter(
+        (ss) => String(ss.id) !== memberId,
+      )
+
+      return {
+        self: selectedMember,
+        parents: [ssStepParent, ssOriginalParent].filter((p) => p) as FamilyMemberInterface[],
+        siblings: ssSiblings.length > 0 ? ssSiblings : undefined,
+        children: undefined,
+      }
+    }
+
+    case 'parent_in_law':
+    case 'father_in_law':
+    case 'mother_in_law': {
+      // Parent-in-Law view: Show their spouse (other parent-in-law), children (spouse + siblings-in-law)
+      const pilSpouse = filterByRelatedThrough(originalPayload.parents_in_law, relatedThrough).find(
+        (pil) => String(pil.id) !== memberId,
+      )
+      const pilChildren = [
+        ...filterByRelatedThrough(originalPayload.spouse, relatedThrough),
+        ...filterByRelatedThrough(originalPayload.siblings_in_law, relatedThrough),
+      ]
+
+      return {
+        self: selectedMember,
+        spouse: pilSpouse ? [pilSpouse] : undefined,
+        children: pilChildren.length > 0 ? pilChildren : undefined,
+      }
+    }
+
+    case 'sibling_in_law':
+    case 'brother_in_law':
+    case 'sister_in_law': {
+      // Sibling-in-Law view: Show their parents (parents-in-law), siblings (other siblings-in-law + spouse), and children
+      const silParents = filterByRelatedThrough(originalPayload.parents_in_law, relatedThrough)
+      const silSiblings = [
+        ...filterByRelatedThrough(originalPayload.siblings_in_law, relatedThrough).filter(
+          (sil) => String(sil.id) !== memberId,
+        ),
+        ...filterByRelatedThrough(originalPayload.spouse, relatedThrough),
+      ]
+
+      return {
+        self: selectedMember,
+        parents: silParents.length > 0 ? silParents : undefined,
+        siblings: silSiblings.length > 0 ? silSiblings : undefined,
+        children: undefined,
+      }
+    }
+
+    case 'child':
+    case 'son':
+    case 'daughter': {
+      // Child view: Show their parents (self + spouse), siblings (other children), and children (grandchildren)
+      const childParents = [
+        originalPayload.self,
+        ...(originalPayload.spouse || []).filter(
+          (s) => String(s.id) === String(parentId || relatedThrough),
+        ),
+      ].filter((p) => p) as FamilyMemberInterface[]
+      const childSiblings = filterByParentId(originalPayload.children, parentId).filter(
+        (c) => String(c.id) !== memberId,
+      )
+      const childChildren = filterByParentId(originalPayload.grandchildren, memberId)
+
+      return {
+        self: selectedMember,
+        parents: childParents.length > 0 ? childParents : undefined,
+        siblings: childSiblings.length > 0 ? childSiblings : undefined,
+        children: childChildren.length > 0 ? childChildren : undefined,
+      }
+    }
+
+    default: {
+      // Default: minimal transformation - just make selected member self
+      return {
+        self: selectedMember,
+      }
+    }
+  }
 }

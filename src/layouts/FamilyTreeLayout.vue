@@ -30,14 +30,24 @@ const resolveFamilyTreeFlow = async () => {
   try {
     const response = await refetch()
     const hasFamilyMembers = (response.data?.data?.length ?? 0) > 0
-    const targetRoute = hasFamilyMembers ? 'App.FamilyTreeView' : 'App.FamilyTreeWelcomeView'
 
-    await $router.replace({ name: targetRoute })
+    if (!hasFamilyMembers) {
+      await $router.replace({
+        name: 'App.FamilyTreeOnboardingView',
+        params: { module: 'add-member' },
+      })
+      return
+    }
+
+    await $router.replace({ name: 'App.FamilyTreeView' })
   } catch (error) {
     handleApiError(error, message)
 
     if ($route.name === 'App.FamilyTreeAppLayout') {
-      await $router.replace({ name: 'App.FamilyTreeWelcomeView' })
+      await $router.replace({
+        name: 'App.FamilyTreeOnboardingView',
+        params: { module: 'add-member' },
+      })
     }
   } finally {
     isResolvingFlow.value = false
