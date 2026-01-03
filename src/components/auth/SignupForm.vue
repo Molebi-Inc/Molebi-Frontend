@@ -44,6 +44,22 @@
             custom-class="border-gray-300 focus:border-primary-500"
           />
         </n-form-item>
+        <div v-if="form.password" class="mb-3">
+          <div v-for="item in isPasswordValid" :key="item.label" class="flex items-center">
+            <MlbIcon
+              :name="item.icon"
+              :size="12"
+              :color="item.condition(form.password) ? 'green' : 'red'"
+            />
+            <span
+              :class="[
+                'ml-1 text-xs',
+                item.condition(form.password) ? 'text-green-500' : 'text-red-500',
+              ]"
+              >{{ item.label }}</span
+            >
+          </div>
+        </div>
         <n-form-item label="Confirm Password" path="password_confirmation">
           <MlbInput
             v-model="form.password_confirmation"
@@ -55,24 +71,6 @@
             custom-class="border-gray-300 focus:border-primary-500"
           />
         </n-form-item>
-        <div v-if="form.password">
-          <div v-for="item in isPasswordValid" :key="item.label" class="flex items-center">
-            <MlbIcon
-              :name="item.icon"
-              :size="12"
-              :color="item.condition(form.password, form.password_confirmation) ? 'green' : 'red'"
-            />
-            <span
-              :class="[
-                'ml-1 text-xs',
-                item.condition(form.password, form.password_confirmation)
-                  ? 'text-green-500'
-                  : 'text-red-500',
-              ]"
-              >{{ item.label }}</span
-            >
-          </div>
-        </div>
       </div>
       <MlbButton
         type="submit"
@@ -156,21 +154,26 @@ export type CountrySelectOption = SelectOption & {
 const isPasswordValid = computed(() => {
   return [
     {
-      label: 'Contains at least one number',
+      label: 'Contains at least one digit',
       icon: 'vuesax.outline.shield-tick',
       condition: (password: string) => /\d/.test(password),
+    },
+    {
+      label: 'Contains at least one uppercase letter',
+      icon: 'vuesax.outline.shield-tick',
+      condition: (password: string) => /[A-Z]/.test(password),
+    },
+    {
+      label: 'Contains at least one special character',
+      icon: 'vuesax.outline.shield-tick',
+      condition: (password: string) => /[!@#$%^&*(),.?":{}|<>]/.test(password),
     },
     {
       label: 'Contains at leat 6 characters',
       icon: 'vuesax.outline.shield-tick',
       condition: (password: string) => password.length >= 6,
     },
-    {
-      label: 'Must be same as confirm password',
-      icon: 'vuesax.outline.shield-tick',
-      condition: (password: string, confirmPassword: string) => password === confirmPassword,
-    },
-  ] //.filter((item) => item.condition(form.value.password, form.value.password_confirmation))
+  ]
 })
 
 const renderCountryLabel = (option: SelectOption, selected: boolean) => {
