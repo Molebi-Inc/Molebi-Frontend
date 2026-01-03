@@ -732,8 +732,6 @@ const fetchFamilyTrees = async () => {
       }
     }
 
-    console.log('fetchFamilyTrees: transformed payload', transformed)
-    console.log('fetchFamilyTrees: raw familyTree', res.data?.data?.familyTree)
     treePayload.value = transformed
   } catch (error) {
     handleApiError(error, message)

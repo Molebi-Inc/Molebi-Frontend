@@ -66,7 +66,7 @@ export const useMemberForm = (relationType: MaybeRefOrGetter<string | null | und
     },
     brother: {
       label: 'Brother',
-      value: 'sibling',
+      value: 'brother',
       category: 'Close',
       fields: {},
       defaultFields: {
@@ -75,7 +75,7 @@ export const useMemberForm = (relationType: MaybeRefOrGetter<string | null | und
     },
     sister: {
       label: 'Sister',
-      value: 'sibling',
+      value: 'sister',
       category: 'Close',
       fields: {},
       defaultFields: {

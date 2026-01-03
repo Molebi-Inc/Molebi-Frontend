@@ -279,6 +279,9 @@ const handleSubmit = async () => {
       if (form.value.relation_type === 'grandparent') {
         form.value.relation_type = form.value.gender === 'female' ? 'grandmother' : 'grandfather'
       }
+      if (['sister', 'brother'].includes(form.value.relation_type as string)) {
+        form.value.relation_type = 'sibling'
+      }
 
       const response = await addFamilyMemberMutation.mutateAsync(form.value)
       message.success(response.message || 'Family member added successfully')

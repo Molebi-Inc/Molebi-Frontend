@@ -145,31 +145,21 @@ const totalMembers = computed(() => {
   return allMembers.value.length
 })
 
-const menCount = computed(() => {
-  // TODO: Replace with actual gender field when available
-  // For now, using a simple calculation based on available data
-  // This is a placeholder - adjust when gender field is added to FamilyMemberInterface
-  return Math.floor(totalMembers.value * 0.5) // Placeholder: 50% men
-})
+const menCount = computed(
+  () => allMembers.value.filter((member) => member.gender === 'male').length,
+)
 
-const womenCount = computed(() => {
-  // TODO: Replace with actual gender field when available
-  return totalMembers.value - menCount.value
-})
+const womenCount = computed(() => totalMembers.value - menCount.value)
 
 const livingCount = computed(() => {
-  // TODO: Replace with actual is_deceased field when available
-  // For now, assuming all are living
-  return totalMembers.value
+  return totalMembers.value - deceasedCount.value
 })
 
 const deceasedCount = computed(() => {
-  // TODO: Replace with actual is_deceased field when available
-  return 0
+  return allMembers.value.filter((member) => member.relationship_metadata?.is_deceased).length
 })
 
 const familyName = computed(() => {
-  // Try to get from family tree details or use family_name from members
   if (familyTreeDetails.value) {
     return (familyTreeDetails.value as any).family_name
   }

@@ -55,14 +55,17 @@
       </div>
 
       <!-- Family Member Selection -->
-      <UserSelector
-        v-if="isLargeScreen || $route.params.step == '2'"
-        label="Family Members"
-        :form="formRecord"
-        :users="familyMembers"
-        :options="userSelectorOptions"
-        @update:selected-users="updateForm"
-      />
+      <n-form-item path="family_member_ids" :show-require-mark="true">
+        <UserSelector
+          v-if="isLargeScreen || $route.params.step == '2'"
+          label="Family Members"
+          class="w-full"
+          :form="formRecord"
+          :users="familyMembers"
+          :options="userSelectorOptions"
+          @update:selected-users="updateForm"
+        />
+      </n-form-item>
 
       <!-- Create Button -->
       <MlbButton

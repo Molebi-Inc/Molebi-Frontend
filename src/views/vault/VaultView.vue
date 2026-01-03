@@ -24,11 +24,11 @@
         <div v-if="routeNames.includes(String($route.name))">
           <MlbButton
             type="button"
-            class="mb-4 rounded-2xl bg-green-700 py-4 px-7 text-white w-100 cursor-pointer!"
+            class="mb-4! rounded-2xl! bg-green-700! text-white! cursor-pointer!"
             @click="handleModalAction"
           >
             <template #icon>
-              <MlbIcon name="vuesax.linear.add" :size="40" color="#ffffff" />
+              <MlbIcon name="vuesax.linear.add" :size="24" color="#ffffff" />
             </template>
             {{ !!$route.params.id ? 'Add media' : `Add ${capitalize(currentFlow)} Folder` }}
           </MlbButton>
@@ -49,11 +49,11 @@
       <p v-html="emptyState.message"></p>
       <MlbButton
         type="button"
-        class="mb-4 rounded-2xl bg-green-700 py-4 px-7 text-white w-100 cursor-pointer!"
+        class="mb-4! rounded-2xl! bg-green-700! text-white! cursor-pointer!"
         @click="handleModalAction"
       >
         <template #icon>
-          <MlbIcon name="vuesax.linear.add" :size="40" color="#ffffff" />
+          <MlbIcon name="vuesax.linear.add" :size="24" color="#ffffff" />
         </template>
         {{ !!$route.params.id ? 'Add media' : `Add ${capitalize(currentFlow)} Folder` }}
       </MlbButton>
@@ -104,7 +104,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { NButton, useMessage } from 'naive-ui'
+import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useVault } from '@/composables/useVault'
@@ -125,6 +125,7 @@ import { useDeleteFolderMediaMutation } from '@/services/storage.services'
 import type { FolderInterface, AttachmentInterface } from '@/types/vault.types'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
 import { capitalize } from '@/helpers/general.helpers'
+import MlbButton from '@/components/ui/MlbButton.vue'
 import emptyVaultImage from '@/assets/images/empty-vault.png'
 import emptyGalleryImage from '@/assets/images/empty-gallery.png'
 
