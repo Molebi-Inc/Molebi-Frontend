@@ -20,6 +20,7 @@
             id="first_name"
             name="first_name"
             type="text"
+            :disabled="!!user?.first_name"
             placeholder="Enter First Name"
             custom-class="border-gray-300 focus:border-primary-500"
           />
@@ -30,6 +31,7 @@
             id="middle_name"
             name="middle_name"
             type="text"
+            :disabled="!!user?.middle_name"
             placeholder="Enter Middle Name"
             custom-class="border-gray-300 focus:border-primary-500"
           />
@@ -50,6 +52,7 @@
             id="family_name"
             name="family_name"
             type="text"
+            :disabled="!!user?.family_name"
             placeholder="Enter Family Name"
             custom-class="border-gray-300 focus:border-primary-500"
           />
@@ -60,13 +63,14 @@
             id="dob"
             name="dob"
             type="date"
+            :disabled="!!user?.dob"
             placeholder="Enter Date of Birth"
             class="w-full"
           />
         </n-form-item>
         <n-form-item
           label="State of Origin"
-          path="relationship"
+          path="state_id"
           label-style="color: #807F94; font-weight: 500;"
           required
         >
@@ -74,6 +78,7 @@
             v-model:value="form.state_id"
             :options="states"
             placeholder="Select State"
+            :disabled="!!user?.state_id"
             size="large"
             class="w-full mlb-select"
           >
@@ -83,25 +88,16 @@
           </NSelect>
         </n-form-item>
         <n-form-item
-          label="Community/Local Government (Optional)"
+          label="Community/Local Government"
           path="community_name"
           label-style="color: #807F94; font-weight: 500;"
+          required
         >
           <MlbInput
             v-model="form.community_name"
             placeholder="Enter Community"
             custom-class="w-full"
-          />
-        </n-form-item>
-        <n-form-item
-          label="Mother's Family Name"
-          path="mother_family_name"
-          label-style="color: #807F94; font-weight: 500;"
-        >
-          <MlbInput
-            v-model="form.mother_family_name"
-            placeholder="Enter Mother's Family Name"
-            custom-class="w-full"
+            :disabled="!!user?.community_name"
           />
         </n-form-item>
       </div>
@@ -141,9 +137,11 @@ import { useUpdateProfileMutation } from '@/services/authentication.services'
 import { personalInformationValidation } from '@/validations/authentication.validations'
 import { NForm, NFormItem, NDatePicker, useMessage, NSelect, NUpload } from 'naive-ui'
 import type { PersonalInformationFormValues } from '@/types/authentication.types'
+import { useProfileStore } from '@/stores/profile.store'
 
 const $router = useRouter()
 const message = useMessage()
+const profileStore = useProfileStore()
 const { refetch: refetchStates } = useGetStatesQuery()
 const { form, rules } = personalInformationValidation()
 const updateProfileMutation = useUpdateProfileMutation()
@@ -192,7 +190,24 @@ const updateFileList = (fileList: UploadFileInfo[]) => {
   ;(form.value as PersonalInformationFormValues).avatar = getValidFiles(fileList)[0]
 }
 
+const user = computed(() => profileStore.user)
+
+const fetchFormData = () => {
+  form.value = {
+    first_name: user.value?.first_name || '',
+    middle_name: user.value?.middle_name || '',
+    family_name: user.value?.family_name || '',
+    dob: user.value?.dob || null,
+    state_id: user.value?.state_id || null,
+    community_name: user.value?.community_name || '',
+    mother_family_name: user.value?.mother_family_name || '',
+    nickname: user.value?.nickname || '',
+    avatar: user.value?.avatar || null,
+  }
+}
+
 onMounted(async () => {
+  fetchFormData()
   await fetchStates()
 })
 </script>

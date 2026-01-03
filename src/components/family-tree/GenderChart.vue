@@ -1,12 +1,14 @@
 <template>
-  <div class="w-full h-full relative">
+  <div ref="chartContainer" class="w-full h-full relative min-h-[60px]">
     <!-- Empty state -->
     <div v-if="men === 0 && women === 0" class="w-full h-full flex items-center justify-center">
       <p class="text-xs text-gray-400">No data</p>
     </div>
 
     <!-- Chart container -->
-    <canvas v-else ref="chartCanvas" :width="width" :height="height" class="w-full h-full"></canvas>
+    <div v-else class="w-full h-full" :key="`chart-${men}-${women}`">
+      <canvas ref="chartCanvas" class="w-full h-full block"></canvas>
+    </div>
   </div>
 </template>
 
@@ -57,7 +59,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const chartCanvas = ref<HTMLCanvasElement | null>(null)
+const chartContainer = ref<HTMLDivElement | null>(null)
 let chartInstance: Chart | null = null
+let resizeObserver: ResizeObserver | null = null
+let isCreatingChart = false
 
 const chartData = () => {
   const labels = ['Men', 'Women']
@@ -178,9 +183,7 @@ const chartOptions = (): ChartConfiguration<'bar'>['options'] => {
 }
 
 const createChart = async () => {
-  if (!chartCanvas.value) return
-
-  await nextTick()
+  if (!chartCanvas.value || !chartContainer.value || isCreatingChart) return
 
   // Destroy existing chart if it exists
   if (chartInstance) {
@@ -188,17 +191,94 @@ const createChart = async () => {
     chartInstance = null
   }
 
-  const config: ChartConfiguration<'bar'> = {
-    type: 'bar',
-    data: chartData(),
-    options: chartOptions(),
+  await nextTick()
+  await new Promise((resolve) => requestAnimationFrame(resolve))
+
+  // Wait for container to have dimensions
+  const containerWidth = chartContainer.value.clientWidth
+  const containerHeight = chartContainer.value.clientHeight
+
+  // If container has no dimensions, set up observer and retry, but also proceed with fallback
+  if (containerWidth === 0 || containerHeight === 0) {
+    // Set up ResizeObserver to watch for container size changes
+    if (!resizeObserver && chartContainer.value) {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect
+          if (width > 0 && height > 0 && chartInstance) {
+            // Container now has dimensions, resize the chart
+            chartInstance.resize()
+            break
+          } else if (width > 0 && height > 0 && !chartInstance && !isCreatingChart) {
+            // Container now has dimensions and chart doesn't exist, create it
+            createChart()
+            break
+          }
+        }
+      })
+      resizeObserver.observe(chartContainer.value)
+    }
+
+    // Retry with exponential backoff (up to 3 attempts)
+    let retryCount = 0
+    const maxRetries = 3
+    const retry = () => {
+      if (retryCount < maxRetries && !chartInstance && !isCreatingChart) {
+        retryCount++
+        setTimeout(() => {
+          if (chartContainer.value) {
+            const w = chartContainer.value.clientWidth
+            const h = chartContainer.value.clientHeight
+            if (w > 0 && h > 0) {
+              createChart()
+            } else if (retryCount < maxRetries) {
+              retry()
+            }
+          }
+        }, 100 * retryCount)
+      }
+    }
+    retry()
+
+    // Don't return - proceed with chart creation using responsive mode
+    // Chart.js will handle sizing when container gets dimensions
   }
 
-  chartInstance = new Chart(chartCanvas.value, config)
+  // Clean up ResizeObserver if chart is being created
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
+
+  isCreatingChart = true
+
+  try {
+    const config: ChartConfiguration<'bar'> = {
+      type: 'bar',
+      data: chartData(),
+      options: chartOptions(),
+    }
+
+    chartInstance = new Chart(chartCanvas.value, config)
+
+    // Force resize after creation to ensure proper rendering
+    await nextTick()
+    if (chartInstance) {
+      chartInstance.resize()
+    }
+  } catch (error) {
+    console.error('Error creating chart:', error)
+  } finally {
+    isCreatingChart = false
+  }
 }
 
 const updateChart = () => {
-  if (!chartInstance) return
+  if (!chartInstance) {
+    // If chart doesn't exist yet, create it
+    createChart()
+    return
+  }
 
   const options = chartOptions()
   if (options) {
@@ -209,10 +289,19 @@ const updateChart = () => {
 }
 
 onMounted(() => {
-  createChart()
+  // Use multiple requestAnimationFrame calls to ensure DOM is fully rendered
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      createChart()
+    })
+  })
 })
 
 onBeforeUnmount(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
   if (chartInstance) {
     chartInstance.destroy()
     chartInstance = null
@@ -225,7 +314,21 @@ watch(
   () => {
     updateChart()
   },
-  { deep: true },
+  { deep: true, immediate: false },
+)
+
+// Watch for when data becomes available and chart doesn't exist
+watch(
+  () => [props.men, props.women],
+  () => {
+    if ((props.men > 0 || props.women > 0) && !chartInstance && chartCanvas.value) {
+      // Data is available but chart doesn't exist, create it
+      requestAnimationFrame(() => {
+        createChart()
+      })
+    }
+  },
+  { immediate: true },
 )
 
 watch(
@@ -235,11 +338,24 @@ watch(
   },
   { deep: true },
 )
+
+watch(
+  () => [props.width, props.height],
+  () => {
+    // Recreate chart when dimensions change significantly
+    if (chartInstance) {
+      createChart()
+    }
+  },
+)
 </script>
 
 <style scoped>
 canvas {
+  display: block;
   max-width: 100%;
   max-height: 100%;
+  min-height: 60px;
+  min-width: 200px;
 }
 </style>

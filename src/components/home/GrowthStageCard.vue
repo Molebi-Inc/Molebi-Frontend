@@ -15,19 +15,20 @@
     </div>
 
     <div class="space-y-3">
-      <div v-for="task in tasks" :key="task.id" class="space-y-1.5">
+      <div v-for="task in tasks" :key="task.task" class="space-y-1.5">
         <div class="flex items-center justify-between text-sm text-gray-700 font-medium">
           <div class="flex items-center gap-2">
-            <MlbIcon v-if="task.icon" :name="task.icon" :size="16" class="text-primary-700" />
-            <span>{{ task.label }}</span>
+            <span>{{ task.task }}</span>
           </div>
-          <span class="text-gray-500 text-xs font-semibold">{{ task.value }}/{{ task.goal }}</span>
+          <span class="text-gray-500 text-xs font-semibold"
+            >{{ task.completion_count }}/{{ task.target_count }}</span
+          >
         </div>
         <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
           <div
             class="h-full rounded-full transition-all"
             :style="{
-              width: `${Math.min((task.value / task.goal) * 100, 100)}%`,
+              width: `${Math.min((task.completion_count / task.target_count) * 100, 100)}%`,
               backgroundColor: '#22C55E',
             }"
           ></div>
@@ -38,21 +39,13 @@
 </template>
 
 <script setup lang="ts">
-import MlbIcon from '@/components/ui/MlbIcon.vue'
-
-interface GrowthTask {
-  id: string
-  label: string
-  value: number
-  goal: number
-  icon?: string
-}
+import type { ProgressItems } from '@/types/general.types'
 
 interface Props {
   stageTitle: string
   nextStage: string
   description: string
-  tasks: GrowthTask[]
+  tasks: ProgressItems[]
 }
 
 defineProps<Props>()

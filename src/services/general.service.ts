@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/config/axios.config'
 import { useMutation } from '@tanstack/vue-query'
 import { useAuthConfig } from '@/config/auth.config'
-import type { ValidationErrorResponse } from '@/types/general.types'
 import type { ApiResponse, StateInterface } from '@/types/general.types'
 import type { TourStageInterface, TourUpdateTypeInterface } from '@/types/tour.types'
+import type { UserProgressionInterface, ValidationErrorResponse } from '@/types/general.types'
 
 const authConfig = useAuthConfig()
 
@@ -125,3 +125,21 @@ export const useUpdateTourStagesMutation = () => {
 //     },
 //   })
 // }
+
+export const useGetUserProgressionQuery = ({ enabled = true }: { enabled?: boolean } = {}) => {
+  return useQuery<ApiResponse<UserProgressionInterface>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['user-progression'],
+    enabled,
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<UserProgressionInterface>>(
+        '/api/user/progression/current-progress',
+        {
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+          },
+        },
+      )
+      return response.data
+    },
+  })
+}

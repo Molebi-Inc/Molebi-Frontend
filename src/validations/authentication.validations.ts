@@ -129,11 +129,15 @@ export const personalInformationValidation = () => {
     middle_name: z.string().optional(),
     family_name: z.string().min(1, { message: 'Family name is required.' }),
     dob: z.string().min(1, { message: 'Date of birth is required.' }),
-    state_id: z.number().optional(),
-    community_name: z.string().optional(),
+    state_id: z.number().min(1, { message: 'State of origin is required.' }),
+    community_name: z.string().min(1, { message: 'Community name is required.' }),
     mother_family_name: z.string().optional(),
     nickname: z.string().optional(),
-    avatar: z.instanceof(File).optional(),
+    avatar: z
+      .custom<File | null | undefined>((val) => val == null || val instanceof File, {
+        message: 'Invalid file uploaded.',
+      })
+      .optional(),
   })
 
   const rules = {
@@ -209,7 +213,7 @@ export const personalInformationValidation = () => {
       },
     },
     community_name: {
-      required: false,
+      required: true,
       trigger: 'input',
       validator: async (_rule: FormItemRule, value: string) => {
         try {

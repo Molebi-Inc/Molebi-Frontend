@@ -42,24 +42,12 @@
           <div class="md:col-span-4">
             <GrowthStageCard
               class="h-full"
-              :stage-title="growthStage.stageTitle"
-              :next-stage="growthStage.nextStage"
-              :description="growthStage.description"
-              :tasks="growthStage.tasks"
+              :stage-title="userProgression?.current_stage.label ?? ''"
+              :next-stage="userProgression?.next_stage.label ?? ''"
+              :description="userProgression?.current_stage.description ?? ''"
+              :tasks="userProgression?.progress?.items ?? []"
             />
           </div>
-          <!-- <div class="md:flex flex-col h-full">
-            <p class="text-sm text-gray-600 mb-2">Gender Distribution</p>
-            <div ref="genderChartContainer" class="flex-1">
-              <GenderChart
-                :men="menCount"
-                :women="womenCount"
-                :direction="isLargeScreen ? 'vertical' : 'horizontal'"
-                :height="isLargeScreen ? chartHeight : 100"
-                :width="!isLargeScreen ? chartWidth : 200"
-              />
-            </div>
-          </div> -->
           <div class="md:flex flex-col h-full">
             <div
               class="cursor-pointer border border-dashed border-gray-500 text-primary-900 rounded-2xl p-1 text-center h-full flex flex-col"
@@ -200,7 +188,7 @@ import type { FamilyTradition } from '@/types/family-tradition.types'
 import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
 import FamilyTraditionForm from '@/components/home/FamilyTraditionForm.vue'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
-import type { FormType, HomeFormConfig } from '@/types/general.types'
+import type { FormType, HomeFormConfig, UserProgressionInterface } from '@/types/general.types'
 import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
 import { useGetHeritageQuery } from '@/services/heritage.services'
@@ -210,49 +198,28 @@ import VerticalTextScroller from '@/components/home/VerticalTextScroller.vue'
 import type { HeritageDataInterface } from '@/types/heritage.types'
 import welcomeBanner from '@/assets/images/welcome-banner.png'
 import welcomeBannerSmall from '@/assets/images/welcome-banner-small.png'
+import { useGetUserProgressionQuery } from '@/services/general.service'
 
 const message = useMessage()
-const heritageData = ref<HeritageDataInterface | null>(null)
 const $route = useRoute()
 const $router = useRouter()
 const heritageQuery = useGetHeritageQuery()
-const { startTour: startTourAction, tourIsComplete } = useTour()
 const announcementStore = useAnnouncementStore()
 const familyTreesQuery = useGetFamilyTreesQuery()
+const userProgressionQuery = useGetUserProgressionQuery()
 const familyTraditionStore = useFamilyTraditionStore()
 const { fetchAnnouncements, fetchFamilyTraditions } = useHome()
+const { startTour: startTourAction, tourIsComplete } = useTour()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
-const showHomeFormModal = ref<boolean>(false)
-const showStartTourModal = ref<boolean>(false)
-const familyMemberCounts = ref<{ men: number; women: number }>({ men: 0, women: 0 })
-const genderChartContainer = ref<HTMLElement | null>(null)
 const chartHeight = ref<number>(60)
 const chartWidth = ref<number>(200)
-
-const growthStage = ref({
-  stageTitle: 'Seedling Stage',
-  nextStage: 'Sapling',
-  description:
-    'You are currently in the seedling stage, keep growing your family by completing the tasks below.',
-  tasks: [
-    {
-      id: 'members',
-      label: 'Add 1 family member',
-      value: 0,
-      goal: 1,
-      icon: 'vuesax.linear.profile-2user',
-    },
-    {
-      id: 'traditions',
-      label: 'Add 1 tradition',
-      value: 0,
-      goal: 1,
-      icon: 'vuesax.linear.sparkle',
-    },
-    { id: 'memories', label: 'Add 1 memory', value: 0, goal: 1, icon: 'vuesax.linear.camera' },
-  ],
-})
+const showHomeFormModal = ref<boolean>(false)
+const showStartTourModal = ref<boolean>(false)
+const userProgression = ref<UserProgressionInterface>()
+const genderChartContainer = ref<HTMLElement | null>(null)
+const heritageData = ref<HeritageDataInterface | null>(null)
+const familyMemberCounts = ref<{ men: number; women: number }>({ men: 0, women: 0 })
 
 const announcements = computed<Announcement[]>(() => announcementStore.announcements)
 const familyTraditions = computed<FamilyTradition[]>(() => familyTraditionStore.familyTraditions)
@@ -391,11 +358,21 @@ const fetchHeritage = async () => {
   }
 }
 
+const fetchUserProgression = async () => {
+  try {
+    const response = await userProgressionQuery.refetch()
+    userProgression.value = response.data?.data as unknown as UserProgressionInterface
+  } catch (error) {
+    handleApiError(error, message)
+  }
+}
+
 onMounted(() => {
+  fetchHeritage()
+  fetchUserProgression()
   fetchFamilyMembers()
   fetchAnnouncements()
   fetchFamilyTraditions()
-  fetchHeritage()
 
   updateChartHeight()
   updateChartWidth()

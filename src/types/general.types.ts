@@ -90,14 +90,25 @@ export interface NotificationItem {
   actions?: NotificationAction[]
 }
 
-export interface GrowthStage {
-  id: string
+export interface StageInterface {
+  value: string
   label: string
-  tasks: GrowthTask[]
+  description: string
+  order: number
 }
 
-export interface GrowthTask {
-  label: string
-  value: boolean
-  count: number
+export interface ProgressItems {
+  task: string
+  completed: boolean
+  target_count: number
+  completion_count: number
+}
+
+type Stages = 'current_stage' | 'next_stage'
+export type UserProgressionInterface = {
+  [K in Stages]: StageInterface
+} & {
+  progress: {
+    items: ProgressItems[]
+  }
 }

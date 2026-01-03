@@ -23,7 +23,7 @@ export interface PersonalInformationFormValues {
   state_id: number | null
   community_name: string
   mother_family_name: string
-  avatar?: File | null
+  avatar?: File | string | null
 }
 
 export interface PersonalInformationFormErrors {
@@ -110,6 +110,14 @@ export interface SigninUser {
   notification_settings?: NotificationSettings | null
   family_tree: {
     unique_identifier: string | null
+    state_id: number | null
+    community_name: string | null
+    num_of_children: number | null
+    mother_family_name: string | null
+    family_name: string | null
+    name: string | null
+    description: string | null
+    id: number | null
   }
 }
 
