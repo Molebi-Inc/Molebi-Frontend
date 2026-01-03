@@ -183,15 +183,15 @@ const emit = defineEmits<{
   (e: 'update:file-list', fileList: UploadFileInfo[]): void
 }>()
 
-const state = ref<RecordingState>('idle')
-const recordingTime = ref(0)
 const playbackTime = ref(0)
-const playbackDuration = ref(0)
+const recordingTime = ref(0)
 const isPlaying = ref(false)
-const waveformBars = ref<number[]>([])
-const permissionError = ref<string | null>(null)
 const isRequesting = ref(false)
+const playbackDuration = ref(0)
 const isRecorderPaused = ref(false)
+const waveformBars = ref<number[]>([])
+const state = ref<RecordingState>('idle')
+const permissionError = ref<string | null>(null)
 const playbackAudioUrl = ref<string | null>(null)
 const audioElement = ref<HTMLAudioElement | null>(null)
 
@@ -245,10 +245,9 @@ const mimeTypeToExtension = (mime: string) => {
 }
 
 const emitRecordingFile = (blob: Blob) => {
-  const mimeType = blob.type || 'audio/mpeg'
-  const extension = mimeTypeToExtension(mimeType)
+  const mimeType = 'audio/mpeg'
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-  const fileName = `molebi-recording-${timestamp}.${extension}`
+  const fileName = `molebi-recording-${timestamp}.mp3`
   const file = new File([blob], fileName, { type: mimeType })
   const url = URL.createObjectURL(file)
   playbackAudioUrl.value = url
@@ -262,6 +261,7 @@ const emitRecordingFile = (blob: Blob) => {
     file,
     url,
   }
+  console.log('uploadFile', uploadFile)
 
   emit('update:file-list', [uploadFile])
 }

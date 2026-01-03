@@ -3,6 +3,8 @@ import type { FamilyMemberInterface } from './family-tree.types'
 export interface CreateFolderValues {
   name: string | undefined
   title: string | undefined
+  pin?: string | undefined
+  pin_confirmation?: string | undefined
 }
 
 export interface CreateFilesValues {

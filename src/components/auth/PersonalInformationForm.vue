@@ -6,6 +6,7 @@
           <n-upload
             directory-dnd
             :max="1"
+            accept="image/*"
             @update:file-list="updateFileList"
             list-type="image-card"
             file-list-class="flex! justify-center items-center rounded-full!"

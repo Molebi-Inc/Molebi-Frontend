@@ -19,6 +19,7 @@ import { useMediaQuery } from '@vueuse/core'
 
 export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   const message = useMessage()
+  const alertState = useAlertState()
   const vaultStore = useVaultStore()
   const updateFolderMutation = useUpdateFolderMutation()
   const deleteFolderMutation = useDeleteFolderMutation()
@@ -33,15 +34,29 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     () =>
       createFolderMutation.isPending.value ||
       updateFolderMutation.isPending.value ||
+      updateVaultPinMutation.isPending.value ||
       getVaultFolderMutation.isPending.value,
   )
 
   const fileUploading = computed(() => updateFolderMutation.isPending.value)
   const pinStep = computed(() => vaultStore.pinStep)
   const pinSubject = computed(() =>
-    pinStep.value === 1 ? 'Create Vault PIN' : 'Confirm Vault PIN',
+    pinStep.value === 0
+      ? 'Enter your current pin'
+      : pinStep.value === 1
+        ? 'Create Vault PIN'
+        : 'Confirm Vault PIN',
   )
-  const alertState = useAlertState()
+
+  const pinMessage = computed(() =>
+    pinStep.value === 0
+      ? 'Provide your current PIN to continue.'
+      : pinStep.value === 1
+        ? 'This is the PIN you will use to access your vault. Please enter a PIN.'
+        : pinStep.value === 2
+          ? 'This is the PIN you will use to access your vault. Please enter a PIN.'
+          : '',
+  )
 
   // Watch pinStep and update alert subject reactively
   watch(pinStep, () => {
@@ -52,8 +67,8 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
 
   const vaultFolderCreation = async (data: CreateFolderValues) => {
     try {
-      const response = await createFolderMutation.mutateAsync(data as CreateFolderValues)
-      AlertService.alert({
+      let response = null
+      await AlertService.alert({
         subject: pinSubject.value,
         message: 'This is the PIN you will use to access your vault. Please enter a PIN.',
         closable: true,
@@ -64,12 +79,62 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
         html: h(VaultPinForm, {
           loading: updateVaultPinMutation.isPending.value,
           hasConfirmation: true,
-          onPinSubmitted: (value: string) =>
-            updateVaultPinMutation.mutateAsync({
-              current_pin: '0000',
-              new_pin: value,
-              id: response.data?.id as number,
-            }),
+          onPinSubmitted: (value: string | { current_pin: string; pin: string }) =>
+            (response = createFolderMutation.mutateAsync({
+              ...data,
+              pin: typeof value === 'string' ? value : value.pin,
+            } as CreateFolderValues))
+              .then((response) => {
+                message.success(response?.message || 'Folder created successfully')
+                AlertService.close()
+              })
+              .catch((error) => {
+                handleApiError(error, message)
+              }),
+        }),
+        onClose: () => {
+          vaultStore.setStoreProp('pinStep', 1)
+        },
+        showCancelButton: false,
+        showConfirmButton: false,
+      })
+      AlertService.close()
+      return response
+    } catch (error) {
+      handleApiError(error, message)
+      throw error
+    }
+  }
+
+  const handleChangePin = async () => {
+    try {
+      vaultStore.setStoreProp('pinStep', 0)
+      let response = null
+      await AlertService.alert({
+        subject: pinSubject.value,
+        message: pinMessage.value,
+        closable: true,
+        showIcon: false,
+        closablePosition: 'left',
+        fullPageAlert: !isLargeScreen.value,
+        textAlign: !isLargeScreen.value ? 'left' : 'center',
+        html: h(VaultPinForm, {
+          loading: updateVaultPinMutation.isPending.value,
+          hasConfirmation: true,
+          hasCurrentPin: true,
+          onPinChanged: (value: { current_pin: string; pin: string }) =>
+            (response = updateVaultPinMutation.mutateAsync({
+              current_pin: value.current_pin,
+              new_pin: value.pin,
+              id: vaultStore.selectedFolder?.id as number,
+            }))
+              .then((response) => {
+                message.success(response?.message || 'PIN changed successfully')
+                AlertService.close()
+              })
+              .catch((error) => {
+                handleApiError(error, message)
+              }),
         }),
         onClose: () => {
           vaultStore.setStoreProp('pinStep', 1)
@@ -186,6 +251,7 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     loading,
     vaultStore,
     fileUploading,
+    handleChangePin,
     fetchVaultFolder,
     deleteVaultFolder,
     handleCreateFolder,

@@ -1,37 +1,65 @@
 <template>
   <div class="relative h-full">
-    <div class="flex justify-between items-center mb-6">
-      <div>
-        <BackButton
-          v-if="
-            $route.name === 'App.VaultFolderView' ||
-            ($route.name === 'App.StorageFolderView' && $route.params.id)
-          "
-          icon="vuesax.linear.arrow-left"
-          :previous-route="false"
-          @update:go-back="handleVaultBackButtonClick"
-        />
-      </div>
-      <div>
-        <div v-if="!!$route.params.id" class="text-2xl font-bold text-center">
-          {{
-            (archiveFolder as StorageFolderInterface)?.name ||
-            (archiveFolder as FolderInterface)?.title
-          }}
+    <div>
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <BackButton
+            v-if="
+              $route.name === 'App.VaultFolderView' ||
+              ($route.name === 'App.StorageFolderView' && $route.params.id)
+            "
+            icon="vuesax.linear.arrow-left"
+            :previous-route="false"
+            @update:go-back="handleVaultBackButtonClick"
+          />
+        </div>
+        <div>
+          <div v-if="!!$route.params.id" class="text-2xl font-bold text-center">
+            {{
+              (archiveFolder as StorageFolderInterface)?.name ||
+              (archiveFolder as FolderInterface)?.title
+            }}
+          </div>
+        </div>
+        <div>
+          <div v-if="routeNames.includes(String($route.name))" class="flex items-center gap-2">
+            <MlbButton
+              v-if="
+                isLargeScreen && String($route.name) === 'App.VaultFolderView' && !!$route.params.id
+              "
+              type="button"
+              text
+              class="underline! text-secondary-400! cursor-pointer!"
+              label="Change PIN"
+              @click="handleChangePin"
+            />
+            <MlbButton
+              type="button"
+              class="rounded-2xl! bg-green-700! text-white! cursor-pointer!"
+              @click="handleModalAction"
+            >
+              <template #icon>
+                <MlbIcon name="vuesax.linear.add" :size="24" color="#ffffff" />
+              </template>
+              {{ !!$route.params.id ? 'Add media' : `Add ${capitalize(currentFlow)} Folder` }}
+            </MlbButton>
+          </div>
         </div>
       </div>
-      <div>
-        <div v-if="routeNames.includes(String($route.name))">
+      <div
+        v-if="!isLargeScreen && String($route.name) === 'App.VaultFolderView' && !!$route.params.id"
+        class="rounded-xl py-5 text-center space-y-2"
+        style="background: #f7931e0d"
+      >
+        <div class="text-xs font-medium text-secondary-600">Your Vault-Share Code</div>
+        <div class="text-xl font-semibold">****</div>
+        <div>
           <MlbButton
             type="button"
-            class="mb-4! rounded-2xl! bg-green-700! text-white! cursor-pointer!"
-            @click="handleModalAction"
-          >
-            <template #icon>
-              <MlbIcon name="vuesax.linear.add" :size="24" color="#ffffff" />
-            </template>
-            {{ !!$route.params.id ? 'Add media' : `Add ${capitalize(currentFlow)} Folder` }}
-          </MlbButton>
+            label="Change Code"
+            class="rounded-2xl! bg-secondary-100! text-secondary-700! cursor-pointer!"
+            @click="handleChangePin"
+          />
         </div>
       </div>
     </div>
@@ -68,19 +96,11 @@
         @batch-delete="handleDeleteMedia"
       />
     </div>
-
-    <!-- <div v-if="routeNames.includes(String($route.name))" class="absolute bottom-10 right-10">
-      <n-button
-        class="rounded-full! bg-primary-500! text-white! w-20! h-20! shadow-[0px_6.33px_31.67px_0px_#16C4504D]!"
-        @click="handleModalAction"
-      >
-        <template #icon>
-          <MlbIcon name="vuesax.linear.add" :size="40" color="#ffffff" />
-        </template>
-      </n-button>
-    </div> -->
-
-    <MlbModal v-model:show="showVaultModal" class="rounded-3xl!">
+    <MlbModal
+      v-model:show="showVaultModal"
+      :bottom-sheet="!!modalComponent?.hasBottomSheet"
+      :bottom-sheet-height="400"
+    >
       <template #header>
         <div>
           <BackButton
@@ -103,19 +123,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
 import { useMessage } from 'naive-ui'
+import { ref, computed, watch } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useVault } from '@/composables/useVault'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import { useVaultStore } from '@/stores/vault.store'
 import { useArchive } from '@/composables/useArchive'
+import MlbButton from '@/components/ui/MlbButton.vue'
+import { capitalize } from '@/helpers/general.helpers'
 import { useStorageStore } from '@/stores/storage.store'
 import { handleApiError } from '@/helpers/error.helpers'
 import BackButton from '@/components/common/BackButton.vue'
 import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 import FolderWrapper from '@/components/vault/FolderWrapper.vue'
+import emptyVaultImage from '@/assets/images/empty-vault.png'
+import emptyGalleryImage from '@/assets/images/empty-gallery.png'
 import VaultContainer from '@/components/vault/VaultContainer.vue'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import ShareFolderForm from '@/components/vault/ShareFolderForm.vue'
@@ -124,10 +149,6 @@ import CreateFolderForm from '@/components/vault/CreateFolderForm.vue'
 import { useDeleteFolderMediaMutation } from '@/services/storage.services'
 import type { FolderInterface, AttachmentInterface } from '@/types/vault.types'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
-import { capitalize } from '@/helpers/general.helpers'
-import MlbButton from '@/components/ui/MlbButton.vue'
-import emptyVaultImage from '@/assets/images/empty-vault.png'
-import emptyGalleryImage from '@/assets/images/empty-gallery.png'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -145,7 +166,8 @@ const {
   setSelectedFolder,
   clearFolderMedia,
 } = useArchive()
-const { loading: vaultLoading, fetchVaultFolder } = useVault()
+const { loading: vaultLoading, handleChangePin, fetchVaultFolder } = useVault()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const folders = computed<FolderInterface[] | StorageFolderInterface[]>(() =>
   currentFlow.value === 'vault' ? vaultStore.folders : storageStore.folders,
@@ -231,6 +253,7 @@ const viewComponent = computed(() => {
 const archiveFolder = computed(() => {
   return currentFlow.value === 'vault' ? vaultStore.selectedFolder : storageStore.selectedFolder
 })
+
 const modalComponent = computed(() => {
   switch (true) {
     case routeNames.includes(String($route.name)) && !$route.params.id && !$route.query.action:
@@ -263,6 +286,7 @@ const modalComponent = computed(() => {
       $route.query.action === 'verify-pin':
       return {
         component: VaultPinForm,
+        hasBottomSheet: !isLargeScreen.value,
         props: {
           loading: vaultLoading.value,
         },

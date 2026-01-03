@@ -8,6 +8,25 @@
   >
     <div class="flex flex-col justify-center items-center mb-11">
       <n-form-item
+        v-if="step === 0"
+        :show-require-mark="false"
+        :show-label="false"
+        path="current_pin"
+        feedback-class="mt-5 text-center"
+      >
+        <div class="mt-5">
+          <MlbInputOtp
+            v-model="form.current_pin"
+            name="current_pin"
+            :length="4"
+            :gap="24"
+            size="large"
+            :mask="false"
+            custom-class="otp-input-wrapper border-gray-300 focus:border-primary-500"
+          />
+        </div>
+      </n-form-item>
+      <n-form-item
         v-if="step === 1"
         :show-require-mark="false"
         :show-label="false"
@@ -47,7 +66,7 @@
       </n-form-item>
     </div>
     <MlbButton
-      label="Submit"
+      :label="step === 0 ? 'Next' : step === 1 ? 'Confirm' : 'Submit'"
       block
       :loading="loading"
       :disabled="loading"
@@ -58,13 +77,13 @@
 </template>
 
 <script setup lang="ts">
-import type { FormInst } from 'naive-ui'
 import { ref, computed } from 'vue'
+import type { FormInst } from 'naive-ui'
+import { useVaultStore } from '@/stores/vault.store'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { useMessage, NForm, NFormItem } from 'naive-ui'
 import MlbInputOtp from '@/components/ui/MlbInputOtp.vue'
 import { pinValidation } from '@/validations/vault.validations'
-import { useVaultStore } from '@/stores/vault.store'
 
 const message = useMessage()
 const vaultStore = useVaultStore()
@@ -73,22 +92,29 @@ const props = withDefaults(
   defineProps<{
     loading: boolean
     hasConfirmation?: boolean
+    hasCurrentPin?: boolean
   }>(),
   {
     loading: false,
     hasConfirmation: false,
+    hasCurrentPin: false,
   },
 )
 const { form, rules } = pinValidation(props.hasConfirmation)
 
 const emit = defineEmits<{
   (e: 'pinSubmitted', value: string): void
+  (e: 'pinChanged', value: { current_pin: string; pin: string }): void
 }>()
 
 const step = computed<number>(() => vaultStore.pinStep)
 const formRef = ref<FormInst | null>(null)
 
 const onFormSubmit = () => {
+  if (step.value === 0) {
+    vaultStore.setStoreProp('pinStep', 1)
+    return
+  }
   if (step.value === 1 && props.hasConfirmation) {
     vaultStore.setStoreProp('pinStep', 2)
     return
@@ -98,7 +124,12 @@ const onFormSubmit = () => {
       message.error('Invalid form')
       return
     }
-    emit('pinSubmitted', form.value.pin.join('') as string)
+    props.hasCurrentPin
+      ? emit('pinChanged', {
+          current_pin: form.value.current_pin.join(''),
+          pin: form.value.pin.join(''),
+        })
+      : emit('pinSubmitted', form.value.pin.join('') as string)
   })
 }
 </script>
