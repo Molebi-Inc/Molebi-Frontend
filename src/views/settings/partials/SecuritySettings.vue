@@ -45,10 +45,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
-import ChangePasswordForm from '@/components/auth/ChangePasswordForm.vue'
-import ChangePinForm from '@/components/settings/ChangePinForm.vue'
-import type { SecurityItem, SecurityItemId } from '@/types/settings.types'
 import MlbButton from '@/components/ui/MlbButton.vue'
+import ChangePasswordForm from '@/components/auth/ChangePasswordForm.vue'
+// import ChangePinForm from '@/components/settings/ChangePinForm.vue'
+import type { SecurityItem, SecurityItemId } from '@/types/settings.types'
 
 const activeItem = ref<SecurityItemId>(null)
 
@@ -60,13 +60,13 @@ const securityItems: SecurityItem[] = [
     icon: 'icon.moon.profile-light',
     component: ChangePasswordForm,
   },
-  {
-    id: 'change-pin',
-    label: 'Change Vault Pin',
-    description: 'Update your vault pin',
-    icon: 'vault',
-    component: ChangePinForm,
-  },
+  // {
+  //   id: 'change-pin',
+  //   label: 'Change Vault Pin',
+  //   description: 'Update your vault pin',
+  //   icon: 'vault',
+  //   component: ChangePinForm,
+  // },
 ]
 
 const activeComponent = computed(() => {

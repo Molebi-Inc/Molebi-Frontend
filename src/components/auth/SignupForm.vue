@@ -44,6 +44,22 @@
             custom-class="border-gray-300 focus:border-primary-500"
           />
         </n-form-item>
+        <div v-if="form.password" class="mb-3">
+          <div v-for="item in isPasswordValid" :key="item.label" class="flex items-center">
+            <MlbIcon
+              :name="item.icon"
+              :size="12"
+              :color="item.condition(form.password) ? 'green' : 'red'"
+            />
+            <span
+              :class="[
+                'ml-1 text-xs',
+                item.condition(form.password) ? 'text-green-500' : 'text-red-500',
+              ]"
+              >{{ item.label }}</span
+            >
+          </div>
+        </div>
         <n-form-item label="Confirm Password" path="password_confirmation">
           <MlbInput
             v-model="form.password_confirmation"
@@ -125,8 +141,8 @@ const signupMutation = useSignupMutation()
 const authenticationStore = useAuthenticationStore()
 const { handleSocialAuthenticationRedirect } = useSocialSignin()
 
-const socialAuthLoader = ref<boolean>(false)
 const formRef = ref<FormInst | null>(null)
+const socialAuthLoader = ref<boolean>(false)
 const loading = computed(() => signupMutation.isPending.value)
 
 export type CountrySelectOption = SelectOption & {
@@ -135,16 +151,38 @@ export type CountrySelectOption = SelectOption & {
   dialingCode?: string
 }
 
-// Custom label renderer: in the dropdown show "Country (+Code)", when selected show just "+Code"
+const isPasswordValid = computed(() => {
+  return [
+    {
+      label: 'Contains at least one digit',
+      icon: 'vuesax.outline.shield-tick',
+      condition: (password: string) => /\d/.test(password),
+    },
+    {
+      label: 'Contains at least one uppercase letter',
+      icon: 'vuesax.outline.shield-tick',
+      condition: (password: string) => /[A-Z]/.test(password),
+    },
+    {
+      label: 'Contains at least one special character',
+      icon: 'vuesax.outline.shield-tick',
+      condition: (password: string) => /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    },
+    {
+      label: 'Contains at leat 6 characters',
+      icon: 'vuesax.outline.shield-tick',
+      condition: (password: string) => password.length >= 6,
+    },
+  ]
+})
+
 const renderCountryLabel = (option: SelectOption, selected: boolean) => {
   const opt = option as CountrySelectOption
   const code =
     opt.dialingCode || String(opt.value || '').split('|')[0] || String(option.label || '')
   if (selected) {
-    // Selected text inside the input
     return code
   }
-  // Dropdown option text
   return `${opt.flag} ${opt.fullLabel || opt.countryName || ''}`
 }
 
@@ -156,7 +194,6 @@ const filterCountryOptions = (pattern: string, option: CountrySelectOption): boo
   const countryName = String(option.countryName || '').toLowerCase()
   const fullLabel = String(option.fullLabel || '').toLowerCase()
 
-  // Match by dialing code, country name, or full label
   return (
     label.includes(searchPattern) ||
     value.includes(searchPattern) ||

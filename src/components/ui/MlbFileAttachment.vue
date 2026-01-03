@@ -6,6 +6,7 @@
         multiple
         directory-dnd
         :max="5"
+        accept="image/*, video/*, audio/*"
         @update:file-list="updateFileList"
       >
         <n-upload-dragger>
@@ -22,6 +23,7 @@
         v-else
         :default-file-list="previewFileList"
         list-type="image-card"
+        accept="image/*, video/*, audio/*"
         @update:file-list="updateFileList"
       />
     </div>
