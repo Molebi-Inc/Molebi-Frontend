@@ -24,6 +24,7 @@ export interface PersonalInformationFormValues {
   community_name: string
   mother_family_name: string
   avatar?: File | string | null
+  gender: string | null
 }
 
 export interface PersonalInformationFormErrors {
@@ -95,6 +96,7 @@ export interface SigninUser {
   family_name: string | null
   nickname: string | null
   dob: string | null
+  gender: string | null
   email: string
   phone: string
   tour_stage: number

@@ -70,6 +70,25 @@
           />
         </n-form-item>
         <n-form-item
+          label="Gender"
+          path="gender"
+          label-style="color: #807F94; font-weight: 500;"
+          required
+        >
+          <NSelect
+            v-model:value="form.gender"
+            :options="genderOptions"
+            placeholder="Select Gender"
+            :disabled="!!user?.gender"
+            size="large"
+            class="w-full mlb-select"
+          >
+            <template #arrow>
+              <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
+            </template>
+          </NSelect>
+        </n-form-item>
+        <n-form-item
           label="State of Origin"
           path="state_id"
           label-style="color: #807F94; font-weight: 500;"
@@ -139,6 +158,7 @@ import { personalInformationValidation } from '@/validations/authentication.vali
 import { NForm, NFormItem, NDatePicker, useMessage, NSelect, NUpload } from 'naive-ui'
 import type { PersonalInformationFormValues } from '@/types/authentication.types'
 import { useProfileStore } from '@/stores/profile.store'
+import { useMemberForm } from '@/composables/member-form.composables'
 
 const $router = useRouter()
 const message = useMessage()
@@ -146,6 +166,8 @@ const profileStore = useProfileStore()
 const { refetch: refetchStates } = useGetStatesQuery()
 const { form, rules } = personalInformationValidation()
 const updateProfileMutation = useUpdateProfileMutation()
+
+const { genderOptions } = useMemberForm('self')
 
 const formRef = ref<FormInst | null>(null)
 const states = ref<{ label: string; value: number }[]>([])
@@ -204,6 +226,7 @@ const fetchFormData = () => {
     mother_family_name: user.value?.mother_family_name || '',
     nickname: user.value?.nickname || '',
     avatar: user.value?.avatar || null,
+    gender: user.value?.gender || null,
   }
 }
 

@@ -39,6 +39,8 @@ export interface VaultStoreInterface {
   selectedFolder: FolderInterface | null
   folders: FolderInterface[]
   foldersLoading: boolean
+  folderLoading: boolean
   pin: string
   pinStep: number
+  edit: boolean
 }

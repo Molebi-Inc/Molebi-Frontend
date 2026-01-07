@@ -8,10 +8,12 @@ import type { FolderInterface } from '@/types/vault.types'
 import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import { useMediaQuery } from '@vueuse/core'
+import { useVaultStore } from '@/stores/vault.store'
 
 export const useFolderMenu = () => {
   const $route = useRoute()
   const $router = useRouter()
+  const vaultStore = useVaultStore()
   const { deleteArchiveFolder } = useArchive()
   const { loading, fetchVaultFolder } = useVault()
   const { currentFlow, setSelectedFolder } = useArchive()
@@ -49,6 +51,7 @@ export const useFolderMenu = () => {
     setSelectedFolder(folder)
     const action = {
       edit: () => {
+        vaultStore.setStoreProp('edit', true)
         $router.push({
           name: $route.name,
           params: { ...$route.params, id: folder.id },
@@ -80,7 +83,7 @@ export const useFolderMenu = () => {
       // })
     }
 
-    if (currentFlow.value === 'vault') {
+    if (currentFlow.value === 'vault' && $route.name !== 'App.HeritageVaultView.Gallery') {
       verifyPin(folder, executeAction)
     } else {
       executeAction()

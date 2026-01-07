@@ -46,22 +46,7 @@
           </div>
         </div>
       </div>
-      <div
-        v-if="!isLargeScreen && String($route.name) === 'App.VaultFolderView' && !!$route.params.id"
-        class="rounded-xl py-5 text-center space-y-2"
-        style="background: #f7931e0d"
-      >
-        <div class="text-xs font-medium text-secondary-600">Your Vault-Share Code</div>
-        <div class="text-xl font-semibold">****</div>
-        <div>
-          <MlbButton
-            type="button"
-            label="Change Code"
-            class="rounded-2xl! bg-secondary-100! text-secondary-700! cursor-pointer!"
-            @click="handleChangePin"
-          />
-        </div>
-      </div>
+
     </div>
     <div
       v-if="emptyState"
@@ -338,8 +323,8 @@ const handleSelectOption = (value: {
   }
 }
 
-const handleUpdateFolder = (key: string) => {
-  if (['edit', 'create'].includes(key)) {
+const handleUpdateFolder = (payload: { key: string }) => {
+  if (['edit', 'create'].includes(payload.key)) {
     showVaultModal.value = false
   }
 }
@@ -420,6 +405,9 @@ const handleDeleteMedia = async (mediaIds: number[]) => {
 watch(
   () => $route.query.action,
   (newVal) => {
+    console.log('newVal', newVal)
+    console.log('vaultStore.selectedFolder', vaultStore.selectedFolder)
+    console.log('currentFlow.value', currentFlow.value)
     if (
       (newVal &&
         newVal === 'share' &&

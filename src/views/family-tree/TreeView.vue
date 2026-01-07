@@ -400,7 +400,23 @@ const props = defineProps<{ payload?: Payload }>()
 const payload = ref<Payload | undefined>(props.payload)
 
 /* ---------- Visual constants & state ---------- */
-const nodeSize = 72
+const nodeSize = ref(72)
+
+function updateNodeSizeForViewport() {
+  if (typeof window === 'undefined') return
+  const width = window.innerWidth
+
+  if (width <= 400) {
+    // Very small screens (e.g. iPhone 8)
+    nodeSize.value = 52
+  } else if (width <= 768) {
+    // Other mobile / small tablets
+    nodeSize.value = 64
+  } else {
+    // Desktop / large screens
+    nodeSize.value = 72
+  }
+}
 
 const svgWidth = ref(1400)
 const svgHeight = ref(1200)
@@ -764,7 +780,7 @@ function buildLayout() {
   const spacing = 120 // Spacing between Self and Spouse (reduced to bring them closer)
   const leftSideX = centerX - 400 // Left side for self's relations
   const rightSideX = centerX + 400 // Right side for spouse's relations
-  const nodeRadius = nodeSize / 2 // Account for node size to prevent overlap
+  const nodeRadius = nodeSize.value / 2 // Account for node size to prevent overlap
 
   // Add generation labels (positioned above nodes)
   generationRows.value = [
@@ -1733,8 +1749,17 @@ function handleViewProfile() {
 /* ---------- Lifecycle ---------- */
 onMounted(async () => {
   await nextTick()
+
+  // Ensure node size matches viewport before initial layout
+  updateNodeSizeForViewport()
+
   svg.value = svg.value ?? (document.querySelector('svg') as SVGSVGElement)
   zoomLayer.value = zoomLayer.value ?? (document.querySelector('svg g') as SVGGElement)
+
+  if (root.value) {
+    svgHeight.value = root.value.clientHeight
+  }
+
   buildLayout()
   await nextTick()
   setupZoom()
@@ -1742,9 +1767,11 @@ onMounted(async () => {
   const onResize = () => {
     if (root.value) {
       svgHeight.value = root.value.clientHeight
-      buildLayout()
     }
+    updateNodeSizeForViewport()
+    buildLayout()
   }
+
   window.addEventListener('resize', onResize)
   onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 })

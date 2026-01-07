@@ -59,11 +59,10 @@ import { useRoute } from 'vue-router'
 
 const message = useMessage()
 const vaultStore = useVaultStore()
-const $route = useRoute()
 const storageStore = useStorageStore()
 const { form, rules } = createFolderValidation()
 const { currentFlow, archiveExist } = useArchive()
-const { loading, handleArchiveMutation } = useArchive()
+const { loading, handleArchiveMutation, setSelectedFolder } = useArchive()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const $emit = defineEmits<{
@@ -88,8 +87,9 @@ const onFormSubmit = async () => {
     try {
       const response = await handleArchiveMutation(form.value)
       if (response) {
-        message.success(response?.message || 'Folder created successfully')
-        // message.success('Folder created successfully')
+        // message.success(response?.message || 'Folder created successfully')
+        message.success('Folder created successfully')
+        vaultStore.setStoreProp('selectedFolder', response.data || null)
         $emit('update:folder', {
           key: response.key,
           folder: selectedFolder.value,
@@ -115,10 +115,13 @@ const getEditData = () => {
 }
 
 onMounted(() => {
-  if ($route.params.id) {
-    getEditData()
-    return
+  if (!vaultStore.edit) {
+    setSelectedFolder(null)
   }
+  // if ($route.params.id) {
+  getEditData()
+  //   return
+  // }
 })
 </script>
 

@@ -68,6 +68,22 @@
       </div>
     </div>
     <hr class="my-4.5 border-gray-200" />
+    <div
+      v-if="currentFlow === 'vault'"
+      class="rounded-xl py-5 text-center space-y-2 mb-4"
+      style="background: #f7931e0d"
+    >
+      <div class="text-xs font-medium text-secondary-600">Your Vault-Share Code</div>
+      <div class="text-xl font-semibold">****</div>
+      <div>
+        <MlbButton
+          type="button"
+          label="Change Code"
+          class="rounded-2xl! bg-secondary-100! text-secondary-700! cursor-pointer!"
+          @click="handleChangePin"
+        />
+      </div>
+    </div>
     <GalleryComponent
       :media="gallery"
       :items-per-row="3"
@@ -113,6 +129,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useVaultStore } from '@/stores/vault.store'
 import MlbAvatar from '@/components/ui/MlbAvatar.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
+import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import { useArchive } from '@/composables/useArchive'
 import { useStorageStore } from '@/stores/storage.store'
@@ -134,14 +151,14 @@ const $router = useRouter()
 const vaultStore = useVaultStore()
 const storageStore = useStorageStore()
 const { options, handleSelect } = useFolderMenu()
-const { loading: vaultLoading, fetchVaultFolder } = useVault()
+const { loading: vaultLoading, fetchVaultFolder, handleChangePin } = useVault()
 const {
   folderMediaLoading,
   fetchFolderMedia,
   fetchFolderDetails,
   fetchArchiveFolders,
   handleDeleteMedia,
-  setSelectedFolder,
+  // setSelectedFolder,
 } = useArchive()
 
 const showModal = ref<boolean>(false)
@@ -151,7 +168,7 @@ const handleBackButtonClick = () => {
   const query = { ...$route.query }
   delete query.action
   delete query.tab
-  setSelectedFolder(null)
+  // setSelectedFolder(null)
   $router.push({
     name: $route.name,
     params: { ...$route.params },
@@ -316,6 +333,19 @@ watch(
   ([tab, action]) => {
     if (tab || action) {
       showModal.value = true
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => selectedFolder.value,
+  (newVal) => {
+    if (!newVal) {
+      $router.push({
+        name: 'App.HeritageVaultView',
+        params: { module: $route.params.module, page: 'folders' },
+      })
     }
   },
   { immediate: true },

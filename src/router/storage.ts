@@ -1,4 +1,3 @@
-import VaultView from '@/views/vault/VaultView.vue'
 import StorageView from '@/views/storage/StorageView.vue'
 import StorageLayout from '@/layouts/StorageLayout.vue'
 
@@ -22,7 +21,7 @@ export const storageRoutes = [
           {
             path: 'folders/:id?',
             name: 'App.StorageFolderView',
-            component: VaultView,
+            component: () => import('@/views/vault/VaultView.vue'),
             meta: {
               pageTitle: 'Storage',
             },

@@ -66,7 +66,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useVault } from '@/composables/useVault'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useVaultStore } from '@/stores/vault.store'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, h } from 'vue'
 import { useStorage } from '@/composables/useStorage'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useStorageStore } from '@/stores/storage.store'
@@ -75,6 +75,8 @@ import FolderWrapper from '@/components/vault/FolderWrapper.vue'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import type { FolderInterface } from '@/types/vault.types'
 import { useGeneralStore } from '@/stores/general.store'
+import VaultPinForm from '@/components/vault/VaultPinForm.vue'
+import { AlertService } from '@/services/alert.service'
 
 const generalStore = useGeneralStore()
 const vault = useVault()
@@ -122,10 +124,46 @@ const getArchiveFiles = async () => {
 }
 
 const handleAddModal = () => {
+  vaultStore.setStoreProp('selectedFolder', null)
   $emit('update:show-add-modal', true)
 }
 
 const handleFolderClick = (event: { id?: number }) => {
+  if ($route.params.module === 'vault') {
+    AlertService.alert({
+      subject: 'Enter Vault PIN',
+      message: 'Enter the PIN to your vault',
+      closable: true,
+      showIcon: false,
+      closablePosition: 'left',
+      bottomSheet: true,
+      bottomSheetHeight: 462,
+      textAlign: 'center',
+      html: h(VaultPinForm, {
+        loading: vaultStore.folderLoading,
+        onPinSubmitted: async (value: string) => {
+          try {
+            vaultStore.setStoreProp('pin', value)
+            await vault.fetchVaultFolder(vaultStore.selectedFolder?.id as number, value)
+            $router.push({
+              name: 'App.HeritageVaultView.Gallery',
+              params: {
+                module: $route.params.module,
+                page: $route.params.page,
+                id: vaultStore.selectedFolder?.id,
+              },
+            })
+            AlertService.close()
+          } catch (error) {
+            handleApiError(error, message)
+          }
+        },
+      }),
+      showCancelButton: false,
+      showConfirmButton: false,
+    })
+    return
+  }
   $router.push({
     name: 'App.HeritageVaultView.Gallery',
     params: {
