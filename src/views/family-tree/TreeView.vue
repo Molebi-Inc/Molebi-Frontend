@@ -123,10 +123,7 @@
                     fill="#111827"
                     font-weight="600"
                   >
-                    {{
-                      (node.data?.first_name ? node.data.first_name[0] : 'F') +
-                      (node.data?.family_name ? node.data.family_name[0] : '')
-                    }}
+                    {{ getInitials(node) }}
                   </text>
                 </g>
 
@@ -1552,6 +1549,13 @@ function relationText(node: LayoutNode) {
   if (node.role === 'spouse')
     return node.data?.relationship_metadata.is_former ? 'Former Spouse' : 'Spouse'
   return 'Relative'
+}
+
+function getInitials(node: LayoutNode): string {
+  if (!node.data) return 'F'
+  const firstInitial = node.data.first_name?.[0] ?? 'F'
+  const lastInitial = node.data.family_name?.[0] ?? ''
+  return firstInitial + lastInitial
 }
 
 /* ---------- D3 zoom (transform applied to zoomLayer) ---------- */
