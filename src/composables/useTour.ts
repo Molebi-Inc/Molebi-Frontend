@@ -62,7 +62,7 @@ export function useTour(tourName?: string) {
     }
   }
 
-  const skipTour = async (tour: Tour) => {
+  const skipTour = async (tour?: Tour) => {
     await updateTourStageMutation({
       tour_type: isLargeScreen
         ? ($route.meta.tour as TourStages)
@@ -70,7 +70,9 @@ export function useTour(tourName?: string) {
       action: 'skip',
     })
     await getProfile()
-    tour.skip()
+    if (tour) {
+      tour.skip()
+    }
   }
 
   const nextStep = async (lastStep: boolean, tour: Tour) => {

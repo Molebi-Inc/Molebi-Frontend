@@ -163,7 +163,7 @@
         <MlbButton
           label="Skip"
           class="rounded-lg! bg-primary-50! text-primary-900! border-none! h-10!"
-          @click="showStartTourModal = false"
+          @click="handleSkipTour"
         />
       </div>
     </template>
@@ -209,7 +209,7 @@ const familyTreesQuery = useGetFamilyTreesQuery()
 const userProgressionQuery = useGetUserProgressionQuery()
 const familyTraditionStore = useFamilyTraditionStore()
 const { fetchAnnouncements, fetchFamilyTraditions } = useHome()
-const { startTour: startTourAction, tourIsComplete } = useTour()
+const { startTour: startTourAction, tourIsComplete, skipTour } = useTour()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const chartHeight = ref<number>(60)
@@ -251,6 +251,11 @@ const getHomeFormsMap = (): Record<FormType, HomeFormConfig> => {
 const startTour = () => {
   const tourName = ($route.meta.tour as string) || 'myTour'
   startTourAction(tourName)
+  showStartTourModal.value = false
+}
+
+const handleSkipTour = () => {
+  skipTour()
   showStartTourModal.value = false
 }
 
