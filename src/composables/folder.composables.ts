@@ -9,21 +9,17 @@ import VaultPinForm from '@/components/vault/VaultPinForm.vue'
 import type { StorageFolderInterface } from '@/types/storage.types'
 import { useMediaQuery } from '@vueuse/core'
 import { useVaultStore } from '@/stores/vault.store'
+import { useStorageStore } from '@/stores/storage.store'
 
 export const useFolderMenu = () => {
   const $route = useRoute()
   const $router = useRouter()
   const vaultStore = useVaultStore()
+  const storageStore = useStorageStore()
   const { deleteArchiveFolder } = useArchive()
   const { loading, fetchVaultFolder } = useVault()
   const { currentFlow, setSelectedFolder } = useArchive()
   const isLargeScreen = useMediaQuery('(min-width: 768px)')
-  // const $emit = defineEmits<{
-  //   (
-  //     e: 'select:option',
-  //     value: { key: string; folder: FolderInterface | StorageFolderInterface },
-  //   ): void
-  // }>()
   const options = ref([
     {
       label: 'Edit',
@@ -51,7 +47,9 @@ export const useFolderMenu = () => {
     setSelectedFolder(folder)
     const action = {
       edit: () => {
-        vaultStore.setStoreProp('edit', true)
+        currentFlow.value === 'vault'
+          ? vaultStore.setStoreProp('edit', true)
+          : storageStore.setStoreProp('edit', true)
         $router.push({
           name: $route.name,
           params: { ...$route.params, id: folder.id },

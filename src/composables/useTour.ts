@@ -38,7 +38,11 @@ export function useTour(tourName?: string) {
   }
 
   const startTour = (name?: string) => {
-    const tourKey = name || tourName || 'myTour'
+    // Prefer explicit name, then composable default, then route meta, then fallback
+    const routeTourKey =
+      ($route.meta.tour as string | undefined) ||
+      ($route.meta.mobileTour as string | undefined)?.replace('-mobile', '')
+    const tourKey = name || tourName || routeTourKey || 'myTour'
 
     // Use nextTick to ensure DOM is ready and tour is registered
     nextTick(() => {
@@ -95,6 +99,10 @@ export function useTour(tourName?: string) {
       (stage) => stage.tour_type === (tourType as TourStages),
     )
     if (!tourStage) {
+      return false
+    }
+
+    if (tourStage.is_skipped) {
       return true
     }
 

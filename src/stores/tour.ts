@@ -8,8 +8,8 @@ export const useTourStore = defineStore('tour', () => {
   const isLargeScreen = useMediaQuery('(min-width: 768px)')
   const route = useRoute()
   const tourList: Record<string, TourList> = {
-    home: {
-      tour_name: 'home',
+    dashboard: {
+      tour_name: 'dashboard',
       tour_steps: [
         {
           target: '#home-tour-step-1',
@@ -61,8 +61,8 @@ export const useTourStore = defineStore('tour', () => {
         },
       ],
     },
-    'home-mobile': {
-      tour_name: 'home-mobile',
+    'dashboard_mobile': {
+      tour_name: 'dashboard_mobile',
       tour_steps: [
         {
           target: '#home-tour-step-1',
@@ -90,8 +90,8 @@ export const useTourStore = defineStore('tour', () => {
         },
       ],
     },
-    'time-capsule': {
-      tour_name: 'time-capsule',
+    'time_capsule': {
+      tour_name: 'time_capsule',
       tour_steps: [
         {
           target: '#time-capsules-tour-step-1',

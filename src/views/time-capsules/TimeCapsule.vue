@@ -292,8 +292,9 @@ const handleGoBack = () => {
 
 onMounted(async () => {
   await fetchTimeCapsules()
+  console.log('tourIsComplete', tourIsComplete.value)
   if (!tourIsComplete.value) {
-    startTour('time-capsule')
+    startTour('time_capsule')
   }
   timeCapsuleStore.setStoreProp('selectedTimeCapsule', null)
 })

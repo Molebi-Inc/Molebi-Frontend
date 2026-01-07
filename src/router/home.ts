@@ -7,8 +7,8 @@ export const homeRoutes = [
     component: () => import('@/layouts/AppLayout.vue'),
     meta: {
       layout: 'app',
-      tour: 'home',
-      mobileTour: 'home-mobile',
+      tour: 'dashboard',
+      mobileTour: 'dashboard_mobile',
       requiresAuth: true,
     },
     children: [

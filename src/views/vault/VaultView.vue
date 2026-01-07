@@ -46,7 +46,6 @@
           </div>
         </div>
       </div>
-
     </div>
     <div
       v-if="emptyState"
@@ -318,6 +317,9 @@ const handleSelectOption = (value: {
   key: string
   folder: FolderInterface | StorageFolderInterface
 }) => {
+  console.log('value', value)
+  setSelectedFolder(value.folder as FolderInterface | StorageFolderInterface)
+  console.log('selectedFolder', storageStore.selectedFolder)
   if (value.key === 'edit') {
     showVaultModal.value = true
   }
@@ -405,9 +407,6 @@ const handleDeleteMedia = async (mediaIds: number[]) => {
 watch(
   () => $route.query.action,
   (newVal) => {
-    console.log('newVal', newVal)
-    console.log('vaultStore.selectedFolder', vaultStore.selectedFolder)
-    console.log('currentFlow.value', currentFlow.value)
     if (
       (newVal &&
         newVal === 'share' &&

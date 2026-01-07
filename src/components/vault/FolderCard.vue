@@ -138,6 +138,7 @@ import type { FamilyMemberInterface } from '@/types/family-tree.types'
 import { useVault } from '@/composables/useVault'
 import { useMediaQuery } from '@vueuse/core'
 import { useVaultStore } from '@/stores/vault.store'
+import { useStorageStore } from '@/stores/storage.store'
 
 interface Props {
   folder: FolderInterface | StorageFolderInterface | null
@@ -162,6 +163,8 @@ const $emit = defineEmits<{
 
 const $route = useRoute()
 const $router = useRouter()
+const vaultStore = useVaultStore()
+const storageStore = useStorageStore()
 const { loading, fetchVaultFolder } = useVault()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const { currentFlow, setSelectedFolder, deleteArchiveFolder } = useArchive()
@@ -249,8 +252,14 @@ const handleClick = () => {
 
 const handleSelect = (key: string) => {
   setSelectedFolder(props.folder as FolderInterface | StorageFolderInterface)
+
+  // console.log('folder', storageStore.selectedFolder)
   const action = {
-    edit: () => {},
+    edit: () => {
+      currentFlow.value === 'vault'
+        ? vaultStore.setStoreProp('edit', true)
+        : storageStore.setStoreProp('edit', true)
+    },
     'add-media': () => {
       $router.push({
         name: $route.name,

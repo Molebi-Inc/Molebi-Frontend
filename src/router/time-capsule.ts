@@ -7,7 +7,7 @@ export const timeCapsuleRoutes = [
     meta: {
       layout: 'app',
       requiresAuth: true,
-      tour: 'time-capsule',
+      tour: 'time_capsule',
       fullScreen: 'mobile-footer',
     },
     children: [

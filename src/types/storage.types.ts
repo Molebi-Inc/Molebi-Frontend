@@ -33,6 +33,7 @@ export interface StorageFolderInterface {
 }
 
 export interface StorageStoreInterface {
+  edit: boolean
   selectedFolder: StorageFolderInterface | null
   folderMedia: AttachmentInterface[]
   folderMediaLoading: boolean

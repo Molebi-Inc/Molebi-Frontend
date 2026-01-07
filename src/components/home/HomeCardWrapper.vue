@@ -11,8 +11,15 @@
         {{ properties.title }}
       </h4>
       <MlbButton
-        class="font-bold!"
+        :id="
+          isLargeScreen && card_type === 'announcement'
+            ? 'home-tour-step-4'
+            : isLargeScreen && card_type === 'tradition'
+              ? 'home-tour-step-5'
+              : ''
+        "
         text
+        class="font-bold!"
         :label="isLargeScreen ? 'Add' : 'See all'"
         @click="isLargeScreen ? handleAddOption() : handleSeeAll()"
       />

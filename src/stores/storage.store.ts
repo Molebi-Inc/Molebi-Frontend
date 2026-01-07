@@ -3,6 +3,7 @@ import type { StorageStoreInterface } from '@/types/storage.types'
 
 export const useStorageStore = defineStore('storage', {
   state: (): StorageStoreInterface => ({
+    edit: false,
     selectedFolder: null,
     folders: [],
     foldersLoading: false,

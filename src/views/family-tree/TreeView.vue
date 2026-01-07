@@ -95,120 +95,157 @@
               </foreignObject>
 
               <!-- PERSON NODE (Standard or SuperNode) -->
-              <foreignObject
-                v-else
-                :x="node.x - nodeSize / 2"
-                :y="node.y - nodeSize / 2"
-                :width="nodeSize"
-                :height="nodeSize"
-                style="overflow: visible"
-              >
-                <div
-                  xmlns="http://www.w3.org/1999/xhtml"
-                  class="relative cursor-pointer"
-                  :style="{ width: nodeSize + 'px', height: nodeSize + 'px' }"
-                  @click.stop="handleNodeClick(node)"
-                >
-                  <!-- SUPER NODE (e.g. Parents: Father & Mother) -->
-                  <div v-if="node.isSuperNode" class="relative w-full h-full">
-                    <!-- Main person (Full size) - Clickable -->
-                    <div
-                      class="absolute top-0 left-0 w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg bg-white z-10 cursor-pointer"
-                      @click.stop="handleNodeClick(node)"
-                    >
-                      <img
-                        :src="
-                          node.data?.profile_picture_url ||
-                          getUserAvatar(
-                            node.data?.first_name || 'User',
-                            node.data?.family_name || '',
-                            node.data?.profile_picture_url || undefined,
-                          )
-                        "
-                        class="object-cover w-full h-full"
-                        :title="node.data?.full_name"
-                      />
-                    </div>
+              <!-- On very small screens, use pure SVG circles to avoid foreignObject issues on iOS Safari -->
+              <template v-else>
+                <g v-if="isSmallScreen" class="cursor-pointer" @click.stop="handleNodeClick(node)">
+                  <circle
+                    :cx="node.x"
+                    :cy="node.y"
+                    :r="nodeSize / 2"
+                    fill="white"
+                    stroke="#ffffff"
+                    stroke-width="2"
+                  />
+                  <circle
+                    v-if="node.isSelf"
+                    :cx="node.x"
+                    :cy="node.y"
+                    :r="nodeSize / 2 + 4"
+                    fill="none"
+                    stroke="#6ee7b7"
+                    stroke-width="3"
+                  />
+                  <text
+                    :x="node.x"
+                    :y="node.y + 4"
+                    text-anchor="middle"
+                    font-size="14"
+                    fill="#111827"
+                    font-weight="600"
+                  >
+                    {{
+                      (node.data?.first_name ? node.data.first_name[0] : 'F') +
+                      (node.data?.family_name ? node.data.family_name[0] : '')
+                    }}
+                  </text>
+                </g>
 
-                    <!-- Subnode (Mini circle overlapping bottom-right) - Clickable -->
-                    <template v-if="node.subNodes && node.subNodes.length > 0">
+                <!-- Original rich HTML avatar rendering for larger screens -->
+                <foreignObject
+                  v-else
+                  :x="node.x - nodeSize / 2"
+                  :y="node.y - nodeSize / 2"
+                  :width="nodeSize"
+                  :height="nodeSize"
+                  style="overflow: visible"
+                >
+                  <div
+                    xmlns="http://www.w3.org/1999/xhtml"
+                    class="relative cursor-pointer"
+                    :style="{ width: nodeSize + 'px', height: nodeSize + 'px' }"
+                    @click.stop="handleNodeClick(node)"
+                  >
+                    <!-- SUPER NODE (e.g. Parents: Father & Mother) -->
+                    <div v-if="node.isSuperNode" class="relative w-full h-full">
+                      <!-- Main person (Full size) - Clickable -->
                       <div
-                        v-for="(subNode, subIdx) in node.subNodes"
-                        :key="subNode.id || subIdx"
-                        class="absolute bottom-0 right-0 w-[32px] h-[32px] rounded-full overflow-hidden border-2 border-white shadow-md bg-white z-20 cursor-pointer"
-                        :style="{
-                          bottom: `${-4 - subIdx * 8}px`,
-                          right: `${-4 - subIdx * 8}px`,
-                        }"
-                        @click.stop="handleSubNodeClick(subNode, node)"
+                        class="absolute top-0 left-0 w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg bg-white z-10 cursor-pointer"
+                        @click.stop="handleNodeClick(node)"
                       >
                         <img
                           :src="
-                            subNode.profile_picture_url ||
+                            node.data?.profile_picture_url ||
                             getUserAvatar(
-                              subNode.first_name || 'User',
-                              subNode.family_name || '',
-                              subNode.profile_picture_url || undefined,
+                              node.data?.first_name || 'User',
+                              node.data?.family_name || '',
+                              node.data?.profile_picture_url || undefined,
                             )
                           "
                           class="object-cover w-full h-full"
-                          :title="subNode.full_name"
+                          :title="node.data?.full_name"
                         />
                       </div>
-                    </template>
-                  </div>
 
-                  <!-- STANDARD NODE -->
-                  <div v-else class="relative w-full h-full">
-                    <!-- Main Avatar -->
-                    <div
-                      :class="[
-                        'w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg flex items-center justify-center relative z-20',
-                        node.isSelf ? 'ring-4 ring-green-300' : '',
-                      ]"
-                      style="background: white"
-                    >
-                      <img
-                        :src="
-                          node.data?.profile_picture_url ||
-                          getUserAvatar(
-                            node.data?.first_name || 'User',
-                            node.data?.family_name || '',
-                            node.data?.profile_picture_url || undefined,
-                          )
-                        "
-                        :title="`${node.data?.full_name || 'Family member'} - ${relationText(node)}`"
-                        class="object-cover w-full h-full"
-                      />
+                      <!-- Subnode (Mini circle overlapping bottom-right) - Clickable -->
+                      <template v-if="node.subNodes && node.subNodes.length > 0">
+                        <div
+                          v-for="(subNode, subIdx) in node.subNodes"
+                          :key="subNode.id || subIdx"
+                          class="absolute bottom-0 right-0 w-[32px] h-[32px] rounded-full overflow-hidden border-2 border-white shadow-md bg-white z-20 cursor-pointer"
+                          :style="{
+                            bottom: `${-4 - subIdx * 8}px`,
+                            right: `${-4 - subIdx * 8}px`,
+                          }"
+                          @click.stop="handleSubNodeClick(subNode, node)"
+                        >
+                          <img
+                            :src="
+                              subNode.profile_picture_url ||
+                              getUserAvatar(
+                                subNode.first_name || 'User',
+                                subNode.family_name || '',
+                                subNode.profile_picture_url || undefined,
+                              )
+                            "
+                            class="object-cover w-full h-full"
+                            :title="subNode.full_name"
+                          />
+                        </div>
+                      </template>
                     </div>
 
-                    <!-- Subnodes (e.g. other spouses) - Small badges - Clickable -->
-                    <div
-                      v-for="(sub, idx) in node.subNodes || []"
-                      :key="sub.id || idx"
-                      class="absolute z-30 w-[40px] h-[40px] border-2 border-white rounded-full overflow-hidden shadow-md bg-white cursor-pointer"
-                      :style="{
-                        bottom: '-5px',
-                        right: `${-15 - idx * 20}px`,
-                      }"
-                      @click.stop="handleSubNodeClick(sub, node)"
-                    >
-                      <img
-                        :src="
-                          sub.profile_picture_url ||
-                          getUserAvatar(
-                            sub.first_name || 'User',
-                            sub.family_name || '',
-                            sub.profile_picture_url || undefined,
-                          )
-                        "
-                        :title="sub.full_name"
-                        class="object-cover w-full h-full"
-                      />
+                    <!-- STANDARD NODE -->
+                    <div v-else class="relative w-full h-full">
+                      <!-- Main Avatar -->
+                      <div
+                        :class="[
+                          'w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg flex items-center justify-center relative z-20',
+                          node.isSelf ? 'ring-4 ring-green-300' : '',
+                        ]"
+                        style="background: white"
+                      >
+                        <img
+                          :src="
+                            node.data?.profile_picture_url ||
+                            getUserAvatar(
+                              node.data?.first_name || 'User',
+                              node.data?.family_name || '',
+                              node.data?.profile_picture_url || undefined,
+                            )
+                          "
+                          :title="`${node.data?.full_name || 'Family member'} - ${relationText(node)}`"
+                          class="object-cover w-full h-full"
+                        />
+                      </div>
+
+                      <!-- Subnodes (e.g. other spouses) - Small badges - Clickable -->
+                      <div
+                        v-for="(sub, idx) in node.subNodes || []"
+                        :key="sub.id || idx"
+                        class="absolute z-30 w-[40px] h-[40px] border-2 border-white rounded-full overflow-hidden shadow-md bg-white cursor-pointer"
+                        :style="{
+                          bottom: '-5px',
+                          right: `${-15 - idx * 20}px`,
+                        }"
+                        @click.stop="handleSubNodeClick(sub, node)"
+                      >
+                        <img
+                          :src="
+                            sub.profile_picture_url ||
+                            getUserAvatar(
+                              sub.first_name || 'User',
+                              sub.family_name || '',
+                              sub.profile_picture_url || undefined,
+                            )
+                          "
+                          :title="sub.full_name"
+                          class="object-cover w-full h-full"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </foreignObject>
+                </foreignObject>
+              </template>
 
               <!-- label -->
               <text
@@ -401,10 +438,14 @@ const payload = ref<Payload | undefined>(props.payload)
 
 /* ---------- Visual constants & state ---------- */
 const nodeSize = ref(72)
+const isSmallScreen = ref(false)
 
 function updateNodeSizeForViewport() {
   if (typeof window === 'undefined') return
   const width = window.innerWidth
+
+  // Flag very small screens (e.g. older iPhones) for SVG-only node rendering
+  isSmallScreen.value = width <= 480
 
   if (width <= 400) {
     // Very small screens (e.g. iPhone 8)

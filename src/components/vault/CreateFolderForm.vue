@@ -115,7 +115,8 @@ const getEditData = () => {
 }
 
 onMounted(() => {
-  if (!vaultStore.edit) {
+  const editMode = currentFlow.value === 'vault' ? vaultStore.edit : storageStore.edit
+  if (!editMode) {
     setSelectedFolder(null)
   }
   // if ($route.params.id) {
