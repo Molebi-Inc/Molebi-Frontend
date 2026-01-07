@@ -85,7 +85,9 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
               pin: typeof value === 'string' ? value : value.pin,
             } as CreateFolderValues))
               .then((response) => {
-                message.success(response?.message || 'Folder created successfully')
+                vaultStore.setStoreProp('selectedFolder', response.data || null)
+                // message.success(response?.message || 'Folder created successfully')
+                message.success('Memory vault created successfully')
                 AlertService.close()
               })
               .catch((error) => {
@@ -162,11 +164,15 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   }
 
   const fetchVaultFolder = async (id: number, pin: string) => {
+    vaultStore.setStoreProp('folderLoading', true)
     try {
       const response = await getVaultFolderMutation.mutateAsync({ id, pin })
       vaultStore.setStoreProp('selectedFolder', response.data || null)
     } catch (error) {
       handleApiError(error, message)
+      throw error
+    } finally {
+      vaultStore.setStoreProp('folderLoading', false)
     }
   }
 

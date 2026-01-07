@@ -1,5 +1,5 @@
 <template>
-  <section class="min-h-screen bg-brand-background px-4 py-10 flex items-center justify-center">
+  <section class="min-h-screen bg-brand-background md:px-4 py-10 flex items-center justify-center">
     <div
       class="w-full max-w-[520px] rounded-[40px] border border-secondary-200 bg-white pb-10 pt-16 shadow-md"
     >

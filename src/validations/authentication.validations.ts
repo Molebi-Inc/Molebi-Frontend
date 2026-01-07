@@ -122,6 +122,7 @@ export const personalInformationValidation = () => {
     community_name: '',
     mother_family_name: '',
     avatar: null,
+    gender: null,
   })
 
   const schema = z.object({
@@ -138,6 +139,7 @@ export const personalInformationValidation = () => {
         message: 'Invalid file uploaded.',
       })
       .optional(),
+    gender: z.string().min(1, { message: 'Gender is required.' }),
   })
 
   const rules = {
@@ -170,6 +172,20 @@ export const personalInformationValidation = () => {
       },
     },
     nickname: {},
+    gender: {
+      required: true,
+      trigger: 'input',
+      validator: async (_rule: FormItemRule, value: string) => {
+        try {
+          schema.pick({ gender: true }).parse({ gender: value })
+          return Promise.resolve()
+        } catch (err: unknown) {
+          const messageText =
+            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid gender.'
+          return Promise.reject(messageText)
+        }
+      },
+    },
     family_name: {
       required: true,
       trigger: 'input',

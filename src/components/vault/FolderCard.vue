@@ -162,7 +162,6 @@ const $emit = defineEmits<{
 
 const $route = useRoute()
 const $router = useRouter()
-const vaultStore = useVaultStore()
 const { loading, fetchVaultFolder } = useVault()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const { currentFlow, setSelectedFolder, deleteArchiveFolder } = useArchive()
@@ -226,7 +225,11 @@ const _folder = computed<{
 
 const handleClick = () => {
   setSelectedFolder(props.folder as FolderInterface | StorageFolderInterface)
-  const routeName = currentFlow.value === 'vault' ? 'App.VaultFolderView' : 'App.StorageFolderView'
+  const routeName = isLargeScreen
+    ? currentFlow.value === 'vault'
+      ? 'App.VaultFolderView'
+      : 'App.StorageFolderView'
+    : 'App.HeritageVaultView.Gallery'
   if (!props.heritageVault) {
     if (currentFlow.value === 'vault') {
       $router.push({
