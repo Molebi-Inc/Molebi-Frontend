@@ -156,7 +156,9 @@ const livingCount = computed(() => {
 })
 
 const deceasedCount = computed(() => {
-  return allMembers.value.filter((member) => member.relationship_metadata?.is_deceased).length
+  return allMembers.value.filter(
+    (member) => member.relationship_metadata?.is_deceased || member.is_deceased,
+  ).length
 })
 
 const familyName = computed(() => {
