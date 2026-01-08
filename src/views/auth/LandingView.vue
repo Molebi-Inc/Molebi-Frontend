@@ -1,25 +1,57 @@
 <template>
-  <div class="md:grid grid-cols-7 bg-brand-background h-screen overflow-hidden">
+  <div
+    :class="[
+      'bg-brand-background',
+      isScrollable
+        ? 'min-h-screen overflow-y-auto flex flex-col'
+        : isDesktop
+          ? 'h-screen overflow-hidden md:grid grid-cols-7'
+          : 'h-screen overflow-hidden flex flex-col',
+    ]"
+  >
     <div
-      class="border-r border-secondary-200 bg-white col-span-4 md:px-[72px] md:py-[40px] px-6 py-8 flex flex-col overflow-hidden"
+      :class="[
+        'border-r border-secondary-200 bg-white',
+        isDesktop
+          ? 'col-span-4 md:px-[72px] md:py-[40px] flex flex-col overflow-hidden'
+          : 'px-6 py-8 flex flex-col',
+      ]"
     >
-      <header v-if="isLargeScreen" class="shrink-0">
+      <header v-if="isDesktop" class="shrink-0">
         <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
       </header>
-      <div class="flex-1 flex justify-center items-center min-h-0">
+      <div
+        :class="[
+          isDesktop
+            ? 'flex-1 flex justify-center items-center min-h-0'
+            : 'flex-1 flex justify-center items-center',
+        ]"
+      >
         <div
-          class="w-full h-full max-w-[344px] max-h-[344px] md:max-w-[540px] md:max-h-[540px] flex items-center justify-center"
+          :class="[
+            'w-full flex items-center justify-center',
+            isDesktop
+              ? 'h-full max-w-[344px] max-h-[344px] md:max-w-[540px] md:max-h-[540px]'
+              : isScrollable
+                ? 'max-w-[280px] max-h-[280px]'
+                : 'max-w-[320px] max-h-[320px]',
+          ]"
         >
           <img :src="component?.image_url" alt="Molebi" class="w-full h-full object-contain" />
         </div>
       </div>
     </div>
     <div
-      class="flex flex-col justify-center col-span-3 md:px-[120px] px-6 overflow-hidden py-4 md:py-8"
+      :class="[
+        'flex flex-col',
+        isDesktop
+          ? 'col-span-3 md:px-[120px] px-6 overflow-hidden py-4 md:py-8 justify-center'
+          : 'px-6 py-6 justify-center flex-1',
+      ]"
     >
       <div class="flex justify-start mb-4 md:mb-8 shrink-0">
         <BackButton
-          v-if="component?.has_back_button && isLargeScreen"
+          v-if="component?.has_back_button && isDesktop"
           icon="vuesax.linear.arrow-left"
         />
       </div>
@@ -33,13 +65,23 @@
           ]"
         ></div>
       </div>
-      <h1 class="text-2xl font-semibold mb-2 text-black shrink-0">
+      <h1
+        :class="[
+          'font-semibold mb-2 text-black shrink-0',
+          isDesktop ? 'text-2xl' : isScrollable ? 'text-xl' : 'text-xl',
+        ]"
+      >
         {{ component?.title }}
       </h1>
-      <p class="text-black text-body-sm mb-4 md:mb-0 shrink-0">
+      <p :class="['text-black shrink-0', isDesktop ? 'text-body-sm mb-4 md:mb-0' : 'text-sm mb-4']">
         {{ component?.description }}
       </p>
-      <div class="flex flex-col mt-4 md:mt-12 mb-2 md:mb-3.5 gap-3 md:gap-4 shrink-0">
+      <div
+        :class="[
+          'flex flex-col gap-3 shrink-0',
+          isDesktop ? 'mt-4 md:mt-12 mb-2 md:mb-3.5 md:gap-4' : 'mt-6 mb-4',
+        ]"
+      >
         <MlbButton
           :label="component?.primary_button_label"
           block
@@ -53,7 +95,7 @@
           @click="component && $router.push(component.secondary_button_route)"
         />
       </div>
-      <div class="text-black text-caption shrink-0">
+      <div :class="['text-black shrink-0', isDesktop ? 'text-caption' : 'text-xs mt-4']">
         By continuing, you agree to Molebi's
         <a href="#" class="underline">Terms of Service</a> and
         <a href="#" class="underline">Privacy Policy</a>
@@ -69,7 +111,10 @@ import BackButton from '@/components/common/BackButton.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 
 const $route = useRoute()
-const isLargeScreen = useMediaQuery('(min-width: 768px)')
+// iPhone 8 is 375px - screens 375px and below should scroll
+const isScrollable = useMediaQuery('(max-width: 375px)')
+// Desktop is 768px and above - uses grid layout
+const isDesktop = useMediaQuery('(min-width: 768px)')
 const $router = useRouter()
 
 type ComponentConfig = {
