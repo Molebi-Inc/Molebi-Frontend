@@ -106,11 +106,13 @@ export function useTour(tourName?: string) {
 
     if (tourStage.is_skipped) {
       return true
+      // return false
     }
 
     const routeTours = tourStore.getTourSteps?.tour_steps
     if (!routeTours?.length) {
       return true
+      // return false
     }
 
     if (routeTours.length > tourStage.current_stage) {

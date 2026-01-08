@@ -8,7 +8,7 @@ export const heritageRoutes = [
     meta: {
       layout: 'app',
       requiresAuth: true,
-      fullScreen: 'mobile',
+      // fullScreen: 'mobile',
     },
     children: [
       {

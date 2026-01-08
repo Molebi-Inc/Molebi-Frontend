@@ -57,11 +57,16 @@ export const useFolderMenu = () => {
         })
       },
       'add-media': () => {
+        currentFlow.value === 'vault'
+          ? vaultStore.setStoreProp('edit', true)
+          : storageStore.setStoreProp('edit', true)
         $router.push({
           name: $route.name,
           params: { ...$route.params, id: folder.id },
           query: { ...$route.query, tab: 'file' },
         })
+        console.log('selected folder', folder)
+        console.log('alonzy', storageStore.selectedFolder)
       },
       share: () => {
         $router.push({

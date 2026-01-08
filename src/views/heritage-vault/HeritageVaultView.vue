@@ -10,15 +10,22 @@
         class="flex items-center justify-between mt-3 mb-6"
       >
         <div></div>
-        <div>Heritage Vault</div>
-        <div>
-          <MlbIcon
+        <!-- <div>Heritage Vault</div> -->
+        <div class="mr-3">
+          <MlbButton
+            v-if="$route.params.module === 'storage'"
+            text
+            class="font-bold!"
+            label="Add"
+            @click="handleAddModal"
+          />
+          <!-- <MlbIcon
             v-if="$route.params.module === 'storage'"
             name="vuesax.linear.add"
             color="#333333"
             :size="24"
             @click.prevent="handleAddModal"
-          />
+          /> -->
         </div>
       </div>
       <n-tabs
@@ -26,8 +33,9 @@
         v-model:value="activeTab"
         animated
         :bar-width="0"
+        class="archive-tabs"
         add-tab-style="color: #333333 !important"
-        justify-content="space-evenly"
+        justify-content="space-evenly""
         @update:value="onTabUpdate"
       >
         <n-tab-pane
@@ -35,7 +43,7 @@
           :key="tab.name"
           :name="tab.name"
           :tab="tab.label"
-          class="w-full mt-6"
+          class="w-full mt-6 font-semibold!"
         >
         </n-tab-pane>
       </n-tabs>
@@ -72,7 +80,8 @@
 import { computed, onMounted, ref, watch, h } from 'vue'
 import { NTabPane, NTabs } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
-import MlbIcon from '@/components/ui/MlbIcon.vue'
+// import MlbIcon from '@/components/ui/MlbIcon.vue'
+import MlbButton from '@/components/ui/MlbButton.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import BackButton from '@/components/common/BackButton.vue'
 import type { TabInterface } from '@/types/general.types'
@@ -217,3 +226,8 @@ onMounted(() => {
   generalStore.setStoreProp('flow', $route.params.module || 'storage')
 })
 </script>
+<style scoped>
+:deep(.archive-tabs .n-tabs-tab__label) {
+  font-weight: semibold;
+}
+</style>

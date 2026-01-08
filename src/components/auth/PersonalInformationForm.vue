@@ -4,13 +4,13 @@
       <div class="flex flex-col gap-1 mb-11">
         <n-form-item label="" path="avatar">
           <n-upload
-            directory-dnd
             :max="1"
+            directory-dnd
             accept="image/*"
-            @update:file-list="updateFileList"
             list-type="image-card"
-            file-list-class="flex! justify-center items-center rounded-full!"
             trigger-class="trigger4dragger"
+            file-list-class="flex! justify-center items-center rounded-full!"
+            @update:file-list="updateFileList"
           >
             Click to Upload
           </n-upload>
@@ -210,6 +210,7 @@ const getValidFiles = (fileList: UploadFileInfo[]) =>
     .filter((maybeFile): maybeFile is File => maybeFile instanceof File)
 
 const updateFileList = (fileList: UploadFileInfo[]) => {
+  console.log('fileList', fileList)
   ;(form.value as PersonalInformationFormValues).avatar = getValidFiles(fileList)[0]
 }
 

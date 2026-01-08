@@ -102,8 +102,8 @@
         </div>
 
         <!-- Playback Controls -->
-        <div class="grid grid-cols-3 gap-6 mb-2">
-          <div></div>
+        <div v-if="isLargeScreen" class="grid grid-cols-3 gap-6 mb-2">
+          <div class="col-span-1"></div>
           <div class="col-span-1 flex items-center gap-5">
             <button
               type="button"
@@ -154,6 +154,57 @@
             </button>
           </div>
         </div>
+        <div v-else class="gap-6 mb-2">
+          <div class="flex items-center gap-5 w-full justify-evenly">
+            <button
+              type="button"
+              @click="rewind"
+              :disabled="!playbackAudioUrl"
+              class="text-gray-600 hover:text-gray-800 transition flex flex-col items-center disabled:opacity-40 disabled:pointer-events-none"
+            >
+              <div
+                class="border-2 border-gray-600 rounded-full w-6 h-6 flex items-center justify-center mb-1"
+              >
+                <span class="text-sm font-semibold">15</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              @click="togglePlayback"
+              :disabled="!playbackAudioUrl"
+              class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-900 transition shadow-lg disabled:opacity-40 disabled:pointer-events-none"
+            >
+              <MlbIcon name="vuesax.bold.play-circle" size="32" color="#807F94" v-if="!isPlaying" />
+              <MlbIcon name="vuesax.bold.pause-circle" size="32" color="#807F94" v-else />
+            </button>
+            <button
+              type="button"
+              @click="forward"
+              :disabled="!playbackAudioUrl"
+              class="text-gray-600 hover:text-gray-800 transition flex flex-col items-center disabled:opacity-40 disabled:pointer-events-none"
+            >
+              <div
+                class="border-2 border-gray-600 rounded-full w-6 h-6 flex items-center justify-center mb-1"
+              >
+                <span class="text-sm font-semibold">15</span>
+              </div>
+            </button>
+            <button
+              type="button"
+              @click="deleteRecording"
+              class="text-red-500 hover:text-red-600 transition"
+            >
+              <div
+                class="border-2 border-red-500 rounded-full w-6 h-6 flex items-center justify-center mb-1"
+              >
+                x
+              </div>
+            </button>
+          </div>
+          <!-- <div class="col-span-1 flex items-center justify-end">
+          </div> -->
+        </div>
       </div>
     </div>
 
@@ -176,12 +227,15 @@ import { ref, onUnmounted } from 'vue'
 import type { UploadFileInfo } from 'naive-ui'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
+import { useMediaQuery } from '@vueuse/core'
 
 type RecordingState = 'idle' | 'recording' | 'playback'
 
 const emit = defineEmits<{
   (e: 'update:file-list', fileList: UploadFileInfo[]): void
 }>()
+
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const playbackTime = ref(0)
 const recordingTime = ref(0)

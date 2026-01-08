@@ -99,15 +99,29 @@ export const useUpdateProfileMutation = () => {
     mutationFn: async (
       data: PersonalInformationFormValues | ProfileFormValues | FamilyInfoFormValues,
     ) => {
+      const formData = new FormData()
+      Object.entries({
+        ...data,
+        _method: 'PUT',
+      }).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formData.append(key, value)
+        } else {
+          formData.append(key, value as string)
+        }
+      })
+      // const payload
       const response = await axiosInstance.post<ApiResponse>(
         '/api/user/profile',
-        {
-          ...data,
-          _method: 'PUT',
-        },
+        formData,
+        // {
+        //   ...data,
+        //   _method: 'PUT',
+        // },
         {
           headers: {
             Authorization: `Bearer ${authConfig.getToken()}`,
+            'Content-Type': 'multipart/form-data',
           },
         },
       )

@@ -22,9 +22,14 @@
           >
             <MlbIcon
               :name="item.icon"
-              :class="['w-6 h-6', activeNav === item.id ? 'text-primary-800' : 'text-gray-400']"
+              :class="[
+                'w-6 h-6',
+                activeNav === item.id
+                  ? 'text-primary-500 font-semibold active-icon'
+                  : 'text-gray-400',
+              ]"
             />
-            <span :class="activeNav === item.id ? 'text-primary-800' : 'text-gray-400'">
+            <span :class="activeNav === item.id ? 'text-primary-500' : 'text-gray-400'">
               {{ item.label }}
             </span>
           </button>
@@ -43,9 +48,14 @@
           >
             <MlbIcon
               :name="item.icon"
-              :class="['w-6 h-6', activeNav === item.id ? 'text-primary-800' : 'text-gray-400']"
+              :class="[
+                'w-6 h-6',
+                activeNav === item.id
+                  ? 'text-primary-500 font-semibold active-icon'
+                  : 'text-gray-400',
+              ]"
             />
-            <span :class="activeNav === item.id ? 'text-primary-800' : 'text-gray-400'">
+            <span :class="activeNav === item.id ? 'text-primary-500' : 'text-gray-400'">
               {{ item.label }}
             </span>
           </button>
@@ -111,3 +121,14 @@ const navigate = (route: SidebarItem['route']) => {
   $router.push(route)
 }
 </script>
+
+<style scoped>
+:deep(.active-icon svg),
+:deep(.active-icon path),
+:deep(.active-icon circle),
+:deep(.active-icon rect),
+:deep(.active-icon line) {
+  stroke-width: 3;
+  font-weight: 800;
+}
+</style>

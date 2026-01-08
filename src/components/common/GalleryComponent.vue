@@ -3,7 +3,10 @@
     <!-- Batch Action Bar -->
     <div
       v-if="allowBatchAction && selectedMediaIds.size > 0"
-      class="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200 flex items-center justify-between"
+      :class="[
+        'mb-4 bg-primary-50 rounded-lg border border-primary-200 flex items-center justify-between',
+        isLargeScreen ? 'p-4' : 'p-3',
+      ]"
     >
       <div class="flex items-center gap-4">
         <span class="text-xs md:text-sm font-medium text-gray-700">
@@ -41,12 +44,18 @@
     </div>
     <div v-else>
       <!-- Grid Layout -->
-      <div v-if="layout === 'grid'" :class="['grid gap-4', getGridColsClass]">
+      <div
+        v-if="layout === 'grid'"
+        :class="['grid', isLargeScreen ? 'gap-4' : 'gap-2', getGridColsClass]"
+      >
         <div
           v-for="item in filteredMedia"
           :key="item.id"
-          class="relative group cursor-pointer bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow active:scale-95"
-          :class="{ 'ring-2 ring-primary-500': allowBatchAction && isSelected(item.id) }"
+          :class="[
+            'relative group cursor-pointer bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow active:scale-95',
+            isLargeScreen ? '' : 'rounded-lg',
+            { 'ring-2 ring-primary-500': allowBatchAction && isSelected(item.id) },
+          ]"
           @click="allowBatchAction ? handleItemClick(item, $event) : openMediaPreview(item)"
         >
           <!-- Selection Checkbox -->
@@ -95,6 +104,32 @@
             </div>
           </div>
 
+          <!-- Audio Thumbnail -->
+          <div
+            v-else-if="getMediaType(item.mime_type, item.file_name) === 'audio'"
+            class="aspect-square bg-gray-50 flex items-center justify-center"
+          >
+            <img
+              src="@/assets/images/audio-thumbnail.png"
+              alt="Audio"
+              :class="isLargeScreen ? 'w-48 h-48' : 'w-24 h-24'"
+              class="object-contain"
+            />
+            <!-- <div class="text-center">
+    <MlbIcon name="vuesax.linear.music" :size="48" color="#02BF83" />
+  </div> -->
+            <div
+              class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity flex items-center justify-center"
+            >
+              <MlbIcon
+                name="vuesax.linear.play"
+                :size="32"
+                color="white"
+                class="opacity-0 group-hover:opacity-100 transition-opacity"
+              />
+            </div>
+          </div>
+
           <!-- Video Thumbnail -->
           <div
             v-else-if="getMediaType(item.mime_type) === 'video'"
@@ -131,37 +166,20 @@
             </div>
           </div>
 
-          <!-- Audio Thumbnail -->
-          <div
-            v-else-if="getMediaType(item.mime_type) === 'audio'"
-            class="aspect-square bg-gray-50 flex items-center justify-center"
-          >
-            <img
-              src="@/assets/images/audio-thumbnail.png"
-              alt="Audio"
-              class="w-48 h-48 object-contain"
-            />
-            <!-- <div class="text-center">
-              <MlbIcon name="vuesax.linear.music" :size="48" color="#02BF83" />
-            </div> -->
-            <div
-              class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity flex items-center justify-center"
-            >
-              <MlbIcon
-                name="vuesax.linear.play"
-                :size="32"
-                color="white"
-                class="opacity-0 group-hover:opacity-100 transition-opacity"
-              />
-            </div>
-          </div>
-
           <!-- Media Info -->
-          <div v-if="showInfo" class="p-3">
-            <h4 class="text-sm font-medium text-gray-900 truncate mb-1">
+          <div v-if="showInfo" :class="isLargeScreen ? 'p-3' : 'p-2'">
+            <h4
+              :class="[
+                'font-medium text-gray-900 truncate mb-1',
+                isLargeScreen ? 'text-sm' : 'text-xs',
+              ]"
+            >
               {{ item.name || 'Untitled' }}
             </h4>
-            <p v-if="item.date" class="text-xs text-gray-500 truncate">
+            <p
+              v-if="item.date"
+              :class="['text-gray-500 truncate', isLargeScreen ? 'text-xs' : 'text-[10px]']"
+            >
               {{ formatDate(item.date) }}
             </p>
           </div>
@@ -267,13 +285,14 @@
 
             <!-- Audio Thumbnail -->
             <div
-              v-else-if="getMediaType(item.mime_type) === 'audio'"
+              v-else-if="getMediaType(item.mime_type, item.file_name) === 'audio'"
               class="aspect-square bg-gray-50 flex items-center justify-center"
             >
               <img
                 src="@/assets/images/audio-thumbnail.png"
                 alt="Audio"
-                class="w-48 h-48 object-contain"
+                :class="isLargeScreen ? 'w-48 h-48' : 'w-24 h-24'"
+                class="object-contain"
               />
               <!-- <div class="text-center">
                 <MlbIcon name="vuesax.linear.music" :size="48" color="#02BF83" />
@@ -291,11 +310,19 @@
             </div>
 
             <!-- Media Info -->
-            <div v-if="showInfo" class="p-3">
-              <h4 class="text-sm font-medium text-gray-900 truncate mb-1">
+            <div v-if="showInfo" :class="isLargeScreen ? 'p-3' : 'p-2'">
+              <h4
+                :class="[
+                  'font-medium text-gray-900 truncate mb-1',
+                  isLargeScreen ? 'text-sm' : 'text-xs',
+                ]"
+              >
                 {{ item.name || 'Untitled' }}
               </h4>
-              <p v-if="item.date" class="text-xs text-gray-500 truncate">
+              <p
+                v-if="item.date"
+                :class="['text-gray-500 truncate', isLargeScreen ? 'text-xs' : 'text-[10px]']"
+              >
                 {{ formatDate(item.date) }}
               </p>
             </div>
@@ -376,7 +403,9 @@ const filteredMedia = computed(() => {
   if (props.mediaType === 'all') {
     return props.media
   }
-  return props.media.filter((item) => getMediaType(item.mime_type) === props.mediaType)
+  return props.media.filter(
+    (item) => getMediaType(item.mime_type, item.file_name) === props.mediaType,
+  )
 })
 
 const getGridColsClass = computed(() => {

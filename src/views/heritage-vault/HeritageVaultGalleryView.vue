@@ -13,18 +13,19 @@
       <div>
         <n-dropdown
           :options="options"
+          trigger="click"
+          :show-arrow="false"
+          placement="bottom-end"
           @select="
-            (key) => initSelect(key, selectedFolder as FolderInterface | StorageFolderInterface)
+            (key) => {
+              if (selectedFolder) {
+                initSelect(key, selectedFolder)
+              }
+            }
           "
           class="z-10!"
         >
-          <n-button
-            text
-            type="tertiary"
-            size="small"
-            @click.stop.prevent="(e) => e?.stopPropagation()"
-            class="rotate-90"
-          >
+          <n-button text type="tertiary" size="small" @click.stop class="rotate-90">
             <MlbIcon name="vuesax.linear.more" :size="20" color="#737373" />
           </n-button>
         </n-dropdown>
@@ -123,7 +124,7 @@
   </section>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { NDropdown, NButton } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import { useVaultStore } from '@/stores/vault.store'
@@ -223,10 +224,13 @@ const gallery = computed<AttachmentInterface[]>(() =>
 )
 
 const initSelect = (key: string, folder: FolderInterface | StorageFolderInterface) => {
-  if (key !== 'delete') {
-    showModal.value = true
-  }
-  handleSelect(key, folder)
+  // Use nextTick to ensure dropdown closes properly before handling selection
+  nextTick(() => {
+    if (key !== 'delete') {
+      showModal.value = true
+    }
+    handleSelect(key, folder)
+  })
 }
 
 const handleUpdateFolder = async (value: {

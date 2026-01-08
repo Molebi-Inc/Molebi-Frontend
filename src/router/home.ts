@@ -9,6 +9,7 @@ export const homeRoutes = [
       layout: 'app',
       tour: 'dashboard',
       mobileTour: 'dashboard_mobile',
+      disableCentralTour: true,
       requiresAuth: true,
     },
     children: [

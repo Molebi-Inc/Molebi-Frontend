@@ -1,8 +1,8 @@
 <template>
   <section class="md:px-16">
-    <div class="md:hidden py-4">
+    <!-- <div class="md:hidden py-4">
       <BackButton icon="vuesax.linear.arrow-left" />
-    </div>
+    </div> -->
     <div class="flex flex-col gap-6">
       <div class="border border-gray-200 rounded-3xl p-6 md:p-8">
         <h1 class="text-xl md:text-2xl font-semibold text-primary-500 mb-2">
