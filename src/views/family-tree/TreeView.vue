@@ -446,10 +446,10 @@ import { ref, reactive, watch, nextTick, onMounted, onBeforeUnmount, computed } 
 import { useRouter } from 'vue-router'
 import * as d3 from 'd3'
 import { getUserAvatar } from '@/helpers/general.helpers'
-import {
-  getChildrenCountForMember,
-  //, getChildrenForMember
-} from '@/helpers/family-tree.helpers'
+// import {
+//   getChildrenCountForMember,
+//   , getChildrenForMember
+// } from '@/helpers/family-tree.helpers'
 import ViewMember from '@/components/family-tree/ViewMember.vue'
 import type { FamilyMemberInterface as Person, Payload } from '@/types/family-tree.types'
 
@@ -794,13 +794,13 @@ function rebuildPayloadForPerson(person: Person, originalPayload: Payload): Payl
 
     // Their children are: original self + siblings (where parent_id matches this parent)
     // Use the helper function to get all children for this parent
-    const parentChildren = getChildrenForMember(originalPayload, personId)
+    // const parentChildren = getChildrenForMember(originalPayload, personId)
 
     return {
       self: person,
       parents: parentGrandparents,
       siblings: parentSiblings,
-      children: parentChildren,
+      children: [], //parentChildren,
       grandparents: [],
       grandchildren: [],
       aunts_uncles: [],
@@ -1718,17 +1718,17 @@ function getChildrenCount(personId: string | number): number {
     console.warn('getChildrenCount: personId is invalid', personId)
     return 0
   }
-  const count = getChildrenCountForMember(p, personId)
+  // const count = getChildrenCountForMember(p, personId)
   // Debug log to help identify issues
-  if (count === 0) {
-    console.log(
-      'getChildrenCount: count is 0 for personId',
-      personId,
-      'payload keys:',
-      Object.keys(p),
-    )
-  }
-  return count
+  // if (count === 0) {
+  //   console.log(
+  //     'getChildrenCount: count is 0 for personId',
+  //     personId,
+  //     'payload keys:',
+  //     Object.keys(p),
+  //   )
+  // }
+  // return count
 }
 
 /**
