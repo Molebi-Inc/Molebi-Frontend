@@ -73,39 +73,42 @@
               @mouseleave="hideTooltip" -->
 
               <!-- HEART NODE -->
-              <foreignObject
-                v-if="node.type === 'heart'"
-                :x="node.x - 20"
-                :y="node.y - 20"
-                width="40"
-                height="40"
-              >
-                <div class="w-full h-full flex items-center justify-center">
-                  <div
-                    class="bg-white rounded-full p-1.5 shadow-md flex items-center justify-center"
-                  >
-                    <!-- Simple Heart Icon (SVG) -->
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#0B5132" stroke="none">
-                      <path
-                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </foreignObject>
+              <g v-if="node.type === 'heart'">
+                <!-- Background circle -->
+                <circle
+                  :cx="node.x"
+                  :cy="node.y"
+                  r="20"
+                  fill="white"
+                  stroke="#0B5132"
+                  stroke-width="2"
+                />
+                <!-- Heart icon centered -->
+                <g :transform="`translate(${node.x}, ${node.y})`">
+                  <path
+                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                    fill="#0B5132"
+                    transform="translate(-12, -12) scale(0.8)"
+                  />
+                </g>
+              </g>
 
               <!-- PERSON NODE (Standard or SuperNode) -->
-              <!-- On very small screens (<=320px), use pure SVG circles to avoid foreignObject issues -->
+              <!-- On very small screens (<=320px) or Safari, use pure SVG circles to avoid foreignObject issues -->
               <template v-else>
-                <g v-if="isSmallScreen" class="cursor-pointer" @click.stop="handleNodeClick(node)">
-                  <!-- Background circle -->
+                <g
+                  v-if="isSmallScreen || isSafari"
+                  class="cursor-pointer"
+                  @click.stop="handleNodeClick(node)"
+                >
+                  <!-- Background circle with color -->
                   <circle
                     :cx="node.x"
                     :cy="node.y"
                     :r="nodeSize / 2"
-                    fill="white"
-                    stroke="#e5e7eb"
-                    stroke-width="2"
+                    :fill="getNodeColor(node).fill"
+                    :stroke="getNodeColor(node).stroke"
+                    stroke-width="2.5"
                   />
                   <!-- Self indicator ring -->
                   <circle
@@ -148,42 +151,135 @@
                     <circle
                       v-for="(subNode, subIdx) in node.subNodes"
                       :key="subNode.id || subIdx"
-                      :cx="node.x + nodeSize / 2 - 6 - subIdx * 10"
-                      :cy="node.y + nodeSize / 2 - 6 - subIdx * 10"
-                      :r="Math.max(10, nodeSize / 6)"
+                      :cx="node.x + nodeSize / 2 - 8 - subIdx * 12"
+                      :cy="node.y + nodeSize / 2 - 8 - subIdx * 12"
+                      :r="Math.max(14, nodeSize / 5)"
                       fill="white"
-                      stroke="#e5e7eb"
-                      stroke-width="1.5"
+                      stroke="#0B5132"
+                      stroke-width="2.5"
                       class="cursor-pointer"
                       @click.stop="handleSubNodeClick(subNode, node)"
                     />
-                    <text
+                    <defs>
+                      <clipPath
+                        v-for="(subNode, subIdx) in node.subNodes"
+                        :key="`subclip-${subNode.id || subIdx}`"
+                        :id="`subclip-${node.id}-${subIdx}`"
+                      >
+                        <circle
+                          :cx="node.x + nodeSize / 2 - 8 - subIdx * 12"
+                          :cy="node.y + nodeSize / 2 - 8 - subIdx * 12"
+                          :r="Math.max(14, nodeSize / 5) - 1"
+                        />
+                      </clipPath>
+                    </defs>
+                    <template
                       v-for="(subNode, subIdx) in node.subNodes"
-                      :key="`text-${subNode.id || subIdx}`"
-                      :x="node.x + nodeSize / 2 - 6 - subIdx * 10"
-                      :y="node.y + nodeSize / 2 - 6 - subIdx * 10 + 3"
-                      text-anchor="middle"
-                      :font-size="Math.max(8, nodeSize / 8)"
-                      fill="#111827"
-                      font-weight="600"
-                      class="cursor-pointer"
-                      @click.stop="handleSubNodeClick(subNode, node)"
+                      :key="`subnode-${subNode.id || subIdx}`"
                     >
-                      {{ getPersonInitials(subNode) }}
-                    </text>
+                      <image
+                        v-if="subNode.profile_picture_url"
+                        :href="subNode.profile_picture_url || ''"
+                        :x="
+                          node.x + nodeSize / 2 - 8 - subIdx * 12 - Math.max(14, nodeSize / 5) + 1
+                        "
+                        :y="
+                          node.y + nodeSize / 2 - 8 - subIdx * 12 - Math.max(14, nodeSize / 5) + 1
+                        "
+                        :width="(Math.max(14, nodeSize / 5) - 1) * 2"
+                        :height="(Math.max(14, nodeSize / 5) - 1) * 2"
+                        :clip-path="`url(#subclip-${node.id}-${subIdx})`"
+                        class="cursor-pointer"
+                        @click.stop="handleSubNodeClick(subNode, node)"
+                      />
+                      <text
+                        v-else
+                        :x="node.x + nodeSize / 2 - 8 - subIdx * 12"
+                        :y="node.y + nodeSize / 2 - 8 - subIdx * 12 + 4"
+                        text-anchor="middle"
+                        :font-size="Math.max(10, nodeSize / 7)"
+                        fill="#111827"
+                        font-weight="600"
+                        class="cursor-pointer"
+                        @click.stop="handleSubNodeClick(subNode, node)"
+                      >
+                        {{ getPersonInitials(subNode) }}
+                      </text>
+                    </template>
+                  </g>
+
+                  <!-- Standard node subnodes (other spouses) - small badges -->
+                  <g v-if="!node.isSuperNode && node.subNodes && node.subNodes.length > 0">
+                    <defs>
+                      <clipPath
+                        v-for="(sub, idx) in node.subNodes"
+                        :key="`stdsubclip-${sub.id || idx}`"
+                        :id="`stdsubclip-${node.id}-${idx}`"
+                      >
+                        <circle
+                          :cx="node.x + nodeSize / 2 - 12 - idx * 22"
+                          :cy="node.y + nodeSize / 2 - 4"
+                          :r="standardSubNodeSize / 2 - 1"
+                        />
+                      </clipPath>
+                    </defs>
+                    <circle
+                      v-for="(sub, idx) in node.subNodes"
+                      :key="`stdsub-${sub.id || idx}`"
+                      :cx="node.x + nodeSize / 2 - 12 - idx * 22"
+                      :cy="node.y + nodeSize / 2 - 4"
+                      :r="standardSubNodeSize / 2"
+                      fill="white"
+                      stroke="#0B5132"
+                      stroke-width="2.5"
+                      class="cursor-pointer"
+                      @click.stop="handleSubNodeClick(sub, node)"
+                    />
+                    <template v-for="(sub, idx) in node.subNodes" :key="`stdsub-${sub.id || idx}`">
+                      <image
+                        v-if="sub.profile_picture_url"
+                        :href="sub.profile_picture_url || ''"
+                        :x="node.x + nodeSize / 2 - 12 - idx * 22 - standardSubNodeSize / 2 + 1"
+                        :y="node.y + nodeSize / 2 - 4 - standardSubNodeSize / 2 + 1"
+                        :width="standardSubNodeSize - 2"
+                        :height="standardSubNodeSize - 2"
+                        :clip-path="`url(#stdsubclip-${node.id}-${idx})`"
+                        class="cursor-pointer"
+                        @click.stop="handleSubNodeClick(sub, node)"
+                      />
+                      <text
+                        v-else
+                        :x="node.x + nodeSize / 2 - 12 - idx * 22"
+                        :y="node.y + nodeSize / 2 - 4 + 4"
+                        text-anchor="middle"
+                        :font-size="Math.max(11, standardSubNodeSize / 3.2)"
+                        fill="#111827"
+                        font-weight="600"
+                        class="cursor-pointer"
+                        @click.stop="handleSubNodeClick(sub, node)"
+                      >
+                        {{ getPersonInitials(sub) }}
+                      </text>
+                    </template>
                   </g>
                 </g>
 
                 <!-- Rich HTML avatar rendering for modern screens (including mobile PWA) -->
                 <foreignObject
                   v-else
-                  :x="Math.round(node.x - nodeSize / 2)"
-                  :y="Math.round(node.y - nodeSize / 2)"
+                  :x="getForeignObjectPosition(node).x"
+                  :y="getForeignObjectPosition(node).y"
                   :width="nodeSize"
                   :height="nodeSize"
                   :style="{
                     overflow: 'visible',
                     pointerEvents: 'none',
+                    ...(isSafari
+                      ? {
+                          WebkitTransform: 'translateZ(0)',
+                          transform: 'translateZ(0)',
+                        }
+                      : {}),
                   }"
                 >
                   <div
@@ -197,12 +293,16 @@
                       padding: '0',
                       boxSizing: 'border-box',
                       display: 'block',
-                      position: 'relative',
+                      position: 'absolute',
+                      left: '0',
+                      top: '0',
                       ...(isSafari
                         ? {
-                            WebkitTransform: 'translateZ(0)',
-                            transform: 'translateZ(0)',
+                            WebkitTransform: 'translate3d(0, 0, 0)',
+                            transform: 'translate3d(0, 0, 0)',
+                            WebkitBackfaceVisibility: 'hidden',
                             backfaceVisibility: 'hidden',
+                            willChange: 'transform',
                           }
                         : {}),
                     }"
@@ -211,9 +311,13 @@
                     <div v-if="node.isSuperNode" class="relative w-full h-full">
                       <!-- Main person (Full size) - Clickable -->
                       <div
-                        class="absolute top-0 left-0 w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg bg-white z-10 cursor-pointer"
+                        class="absolute top-0 left-0 w-full h-full rounded-full overflow-hidden shadow-lg z-10 cursor-pointer"
+                        :style="{
+                          pointerEvents: 'auto',
+                          backgroundColor: getNodeColor(node).fill,
+                          border: `2.5px solid ${getNodeColor(node).stroke}`,
+                        }"
                         @click.stop="handleNodeClick(node)"
-                        :style="{ pointerEvents: 'auto' }"
                       >
                         <img
                           :src="
@@ -234,13 +338,14 @@
                         <div
                           v-for="(subNode, subIdx) in node.subNodes"
                           :key="subNode.id || subIdx"
-                          class="absolute rounded-full overflow-hidden border-2 border-white shadow-md bg-white z-20 cursor-pointer"
+                          class="absolute rounded-full overflow-hidden shadow-md bg-white z-20 cursor-pointer"
                           :style="{
                             width: subNodeSize + 'px',
                             height: subNodeSize + 'px',
-                            bottom: `${-4 - subIdx * 8}px`,
-                            right: `${-4 - subIdx * 8}px`,
+                            bottom: `${-6 - subIdx * 10}px`,
+                            right: `${-6 - subIdx * 10}px`,
                             pointerEvents: 'auto',
+                            border: '2.5px solid #0B5132',
                           }"
                           @click.stop="handleSubNodeClick(subNode, node)"
                         >
@@ -265,10 +370,14 @@
                       <!-- Main Avatar -->
                       <div
                         :class="[
-                          'w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg flex items-center justify-center relative z-20 cursor-pointer',
+                          'w-full h-full rounded-full overflow-hidden shadow-lg flex items-center justify-center relative z-20 cursor-pointer',
                           node.isSelf ? 'ring-4 ring-green-300' : '',
                         ]"
-                        style="background: white; pointer-events: auto"
+                        :style="{
+                          backgroundColor: getNodeColor(node).fill,
+                          border: `2.5px solid ${getNodeColor(node).stroke}`,
+                          pointerEvents: 'auto',
+                        }"
                         @click.stop="handleNodeClick(node)"
                       >
                         <img
@@ -289,13 +398,14 @@
                       <div
                         v-for="(sub, idx) in node.subNodes || []"
                         :key="sub.id || idx"
-                        class="absolute z-30 border-2 border-white rounded-full overflow-hidden shadow-md bg-white cursor-pointer"
+                        class="absolute z-30 rounded-full overflow-hidden shadow-md bg-white cursor-pointer"
                         :style="{
                           width: standardSubNodeSize + 'px',
                           height: standardSubNodeSize + 'px',
-                          bottom: '-5px',
-                          right: `${-15 - idx * 20}px`,
+                          bottom: '-6px',
+                          right: `${-12 - idx * 22}px`,
                           pointerEvents: 'auto',
+                          border: '2.5px solid #0B5132',
                         }"
                         @click.stop="handleSubNodeClick(sub, node)"
                       >
@@ -551,8 +661,51 @@ function updateNodeSizeForViewport() {
 }
 
 // Computed properties for responsive subnode sizing
-const subNodeSize = computed(() => Math.max(28, nodeSize.value * 0.4))
-const standardSubNodeSize = computed(() => Math.max(32, nodeSize.value * 0.5))
+const subNodeSize = computed(() => Math.max(32, nodeSize.value * 0.45)) // Made more prominent
+const standardSubNodeSize = computed(() => Math.max(36, nodeSize.value * 0.55)) // Made more prominent
+
+// Helper function to get node colors based on role
+function getNodeColor(node: LayoutNode): { fill: string; stroke: string } {
+  if (node.isSelf) {
+    return { fill: '#D1FAE5', stroke: '#10B981' } // Light green for self
+  }
+  if (node.role === 'parent' || node.role === 'parent-super') {
+    return { fill: '#FEF3C7', stroke: '#F59E0B' } // Light yellow/amber for parents
+  }
+  if (node.role === 'spouse') {
+    return { fill: '#E0E7FF', stroke: '#6366F1' } // Light indigo for spouse
+  }
+  if (node.role === 'sibling') {
+    return { fill: '#FCE7F3', stroke: '#EC4899' } // Light pink for siblings
+  }
+  if (node.role === 'child') {
+    return { fill: '#DBEAFE', stroke: '#3B82F6' } // Light blue for children
+  }
+  if (node.role === 'grandparent') {
+    return { fill: '#FED7AA', stroke: '#F97316' } // Light orange for grandparents
+  }
+  if (node.role === 'grandchild') {
+    return { fill: '#E0F2FE', stroke: '#0EA5E9' } // Light sky blue for grandchildren
+  }
+  // Default
+  return { fill: '#F3F4F6', stroke: '#9CA3AF' } // Light gray
+}
+
+// Helper function to get precise foreignObject positioning for Safari
+function getForeignObjectPosition(node: LayoutNode) {
+  const halfSize = nodeSize.value / 2
+  // Calculate the exact position where foreignObject should be placed
+  // so that its center (at halfSize from top-left) aligns with node.x, node.y
+  const x = node.x - halfSize
+  const y = node.y - halfSize
+
+  // For Safari, ensure we're using the exact same coordinates as the connectors
+  // Safari may render foreignObject at slightly different positions, so we use exact values
+  return {
+    x: x,
+    y: y,
+  }
+}
 
 const svgWidth = ref(1400)
 const svgHeight = ref(1200)
@@ -2015,5 +2168,22 @@ svg {
 }
 .links-layer path {
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.06));
+}
+
+/* Safari-specific fixes for foreignObject alignment */
+@supports (-webkit-appearance: none) {
+  foreignObject {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  foreignObject > div {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 </style>
