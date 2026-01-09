@@ -1718,6 +1718,7 @@ function getChildrenCount(personId: string | number): number {
     console.warn('getChildrenCount: personId is invalid', personId)
     return 0
   }
+  return 0
   // const count = getChildrenCountForMember(p, personId)
   // Debug log to help identify issues
   // if (count === 0) {
