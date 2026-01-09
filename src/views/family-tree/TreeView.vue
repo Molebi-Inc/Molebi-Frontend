@@ -143,14 +143,14 @@
                   >
                     {{ getInitials(node) }}
                   </text>
-                  <!-- Super node subnodes (small circles) -->
+                  <!-- Super node subnodes (small circles) - positioned relative to node center -->
                   <g v-if="node.isSuperNode && node.subNodes && node.subNodes.length > 0">
                     <circle
                       v-for="(subNode, subIdx) in node.subNodes"
                       :key="subNode.id || subIdx"
-                      :cx="node.x + nodeSize / 2 - 8 - subIdx * 8"
-                      :cy="node.y + nodeSize / 2 - 8 - subIdx * 8"
-                      r="12"
+                      :cx="node.x + nodeSize / 2 - 6 - subIdx * 10"
+                      :cy="node.y + nodeSize / 2 - 6 - subIdx * 10"
+                      :r="Math.max(10, nodeSize / 6)"
                       fill="white"
                       stroke="#e5e7eb"
                       stroke-width="1.5"
@@ -160,10 +160,10 @@
                     <text
                       v-for="(subNode, subIdx) in node.subNodes"
                       :key="`text-${subNode.id || subIdx}`"
-                      :x="node.x + nodeSize / 2 - 8 - subIdx * 8"
-                      :y="node.y + nodeSize / 2 - 8 - subIdx * 8 + 3"
+                      :x="node.x + nodeSize / 2 - 6 - subIdx * 10"
+                      :y="node.y + nodeSize / 2 - 6 - subIdx * 10 + 3"
                       text-anchor="middle"
-                      font-size="8"
+                      :font-size="Math.max(8, nodeSize / 8)"
                       fill="#111827"
                       font-weight="600"
                       class="cursor-pointer"
@@ -181,13 +181,16 @@
                   :y="node.y - nodeSize / 2"
                   :width="nodeSize"
                   :height="nodeSize"
-                  style="overflow: visible"
+                  style="overflow: visible; pointer-events: none"
                 >
                   <div
                     xmlns="http://www.w3.org/1999/xhtml"
-                    class="relative cursor-pointer"
-                    :style="{ width: nodeSize + 'px', height: nodeSize + 'px' }"
-                    @click.stop="handleNodeClick(node)"
+                    class="relative"
+                    :style="{
+                      width: nodeSize + 'px',
+                      height: nodeSize + 'px',
+                      pointerEvents: 'auto',
+                    }"
                   >
                     <!-- SUPER NODE (e.g. Parents: Father & Mother) -->
                     <div v-if="node.isSuperNode" class="relative w-full h-full">
@@ -195,6 +198,7 @@
                       <div
                         class="absolute top-0 left-0 w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg bg-white z-10 cursor-pointer"
                         @click.stop="handleNodeClick(node)"
+                        :style="{ pointerEvents: 'auto' }"
                       >
                         <img
                           :src="
@@ -215,10 +219,13 @@
                         <div
                           v-for="(subNode, subIdx) in node.subNodes"
                           :key="subNode.id || subIdx"
-                          class="absolute bottom-0 right-0 w-[32px] h-[32px] rounded-full overflow-hidden border-2 border-white shadow-md bg-white z-20 cursor-pointer"
+                          class="absolute rounded-full overflow-hidden border-2 border-white shadow-md bg-white z-20 cursor-pointer"
                           :style="{
+                            width: subNodeSize + 'px',
+                            height: subNodeSize + 'px',
                             bottom: `${-4 - subIdx * 8}px`,
                             right: `${-4 - subIdx * 8}px`,
+                            pointerEvents: 'auto',
                           }"
                           @click.stop="handleSubNodeClick(subNode, node)"
                         >
@@ -243,10 +250,11 @@
                       <!-- Main Avatar -->
                       <div
                         :class="[
-                          'w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg flex items-center justify-center relative z-20',
+                          'w-full h-full rounded-full overflow-hidden border-2 border-white shadow-lg flex items-center justify-center relative z-20 cursor-pointer',
                           node.isSelf ? 'ring-4 ring-green-300' : '',
                         ]"
-                        style="background: white"
+                        style="background: white; pointer-events: auto"
+                        @click.stop="handleNodeClick(node)"
                       >
                         <img
                           :src="
@@ -266,10 +274,13 @@
                       <div
                         v-for="(sub, idx) in node.subNodes || []"
                         :key="sub.id || idx"
-                        class="absolute z-30 w-[40px] h-[40px] border-2 border-white rounded-full overflow-hidden shadow-md bg-white cursor-pointer"
+                        class="absolute z-30 border-2 border-white rounded-full overflow-hidden shadow-md bg-white cursor-pointer"
                         :style="{
+                          width: standardSubNodeSize + 'px',
+                          height: standardSubNodeSize + 'px',
                           bottom: '-5px',
                           right: `${-15 - idx * 20}px`,
+                          pointerEvents: 'auto',
                         }"
                         @click.stop="handleSubNodeClick(sub, node)"
                       >
@@ -507,6 +518,10 @@ function updateNodeSizeForViewport() {
     nodeSize.value = 72
   }
 }
+
+// Computed properties for responsive subnode sizing
+const subNodeSize = computed(() => Math.max(28, nodeSize.value * 0.4))
+const standardSubNodeSize = computed(() => Math.max(32, nodeSize.value * 0.5))
 
 const svgWidth = ref(1400)
 const svgHeight = ref(1200)
@@ -910,9 +925,10 @@ function buildLayout() {
   const yGen4 = centerY + rowHeight // Children
   const yGen5 = centerY + rowHeight * 2 // Grandchildren
 
-  const spacing = 120 // Spacing between Self and Spouse (reduced to bring them closer)
-  const leftSideX = centerX - 400 // Left side for self's relations
-  const rightSideX = centerX + 400 // Right side for spouse's relations
+  // Responsive spacing based on nodeSize for better mobile alignment
+  const spacing = Math.max(80, nodeSize.value * 1.5) // Spacing between Self and Spouse, scales with nodeSize
+  const leftSideX = centerX - Math.max(300, nodeSize.value * 5.5) // Left side for self's relations
+  const rightSideX = centerX + Math.max(300, nodeSize.value * 5.5) // Right side for spouse's relations
   const nodeRadius = nodeSize.value / 2 // Account for node size to prevent overlap
 
   // Add generation labels (positioned above nodes)
@@ -1014,8 +1030,8 @@ function buildLayout() {
     })
 
     // Position grandparents based on their parent_id
-    let grandparentXOffset = leftSideX - 200
-    const grandparentSpacing = 300
+    let grandparentXOffset = leftSideX - nodeSize.value * 3
+    const grandparentSpacing = Math.max(250, nodeSize.value * 4.2)
 
     // Add grandparents grouped by parent_id
     Object.entries(grandparentsByParent).forEach(([, gps]) => {
@@ -1098,11 +1114,20 @@ function buildLayout() {
     }
     parentAndAuntsUncles.push(...filteredAuntsUncles)
 
-    const arcWidth = Math.max(400, parentAndAuntsUncles.length * 100)
-    const leftAnchor = leftSideX - 200
+    const arcWidth = Math.max(
+      nodeSize.value * 6,
+      parentAndAuntsUncles.length * nodeSize.value * 1.4,
+    )
+    const leftAnchor = leftSideX - nodeSize.value * 3
     const startX = leftAnchor - arcWidth / 2
 
-    const auPositions = arrangeInArc(parentAndAuntsUncles, startX, yGen2, arcWidth, 50)
+    const auPositions = arrangeInArc(
+      parentAndAuntsUncles,
+      startX,
+      yGen2,
+      arcWidth,
+      nodeSize.value * 0.7,
+    )
 
     auPositions.forEach((pos, i) => {
       const person = parentAndAuntsUncles[i]!
@@ -1132,12 +1157,18 @@ function buildLayout() {
   if (siblings.length > 0) {
     // Arrange siblings to the left of self
     // Calculate centerX for the siblings arc so that the rightmost sibling is just to the left of self
-    const arcWidth = Math.max(400, siblings.length * 100)
+    const arcWidth = Math.max(nodeSize.value * 6, siblings.length * nodeSize.value * 1.4)
     const selfLeftEdge = selfX - nodeRadius // Left edge of self node
-    const minGap = 40 // Increased gap between siblings and self for better visibility
+    const minGap = Math.max(30, nodeSize.value * 0.6) // Gap between siblings and self, scales with nodeSize
     const siblingsArcCenterX = selfLeftEdge - arcWidth / 2 - minGap // Leave space between siblings and self
 
-    const siblingPositions = arrangeInArc(siblings, siblingsArcCenterX, yGen3, arcWidth, 60)
+    const siblingPositions = arrangeInArc(
+      siblings,
+      siblingsArcCenterX,
+      yGen3,
+      arcWidth,
+      nodeSize.value * 0.85,
+    )
 
     siblingPositions.forEach((pos) => {
       const sibling = siblings.find((s) => String(s.id) === pos.id)
@@ -1169,8 +1200,8 @@ function buildLayout() {
       children,
       centerX,
       yGen4,
-      Math.max(500, children.length * 120),
-      40,
+      Math.max(nodeSize.value * 7, children.length * nodeSize.value * 1.7),
+      nodeSize.value * 0.55,
     )
     childPositions.forEach((pos, i) => {
       const child = children[i]!
@@ -1193,8 +1224,8 @@ function buildLayout() {
       grandchildren,
       centerX,
       yGen5,
-      Math.max(500, grandchildren.length * 120),
-      40,
+      Math.max(nodeSize.value * 7, grandchildren.length * nodeSize.value * 1.7),
+      nodeSize.value * 0.55,
     )
     grandchildPositions.forEach((pos, i) => {
       const gc = grandchildren[i]!
@@ -1275,9 +1306,9 @@ function buildLayout() {
 
   if (allSiblingsInLaw.length > 0) {
     // Arrange siblings-in-law to the right of spouse
-    const arcWidth = Math.max(400, allSiblingsInLaw.length * 100)
+    const arcWidth = Math.max(nodeSize.value * 6, allSiblingsInLaw.length * nodeSize.value * 1.4)
     const spouseRightEdge = spouseX + nodeRadius
-    const minGap = 20 // Minimum gap between nodes
+    const minGap = Math.max(20, nodeSize.value * 0.3) // Minimum gap between nodes, scales with nodeSize
     // Calculate centerX for the siblings-in-law arc so that the leftmost sibling-in-law is just to the right of spouse
     const siblingsInLawArcCenterX = spouseRightEdge + arcWidth / 2 + minGap
 
@@ -1286,7 +1317,7 @@ function buildLayout() {
       siblingsInLawArcCenterX,
       yGen3,
       arcWidth,
-      60,
+      nodeSize.value * 0.85,
     )
 
     siblingInLawPositions.forEach((pos) => {
