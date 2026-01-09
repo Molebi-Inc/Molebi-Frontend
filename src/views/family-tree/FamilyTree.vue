@@ -12,7 +12,7 @@
         >
           <div
             ref="headerRef"
-            class="flex justify-between items-center py-4 px-4 md:px-6 bg-brand-background sticky top-0 z-10 shrink-0"
+            class="flex justify-between items-center py-4 px-4 md:px-6 bg-brand-background fixed top-0 z-10 shrink-0 left-0 right-0 md:left-[25%] md:right-0"
           >
             <div class="flex items-center gap-3">
               <MlbButton
@@ -53,7 +53,9 @@
               </MlbButton>
             </div>
           </div>
-          <TreeView v-if="treePayload" :payload="treePayload" />
+          <div class="pt-[73px]">
+            <TreeView v-if="treePayload" :payload="treePayload" />
+          </div>
           <!-- <TreeView v-if="defaultPayload" :payload="defaultPayload" /> -->
 
           <!-- Mobile Floating Action Button -->
