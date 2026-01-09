@@ -177,11 +177,14 @@
                 <!-- Rich HTML avatar rendering for modern screens (including mobile PWA) -->
                 <foreignObject
                   v-else
-                  :x="node.x - nodeSize / 2"
-                  :y="node.y - nodeSize / 2"
+                  :x="Math.round(node.x - nodeSize / 2)"
+                  :y="Math.round(node.y - nodeSize / 2)"
                   :width="nodeSize"
                   :height="nodeSize"
-                  style="overflow: visible; pointer-events: none"
+                  :style="{
+                    overflow: 'visible',
+                    pointerEvents: 'none',
+                  }"
                 >
                   <div
                     xmlns="http://www.w3.org/1999/xhtml"
@@ -190,6 +193,18 @@
                       width: nodeSize + 'px',
                       height: nodeSize + 'px',
                       pointerEvents: 'auto',
+                      margin: '0',
+                      padding: '0',
+                      boxSizing: 'border-box',
+                      display: 'block',
+                      position: 'relative',
+                      ...(isSafari
+                        ? {
+                            WebkitTransform: 'translateZ(0)',
+                            transform: 'translateZ(0)',
+                            backfaceVisibility: 'hidden',
+                          }
+                        : {}),
                     }"
                   >
                     <!-- SUPER NODE (e.g. Parents: Father & Mother) -->
@@ -306,10 +321,13 @@
               <text
                 v-if="node.label"
                 :x="node.x"
-                :y="node.y + nodeSize / 2 + 14"
+                :y="node.y + nodeSize / 2 + (isSafari ? 16 : 14)"
                 text-anchor="middle"
-                font-size="11"
+                :font-size="isSafari ? '12' : '11'"
                 fill="#374151"
+                :style="{
+                  dominantBaseline: 'hanging',
+                }"
               >
                 {{ node.label }}
               </text>
@@ -498,10 +516,23 @@ const payload = ref<Payload | undefined>(props.payload)
 /* ---------- Visual constants & state ---------- */
 const nodeSize = ref(72)
 const isSmallScreen = ref(false)
+const isSafari = ref(false)
+
+// Detect Safari browser
+function detectSafari() {
+  if (typeof window === 'undefined') return false
+  const ua = window.navigator.userAgent.toLowerCase()
+  const isSafariUA = /safari/.test(ua) && !/chrome/.test(ua) && !/chromium/.test(ua)
+  const isIOS = /iphone|ipad|ipod/.test(ua)
+  return isSafariUA || isIOS
+}
 
 function updateNodeSizeForViewport() {
   if (typeof window === 'undefined') return
   const width = window.innerWidth
+
+  // Detect Safari
+  isSafari.value = detectSafari()
 
   // Only use SVG-only rendering for very old/small devices (<= 320px)
   // Modern mobile devices and PWAs can handle foreignObject with images
