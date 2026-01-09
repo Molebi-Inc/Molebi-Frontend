@@ -95,17 +95,19 @@
               </foreignObject>
 
               <!-- PERSON NODE (Standard or SuperNode) -->
-              <!-- On very small screens, use pure SVG circles to avoid foreignObject issues on iOS Safari -->
+              <!-- On very small screens (<=320px), use pure SVG circles to avoid foreignObject issues -->
               <template v-else>
                 <g v-if="isSmallScreen" class="cursor-pointer" @click.stop="handleNodeClick(node)">
+                  <!-- Background circle -->
                   <circle
                     :cx="node.x"
                     :cy="node.y"
                     :r="nodeSize / 2"
                     fill="white"
-                    stroke="#ffffff"
+                    stroke="#e5e7eb"
                     stroke-width="2"
                   />
+                  <!-- Self indicator ring -->
                   <circle
                     v-if="node.isSelf"
                     :cx="node.x"
@@ -115,7 +117,23 @@
                     stroke="#6ee7b7"
                     stroke-width="3"
                   />
+                  <!-- Profile image or initials -->
+                  <defs>
+                    <clipPath :id="`clip-${node.id}`">
+                      <circle :cx="node.x" :cy="node.y" :r="nodeSize / 2 - 2" />
+                    </clipPath>
+                  </defs>
+                  <image
+                    v-if="node.data?.profile_picture_url"
+                    :href="node.data.profile_picture_url"
+                    :x="node.x - nodeSize / 2 + 2"
+                    :y="node.y - nodeSize / 2 + 2"
+                    :width="nodeSize - 4"
+                    :height="nodeSize - 4"
+                    :clip-path="`url(#clip-${node.id})`"
+                  />
                   <text
+                    v-else
                     :x="node.x"
                     :y="node.y + 4"
                     text-anchor="middle"
@@ -125,9 +143,38 @@
                   >
                     {{ getInitials(node) }}
                   </text>
+                  <!-- Super node subnodes (small circles) -->
+                  <g v-if="node.isSuperNode && node.subNodes && node.subNodes.length > 0">
+                    <circle
+                      v-for="(subNode, subIdx) in node.subNodes"
+                      :key="subNode.id || subIdx"
+                      :cx="node.x + nodeSize / 2 - 8 - subIdx * 8"
+                      :cy="node.y + nodeSize / 2 - 8 - subIdx * 8"
+                      r="12"
+                      fill="white"
+                      stroke="#e5e7eb"
+                      stroke-width="1.5"
+                      class="cursor-pointer"
+                      @click.stop="handleSubNodeClick(subNode, node)"
+                    />
+                    <text
+                      v-for="(subNode, subIdx) in node.subNodes"
+                      :key="`text-${subNode.id || subIdx}`"
+                      :x="node.x + nodeSize / 2 - 8 - subIdx * 8"
+                      :y="node.y + nodeSize / 2 - 8 - subIdx * 8 + 3"
+                      text-anchor="middle"
+                      font-size="8"
+                      fill="#111827"
+                      font-weight="600"
+                      class="cursor-pointer"
+                      @click.stop="handleSubNodeClick(subNode, node)"
+                    >
+                      {{ getPersonInitials(subNode) }}
+                    </text>
+                  </g>
                 </g>
 
-                <!-- Original rich HTML avatar rendering for larger screens -->
+                <!-- Rich HTML avatar rendering for modern screens (including mobile PWA) -->
                 <foreignObject
                   v-else
                   :x="node.x - nodeSize / 2"
@@ -399,6 +446,10 @@ import { ref, reactive, watch, nextTick, onMounted, onBeforeUnmount, computed } 
 import { useRouter } from 'vue-router'
 import * as d3 from 'd3'
 import { getUserAvatar } from '@/helpers/general.helpers'
+import {
+  getChildrenCountForMember,
+  //, getChildrenForMember
+} from '@/helpers/family-tree.helpers'
 import ViewMember from '@/components/family-tree/ViewMember.vue'
 import type { FamilyMemberInterface as Person, Payload } from '@/types/family-tree.types'
 
@@ -441,8 +492,9 @@ function updateNodeSizeForViewport() {
   if (typeof window === 'undefined') return
   const width = window.innerWidth
 
-  // Flag very small screens (e.g. older iPhones) for SVG-only node rendering
-  isSmallScreen.value = width <= 480
+  // Only use SVG-only rendering for very old/small devices (<= 320px)
+  // Modern mobile devices and PWAs can handle foreignObject with images
+  isSmallScreen.value = width <= 320
 
   if (width <= 400) {
     // Very small screens (e.g. iPhone 8)
@@ -712,6 +764,49 @@ function rebuildPayloadForPerson(person: Person, originalPayload: Payload): Payl
       cousins: [],
       nieces_nephews: [],
       spouse: [],
+      parents_in_law: [],
+      siblings_in_law: [],
+    }
+  }
+
+  // For parents: when viewing a parent's tree, show their parents (grandparents), siblings (aunts/uncles), spouse (other parent), and children (self + siblings)
+  const isParent = (originalPayload.parents || []).some((p) => String(p.id) === personId)
+  if (isParent) {
+    const parent = (originalPayload.parents || []).find((p) => String(p.id) === personId)
+    const relatedThrough = parent?.relationship_metadata.related_through
+
+    // Find the other parent (spouse) - the other parent in the parents array
+    const otherParent = (originalPayload.parents || []).find((p) => String(p.id) !== personId)
+
+    // Their parents are grandparents (filtered by related_through)
+    const parentGrandparents = relatedThrough
+      ? (originalPayload.grandparents || []).filter(
+          (gp) => String(gp.relationship_metadata.related_through ?? '') === String(relatedThrough),
+        )
+      : originalPayload.grandparents || []
+
+    // Their siblings are aunts/uncles (filtered by related_through)
+    const parentSiblings = relatedThrough
+      ? (originalPayload.aunts_uncles || []).filter(
+          (au) => String(au.relationship_metadata.related_through ?? '') === String(relatedThrough),
+        )
+      : originalPayload.aunts_uncles || []
+
+    // Their children are: original self + siblings (where parent_id matches this parent)
+    // Use the helper function to get all children for this parent
+    const parentChildren = getChildrenForMember(originalPayload, personId)
+
+    return {
+      self: person,
+      parents: parentGrandparents,
+      siblings: parentSiblings,
+      children: parentChildren,
+      grandparents: [],
+      grandchildren: [],
+      aunts_uncles: [],
+      cousins: [],
+      nieces_nephews: [],
+      spouse: otherParent ? [otherParent] : [],
       parents_in_law: [],
       siblings_in_law: [],
     }
@@ -1039,7 +1134,7 @@ function buildLayout() {
     // Calculate centerX for the siblings arc so that the rightmost sibling is just to the left of self
     const arcWidth = Math.max(400, siblings.length * 100)
     const selfLeftEdge = selfX - nodeRadius // Left edge of self node
-    const minGap = 20 // Minimum gap between nodes
+    const minGap = 40 // Increased gap between siblings and self for better visibility
     const siblingsArcCenterX = selfLeftEdge - arcWidth / 2 - minGap // Leave space between siblings and self
 
     const siblingPositions = arrangeInArc(siblings, siblingsArcCenterX, yGen3, arcWidth, 60)
@@ -1292,8 +1387,8 @@ function generateConnections(
       id: 'self-siblings-line',
       path: path,
       stroke: '#E7C19E',
-      width: 2,
-      opacity: 0.8,
+      width: 2.5, // Slightly thicker for better visibility on mobile
+      opacity: 0.9, // Increased opacity for better visibility
     })
   }
 
@@ -1558,6 +1653,12 @@ function getInitials(node: LayoutNode): string {
   return firstInitial + lastInitial
 }
 
+function getPersonInitials(person: Person): string {
+  const firstInitial = person.first_name?.[0] ?? 'F'
+  const lastInitial = person.family_name?.[0] ?? ''
+  return firstInitial + lastInitial
+}
+
 /* ---------- D3 zoom (transform applied to zoomLayer) ---------- */
 let zoomBehavior: d3.ZoomBehavior<SVGSVGElement, unknown> | null = null
 function setupZoom() {
@@ -1605,20 +1706,29 @@ function computeChildrenFor(node: LayoutNode) {
 
 /**
  * Get children count for a person
+ * Uses the helper function from family-tree.helpers
  */
 function getChildrenCount(personId: string | number): number {
-  const id = String(personId)
   const p = payload.value
-
-  const allPotentialChildren: Person[] = [
-    ...(p?.children || []),
-    ...(p?.cousins || []),
-    ...(p?.nieces_nephews || []),
-    ...(p?.grandchildren || []),
-  ]
-
-  return allPotentialChildren.filter((m) => String(m.relationship_metadata.parent_id ?? '') === id)
-    .length
+  if (!p) {
+    console.warn('getChildrenCount: payload is not available')
+    return 0
+  }
+  if (!personId || personId === '' || personId === 'undefined' || personId === 'null') {
+    console.warn('getChildrenCount: personId is invalid', personId)
+    return 0
+  }
+  const count = getChildrenCountForMember(p, personId)
+  // Debug log to help identify issues
+  if (count === 0) {
+    console.log(
+      'getChildrenCount: count is 0 for personId',
+      personId,
+      'payload keys:',
+      Object.keys(p),
+    )
+  }
+  return count
 }
 
 /**
@@ -1671,7 +1781,9 @@ function nodeToMember(node: LayoutNode): {
   }
 
   const person = node.data
-  const childrenCount = getChildrenCount(person.id ?? '')
+  // Only compute children count if person has a valid ID
+  const childrenCount =
+    person.id !== undefined && person.id !== null ? getChildrenCount(person.id) : 0
 
   return {
     first_name: person.first_name,
@@ -1743,8 +1855,11 @@ function handleNodeClick(node: LayoutNode) {
   }
 
   if ((node.role === 'parent' || node.role === 'parent-super') && node.data) {
-    // Parent: Show split view (parent becomes self, show their siblings and parents)
-    // This can be triggered from the modal if needed
+    // Parent: Show their tree (parent becomes self, show their siblings, parents, and children)
+    focusedPerson.value = node.data
+    viewMode.value = 'parent'
+    buildLayout()
+    return
   }
 
   if (node.role === 'spouse' && node.data) {
