@@ -83,12 +83,12 @@
                   stroke="#0B5132"
                   stroke-width="2"
                 />
-                <!-- Heart icon centered -->
+                <!-- Heart icon centered and larger -->
                 <g :transform="`translate(${node.x}, ${node.y})`">
                   <path
                     d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
                     fill="#0B5132"
-                    transform="translate(-12, -12) scale(0.8)"
+                    transform="translate(-12, -12) scale(1.1)"
                   />
                 </g>
               </g>
@@ -446,64 +446,6 @@
         </g>
       </svg>
     </div>
-    <!-- Back button when viewing uncle/aunt's tree -->
-    <div
-      v-if="focusedPerson"
-      class="absolute left-4 top-4 bg-white/95 rounded-2xl shadow-lg border border-gray-200 p-3 z-40"
-    >
-      <button
-        type="button"
-        class="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900"
-        @click="returnToMainTree"
-      >
-        <span>←</span>
-        <span>Back to Your Tree</span>
-      </button>
-    </div>
-
-    <!-- Selected node breakdown panel -->
-    <div
-      v-if="selectedNode"
-      class="absolute right-4 top-4 w-72 max-w-[90vw] bg-white/95 rounded-2xl shadow-lg border border-gray-200 p-4 space-y-3 z-40"
-    >
-      <div class="flex items-start justify-between gap-2">
-        <div>
-          <p class="text-xs uppercase tracking-wide text-gray-400 mb-1">Selected</p>
-          <p class="font-semibold text-gray-900 text-sm">
-            {{ selectedNode.data?.full_name || selectedNode.label || 'Family member' }}
-          </p>
-          <p class="text-xs text-gray-500">
-            {{ relationText(selectedNode) }}
-          </p>
-        </div>
-        <button
-          type="button"
-          class="text-gray-400 hover:text-gray-600 text-xs"
-          @click="selectedNode = null"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div class="border-t border-gray-100 pt-2">
-        <p class="text-xs font-medium text-gray-500 mb-1">Children in this tree</p>
-        <div v-if="selectedNodeChildren.length === 0" class="text-xs text-gray-400">
-          No linked children found for this member yet.
-        </div>
-        <ul v-else class="space-y-1 max-h-40 overflow-auto pr-1">
-          <li
-            v-for="child in selectedNodeChildren"
-            :key="child.id"
-            class="flex items-center justify-between text-xs text-gray-700"
-          >
-            <span>{{ child.full_name || child.first_name }}</span>
-            <span class="text-[11px] text-gray-400">
-              {{ child.relationship_metadata.relation_type === 'cousin' ? 'Cousin' : 'Child' }}
-            </span>
-          </li>
-        </ul>
-      </div>
-    </div>
 
     <!-- Spouse Selection Modal -->
     <div
@@ -550,7 +492,28 @@
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
       @click.self="showMemberModal = false"
     >
-      <div class="relative w-full max-w-2xl" @click.stop>
+      <div
+        class="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden"
+        @click.stop
+      >
+        <!-- Close button at top right (two X icons as shown in screenshot) -->
+        <div class="absolute top-4 right-4 flex gap-2 z-10">
+          <button
+            type="button"
+            class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+            @click="showMemberModal = false"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
         <ViewMember
           :member="
             nodeToMember({
@@ -563,18 +526,12 @@
               isSelf: selectedMemberRole === 'self',
             })
           "
-          variant="card"
+          variant="modal"
           :show-back="false"
           @back="showMemberModal = false"
           @view-profile="handleViewProfile"
+          @edit="handleEditMember"
         />
-        <button
-          type="button"
-          class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-lg text-gray-400 hover:text-gray-600 transition-colors z-10"
-          @click="showMemberModal = false"
-        >
-          ✕
-        </button>
       </div>
     </div>
   </div>
@@ -585,12 +542,12 @@ import { ref, reactive, watch, nextTick, onMounted, onBeforeUnmount, computed } 
 import { useRouter } from 'vue-router'
 import * as d3 from 'd3'
 import { getUserAvatar } from '@/helpers/general.helpers'
-// import {
-//   getChildrenCountForMember,
-//   , getChildrenForMember
-// } from '@/helpers/family-tree.helpers'
 import ViewMember from '@/components/family-tree/ViewMember.vue'
-import type { FamilyMemberInterface as Person, Payload } from '@/types/family-tree.types'
+import type {
+  FamilyMemberInterface as Person,
+  Payload,
+  NodeMemberInterface,
+} from '@/types/family-tree.types'
 
 /* ---------- Types ---------- */
 
@@ -802,41 +759,86 @@ function wobblyPath(sx: number, sy: number, tx: number, ty: number, seed = 1) {
 }
 
 /**
- * Helper function to arrange nodes in a curved arc
+ * Helper function to arrange nodes with equal spacing in a straight line
  * @param nodes Array of Person objects to arrange
- * @param centerX X position of the center of the arc
- * @param baseY Base Y position
- * @param radius Horizontal radius of the arc
- * @param curvature Vertical curvature amount
+ * @param centerX X position of the center of the arrangement
+ * @param baseY Base Y position (all nodes will be at this Y)
+ * @param spacing Distance between node centers (minimum spacing to prevent overlap)
  */
-function arrangeInArc(
+function arrangeWithEqualSpacing(
   nodes: Person[],
   centerX: number,
   baseY: number,
-  radius: number,
-  curvature: number,
+  spacing: number,
 ): Array<{ x: number; y: number; id: string }> {
   if (nodes.length === 0) return []
   if (nodes.length === 1) {
     return [{ x: centerX, y: baseY, id: String(nodes[0]!.id) }]
   }
 
-  // If we want the arc to be centered, we calculate total width and center it
-  const totalWidth = radius
-  const actualStartX = centerX - totalWidth / 2
-  const step = totalWidth / (nodes.length - 1 || 1)
+  // Calculate total width needed
+  // Use the spacing as minimum distance between node edges
+  // Actual spacing between centers = nodeSize + gap between nodes
+  const totalWidth = (nodes.length - 1) * spacing
+  const startX = centerX - totalWidth / 2
 
   return nodes.map((node, i) => {
-    // Linear X placement
-    const x = nodes.length > 1 ? actualStartX + i * step : centerX
-
-    // Parabolic Y offset: y = a(x - h)^2 + k
-    // Normalized position t from -1 to 1
-    const t = nodes.length > 1 ? (i / (nodes.length - 1)) * 2 - 1 : 0
-    const yOffset = -curvature * (1 - t * t) // Parabolic curve peaking at center
-
-    return { x, y: baseY + yOffset, id: String(node.id) }
+    const x = startX + i * spacing
+    return { x, y: baseY, id: String(node.id) }
   })
+}
+
+/**
+ * Calculate dynamic spacing between nodes based on the number of nodes in a generation
+ * Spacing decreases as node count increases, but has a minimum threshold to prevent overlap
+ *
+ * @param nodeCount - Number of nodes in the generation
+ * @returns Base spacing value (x) between node centers
+ */
+function calculateDynamicNodeSpacing(nodeCount: number): number {
+  // Minimum spacing threshold to prevent overlap
+  // Accounts for: node size, borders (2.5px * 2), subnode overflow (~20px), labels, and visual padding
+  const minThreshold = Math.max(nodeSize.value * 2.2, 120)
+
+  // Maximum spacing for few nodes (generous spacing when we have room)
+  const maxSpacing = Math.max(nodeSize.value * 3.5, 180)
+
+  // Start reducing spacing after 3 nodes
+  // The more nodes, the smaller the spacing (but never below threshold)
+  const reductionStart = 3
+  const aggressiveReductionStart = 6
+
+  if (nodeCount <= 2) {
+    // Very few nodes: use maximum spacing
+    return maxSpacing
+  } else if (nodeCount <= reductionStart) {
+    // 3 nodes: slightly reduced but still generous
+    return maxSpacing * 0.9
+  } else if (nodeCount <= aggressiveReductionStart) {
+    // 4-6 nodes: linear reduction from max to a mid-point
+    const midPoint = (maxSpacing + minThreshold) * 0.65
+    const ratio = (nodeCount - reductionStart) / (aggressiveReductionStart - reductionStart)
+    return maxSpacing - (maxSpacing - midPoint) * ratio
+  } else {
+    // 7+ nodes: more aggressive reduction towards threshold
+    // Use a logarithmic-like curve that approaches but never reaches threshold
+    const excessNodes = nodeCount - aggressiveReductionStart
+    const midPoint = (maxSpacing + minThreshold) * 0.65
+    // Reduce by smaller increments as we approach threshold
+    const reduction = (midPoint - minThreshold) * (1 - Math.exp(-excessNodes * 0.15))
+    return Math.max(midPoint - reduction, minThreshold)
+  }
+}
+
+/**
+ * Calculate spacing between self and spouse (2x the base spacing)
+ *
+ * @param nodeCount - Number of nodes in generation 3 (self + spouse + siblings + siblings-in-law)
+ * @returns Spacing between self and spouse (2x base spacing)
+ */
+function calculateSelfSpouseSpacing(nodeCount: number): number {
+  const baseSpacing = calculateDynamicNodeSpacing(nodeCount)
+  return baseSpacing * 2
 }
 
 /**
@@ -925,8 +927,7 @@ function rebuildPayloadForPerson(person: Person, originalPayload: Payload): Payl
       cousins: [],
       nieces_nephews: [],
       spouse: [],
-      parents_in_law: [],
-      siblings_in_law: [],
+      in_laws: [],
     }
   }
 
@@ -944,18 +945,31 @@ function rebuildPayloadForPerson(person: Person, originalPayload: Payload): Payl
       cousins: [],
       nieces_nephews: [],
       spouse: [],
-      parents_in_law: [],
-      siblings_in_law: [],
+      in_laws: [],
     }
   }
 
   // For spouse
   const isSpouse = (originalPayload.spouse || []).some((s) => String(s.id) === personId)
   if (isSpouse) {
+    // Extract parents-in-law and siblings-in-law from in_law array
+    const allInLawsForSpouse = originalPayload.in_laws || []
+    const parentsInLawForSpouse = allInLawsForSpouse.filter(
+      (il) =>
+        il.relationship_metadata?.relation_type === 'father_in_law' ||
+        il.relationship_metadata?.relation_type === 'mother_in_law',
+    )
+    const siblingsInLawForSpouse = allInLawsForSpouse.filter(
+      (il) =>
+        il.relationship_metadata?.relation_type === 'brother_in_law' ||
+        il.relationship_metadata?.relation_type === 'brother-in-law' ||
+        il.relationship_metadata?.relation_type === 'sister_in_law' ||
+        il.relationship_metadata?.relation_type === 'sister-in-law',
+    )
     return {
       self: person,
-      parents: originalPayload.parents_in_law || [],
-      siblings: originalPayload.siblings_in_law || [],
+      parents: parentsInLawForSpouse,
+      siblings: siblingsInLawForSpouse,
       children: getFilteredChildren(null, originalPayload.children || [], personId),
       grandparents: [],
       grandchildren: [],
@@ -963,8 +977,7 @@ function rebuildPayloadForPerson(person: Person, originalPayload: Payload): Payl
       cousins: [],
       nieces_nephews: [],
       spouse: [],
-      parents_in_law: [],
-      siblings_in_law: [],
+      in_laws: [],
     }
   }
 
@@ -1006,8 +1019,7 @@ function rebuildPayloadForPerson(person: Person, originalPayload: Payload): Payl
       cousins: [],
       nieces_nephews: [],
       spouse: otherParent ? [otherParent] : [],
-      parents_in_law: [],
-      siblings_in_law: [],
+      in_laws: [],
     }
   }
 
@@ -1023,8 +1035,7 @@ function rebuildPayloadForPerson(person: Person, originalPayload: Payload): Payl
     cousins: [],
     nieces_nephews: [],
     spouse: [],
-    parents_in_law: [],
-    siblings_in_law: [],
+    in_laws: [],
   }
 }
 
@@ -1109,8 +1120,6 @@ function buildLayout() {
   const yGen4 = centerY + rowHeight // Children
   const yGen5 = centerY + rowHeight * 2 // Grandchildren
 
-  // Responsive spacing based on nodeSize for better mobile alignment
-  const spacing = Math.max(80, nodeSize.value * 1.5) // Spacing between Self and Spouse, scales with nodeSize
   const leftSideX = centerX - Math.max(300, nodeSize.value * 5.5) // Left side for self's relations
   const rightSideX = centerX + Math.max(300, nodeSize.value * 5.5) // Right side for spouse's relations
   const nodeRadius = nodeSize.value / 2 // Account for node size to prevent overlap
@@ -1126,12 +1135,12 @@ function buildLayout() {
 
   // === POSITION NODES ===
 
-  // Gen 3: Self Node (will be repositioned in siblings arc)
+  // Gen 3: Self Node (will be repositioned later with dynamic spacing)
   let selfLayoutNode: LayoutNode | null = null
   if (p?.self) {
     selfLayoutNode = {
       id: String(p?.self?.id),
-      x: centerX - (primarySpouse ? spacing / 2 : 0),
+      x: centerX, // Placeholder - will be repositioned with dynamic spacing
       y: yGen3,
       label: viewMode.value === 'main' ? 'You' : p?.self?.full_name || p?.self?.first_name,
       data: p?.self,
@@ -1141,15 +1150,15 @@ function buildLayout() {
       subNodes: otherSpouses,
       side: 'self',
     }
-    // Don't push yet - will be positioned in siblings arc
+    // Don't push yet - will be positioned with dynamic spacing
   }
 
-  // Gen 3: Spouse Node (will be repositioned in spouse-side arc)
+  // Gen 3: Spouse Node (will be repositioned later with dynamic spacing)
   let spouseLayoutNode: LayoutNode | null = null
   if (primarySpouse) {
     spouseLayoutNode = {
       id: String(primarySpouse.id),
-      x: centerX + spacing / 2,
+      x: centerX, // Placeholder - will be repositioned with dynamic spacing
       y: yGen3,
       label: primarySpouse.full_name || primarySpouse.first_name,
       data: primarySpouse,
@@ -1157,7 +1166,7 @@ function buildLayout() {
       role: 'spouse',
       side: 'spouse',
     }
-    // Don't push yet - will be positioned in spouse-side arc
+    // Don't push yet - will be positioned with dynamic spacing
   }
 
   // Gen 2: Parents (SuperNode if multiple)
@@ -1298,19 +1307,13 @@ function buildLayout() {
     }
     parentAndAuntsUncles.push(...filteredAuntsUncles)
 
-    const arcWidth = Math.max(
-      nodeSize.value * 6,
-      parentAndAuntsUncles.length * nodeSize.value * 1.4,
-    )
-    const leftAnchor = leftSideX - nodeSize.value * 3
-    const startX = leftAnchor - arcWidth / 2
-
-    const auPositions = arrangeInArc(
+    // Calculate dynamic spacing for aunts/uncles based on node count
+    const auSpacing = calculateDynamicNodeSpacing(parentAndAuntsUncles.length)
+    const auPositions = arrangeWithEqualSpacing(
       parentAndAuntsUncles,
-      startX,
+      leftSideX - nodeSize.value * 2, // Center point for arrangement
       yGen2,
-      arcWidth,
-      nodeSize.value * 0.7,
+      auSpacing,
     )
 
     auPositions.forEach((pos, i) => {
@@ -1332,61 +1335,105 @@ function buildLayout() {
     })
   }
 
-  // Gen 3: Siblings (arc to the left of Self) - self should be at the rightmost position
+  // Spouse Side: Process siblings-in-law early (needed for Gen 3 layout)
+  // Extract siblings-in-law from in_law array by filtering relation_type
+  const allInLaws = p?.in_laws || []
+  const siblingsInLaw = allInLaws.filter(
+    (il) =>
+      il.relationship_metadata?.relation_type === 'brother_in_law' ||
+      il.relationship_metadata?.relation_type === 'brother-in-law' ||
+      il.relationship_metadata?.relation_type === 'sister_in_law' ||
+      il.relationship_metadata?.relation_type === 'sister-in-law',
+  )
+  const brothersInLaw = siblingsInLaw.filter(
+    (sil) =>
+      sil.relationship_metadata?.relation_type === 'brother_in_law' ||
+      sil.relationship_metadata?.relation_type === 'brother-in-law',
+  )
+  const allSiblingsInLaw = siblingsInLaw
+
+  // Gen 3: Siblings, Self, Spouse, and Siblings-in-Law - all with equal spacing
   const siblings = p?.siblings || []
 
-  // Position self first at the rightmost position of the siblings arc
-  const selfX = centerX - (primarySpouse ? spacing / 2 : 0)
+  // Calculate total Gen 3 node count for dynamic spacing
+  const gen3NodeCount =
+    siblings.length +
+    (selfLayoutNode ? 1 : 0) +
+    (spouseLayoutNode && primarySpouse ? 1 : 0) +
+    allSiblingsInLaw.length
 
+  // Calculate dynamic spacing for Gen 3 nodes
+  const gen3BaseSpacing = calculateDynamicNodeSpacing(gen3NodeCount)
+  const selfSpouseSpacing = calculateSelfSpouseSpacing(gen3NodeCount) // 2x base spacing for self-spouse
+
+  // Determine self position first (center or center-left if spouse exists)
+  const selfX = centerX - (primarySpouse ? selfSpouseSpacing / 2 : 0)
+
+  // Position siblings to the left of self with dynamic spacing
   if (siblings.length > 0) {
-    // Arrange siblings to the left of self
-    // Calculate centerX for the siblings arc so that the rightmost sibling is just to the left of self
-    const arcWidth = Math.max(nodeSize.value * 6, siblings.length * nodeSize.value * 1.4)
-    const selfLeftEdge = selfX - nodeRadius // Left edge of self node
-    const minGap = Math.max(30, nodeSize.value * 0.6) // Gap between siblings and self, scales with nodeSize
-    const siblingsArcCenterX = selfLeftEdge - arcWidth / 2 - minGap // Leave space between siblings and self
+    // Increase gap to ensure no overlap with self node, accounting for subnodes
+    const minGap = Math.max(gen3BaseSpacing * 0.5, nodeSize.value + 20) // Use half of base spacing or nodeSize + buffer
+    const selfLeftEdge = selfX - nodeRadius
+    const rightmostSiblingX = selfLeftEdge - minGap
 
-    const siblingPositions = arrangeInArc(
-      siblings,
-      siblingsArcCenterX,
-      yGen3,
-      arcWidth,
-      nodeSize.value * 0.85,
-    )
+    // Calculate start position for siblings (leftmost sibling) using dynamic spacing
+    const totalSiblingsWidth = (siblings.length - 1) * gen3BaseSpacing
+    const siblingsStartX = rightmostSiblingX - totalSiblingsWidth
 
-    siblingPositions.forEach((pos) => {
-      const sibling = siblings.find((s) => String(s.id) === pos.id)
-      if (sibling) {
-        nodes.value.push({
-          id: pos.id,
-          x: pos.x,
-          y: pos.y,
-          label: sibling.full_name || sibling.first_name,
-          data: sibling,
-          type: 'person',
-          role: 'sibling',
-          side: 'self',
-        })
-      }
+    siblings.forEach((sibling, idx) => {
+      nodes.value.push({
+        id: String(sibling.id),
+        x: siblingsStartX + idx * gen3BaseSpacing,
+        y: yGen3,
+        label: sibling.full_name || sibling.first_name,
+        data: sibling,
+        type: 'person',
+        role: 'sibling',
+        side: 'self',
+      })
     })
   }
 
-  // Add self node at its position
+  // Position self
   if (selfLayoutNode) {
     selfLayoutNode.x = selfX
     selfLayoutNode.y = yGen3
     nodes.value.push(selfLayoutNode)
   }
 
+  // Position spouse to the right of self (using 2x base spacing)
+  let nextX = selfX + selfSpouseSpacing
+  if (spouseLayoutNode && primarySpouse) {
+    spouseLayoutNode.x = nextX
+    spouseLayoutNode.y = yGen3
+    nodes.value.push(spouseLayoutNode)
+    nextX = spouseLayoutNode.x + gen3BaseSpacing // Use base spacing for gap before siblings-in-law
+  }
+
+  // Position siblings-in-law to the right of spouse with dynamic spacing
+  if (allSiblingsInLaw.length > 0) {
+    allSiblingsInLaw.forEach((sil, idx) => {
+      const isBrother =
+        sil.relationship_metadata.relation_type === 'brother_in_law' ||
+        sil.relationship_metadata.relation_type === 'brother-in-law' ||
+        brothersInLaw.some((bil) => String(bil.id) === String(sil.id))
+      nodes.value.push({
+        id: String(sil.id),
+        x: nextX + idx * gen3BaseSpacing,
+        y: yGen3,
+        label: sil.full_name || sil.first_name,
+        data: sil,
+        type: 'person',
+        role: isBrother ? 'brother-in-law' : 'sister-in-law',
+        side: 'spouse',
+      })
+    })
+  }
+
   // Gen 4: Children (arc below Self/Spouse)
   if (children.length > 0) {
-    const childPositions = arrangeInArc(
-      children,
-      centerX,
-      yGen4,
-      Math.max(nodeSize.value * 7, children.length * nodeSize.value * 1.7),
-      nodeSize.value * 0.55,
-    )
+    const childSpacing = calculateDynamicNodeSpacing(children.length)
+    const childPositions = arrangeWithEqualSpacing(children, centerX, yGen4, childSpacing)
     childPositions.forEach((pos, i) => {
       const child = children[i]!
       nodes.value.push({
@@ -1404,12 +1451,12 @@ function buildLayout() {
 
   // Gen 5: Grandchildren (arc below children)
   if (grandchildren.length > 0) {
-    const grandchildPositions = arrangeInArc(
+    const grandchildSpacing = calculateDynamicNodeSpacing(grandchildren.length)
+    const grandchildPositions = arrangeWithEqualSpacing(
       grandchildren,
       centerX,
       yGen5,
-      Math.max(nodeSize.value * 7, grandchildren.length * nodeSize.value * 1.7),
-      nodeSize.value * 0.55,
+      grandchildSpacing,
     )
     grandchildPositions.forEach((pos, i) => {
       const gc = grandchildren[i]!
@@ -1427,7 +1474,12 @@ function buildLayout() {
   }
 
   // Spouse Side: Parents-in-Law (Gen 2)
-  const parentsInLaw = p?.parents_in_law || []
+  // Extract parents-in-law from in_law array by filtering relation_type
+  const parentsInLaw = allInLaws.filter(
+    (il) =>
+      il.relationship_metadata?.relation_type === 'father_in_law' ||
+      il.relationship_metadata?.relation_type === 'mother_in_law',
+  )
   if (primarySpouse && parentsInLaw.length > 0) {
     const mainPIL = parentsInLaw[0]!
     const otherPIL = parentsInLaw.slice(1)
@@ -1460,80 +1512,6 @@ function buildLayout() {
       }
       nodes.value.push(pilNode)
     }
-  }
-
-  // Spouse Side: Spouse, Brother-in-Law, and Sister-in-Law (Gen 3, arc on spouse side)
-  const siblingsInLaw = p?.siblings_in_law || []
-  // Filter by relation_type if available, otherwise use all siblings-in-law
-  const brothersInLaw = siblingsInLaw.filter(
-    (sil) =>
-      !sil.relationship_metadata.relation_type ||
-      sil.relationship_metadata.relation_type === 'brother_in_law' ||
-      sil.relationship_metadata.relation_type === 'brother-in-law',
-  )
-  const sistersInLaw = siblingsInLaw.filter(
-    (sil) =>
-      sil.relationship_metadata.relation_type === 'sister_in_law' ||
-      sil.relationship_metadata.relation_type === 'sister-in-law',
-  )
-
-  // If filtering didn't work (no relation_type), use all siblings-in-law
-  const allSiblingsInLaw =
-    siblingsInLaw.length > 0
-      ? brothersInLaw.length > 0 || sistersInLaw.length > 0
-        ? [...brothersInLaw, ...sistersInLaw]
-        : siblingsInLaw // If filtering didn't work, use all
-      : []
-
-  // Position spouse first at the leftmost position of the spouse-side arc
-  const spouseX = centerX + spacing / 2
-
-  if (allSiblingsInLaw.length > 0) {
-    // Arrange siblings-in-law to the right of spouse
-    const arcWidth = Math.max(nodeSize.value * 6, allSiblingsInLaw.length * nodeSize.value * 1.4)
-    const spouseRightEdge = spouseX + nodeRadius
-    const minGap = Math.max(20, nodeSize.value * 0.3) // Minimum gap between nodes, scales with nodeSize
-    // Calculate centerX for the siblings-in-law arc so that the leftmost sibling-in-law is just to the right of spouse
-    const siblingsInLawArcCenterX = spouseRightEdge + arcWidth / 2 + minGap
-
-    const siblingInLawPositions = arrangeInArc(
-      allSiblingsInLaw,
-      siblingsInLawArcCenterX,
-      yGen3,
-      arcWidth,
-      nodeSize.value * 0.85,
-    )
-
-    siblingInLawPositions.forEach((pos) => {
-      const person = allSiblingsInLaw.find((s) => String(s.id) === pos.id)
-      if (person) {
-        // Try to determine if it's a brother or sister based on relation_type
-        const isBrother =
-          person.relationship_metadata.relation_type === 'brother_in_law' ||
-          person.relationship_metadata.relation_type === 'brother-in-law' ||
-          brothersInLaw.some((bil) => String(bil.id) === pos.id)
-        nodes.value.push({
-          id: pos.id,
-          x: pos.x,
-          y: pos.y,
-          label: person.full_name || person.first_name,
-          data: person,
-          type: 'person',
-          role: isBrother ? 'brother-in-law' : 'sister-in-law',
-          side: 'spouse',
-        })
-      }
-    })
-  }
-
-  // Add spouse node at its position
-  if (spouseLayoutNode && primarySpouse) {
-    spouseLayoutNode.x = spouseX
-    spouseLayoutNode.y = yGen3
-    nodes.value.push(spouseLayoutNode)
-  } else if (spouseLayoutNode) {
-    // If no primary spouse but layout node exists, add it
-    nodes.value.push(spouseLayoutNode)
   }
 
   // Heart Icon between Self and Spouse (positioned dynamically between them)
@@ -1920,34 +1898,6 @@ function computeChildrenFor(node: LayoutNode) {
 }
 
 /**
- * Get children count for a person
- * Uses the helper function from family-tree.helpers
- */
-function getChildrenCount(personId: string | number): number {
-  const p = payload.value
-  if (!p) {
-    console.warn('getChildrenCount: payload is not available')
-    return 0
-  }
-  if (!personId || personId === '' || personId === 'undefined' || personId === 'null') {
-    console.warn('getChildrenCount: personId is invalid', personId)
-    return 0
-  }
-  return 0
-  // const count = getChildrenCountForMember(p, personId)
-  // Debug log to help identify issues
-  // if (count === 0) {
-  //   console.log(
-  //     'getChildrenCount: count is 0 for personId',
-  //     personId,
-  //     'payload keys:',
-  //     Object.keys(p),
-  //   )
-  // }
-  // return count
-}
-
-/**
  * Get generation label based on role
  */
 function getGenerationLabel(role: string | undefined): string {
@@ -1973,21 +1923,7 @@ function getGenerationLabel(role: string | undefined): string {
 /**
  * Convert LayoutNode to Member format for ViewMember component
  */
-function nodeToMember(node: LayoutNode): {
-  name?: string
-  first_name?: string
-  family_name?: string
-  full_name?: string
-  avatar?: string | null
-  profile_picture_url?: string | null
-  generation?: string
-  familyName?: string
-  childrenCount?: number | string
-  relation?: string
-  profileUrl?: string
-  isSelf?: boolean
-  description?: string
-} {
+function nodeToMember(node: LayoutNode): NodeMemberInterface {
   if (!node.data) {
     return {
       name: node.label || 'Unknown',
@@ -1997,19 +1933,17 @@ function nodeToMember(node: LayoutNode): {
   }
 
   const person = node.data
-  // Only compute children count if person has a valid ID
-  const childrenCount =
-    person.id !== undefined && person.id !== null ? getChildrenCount(person.id) : 0
 
   return {
+    id: person.id,
     first_name: person.first_name,
     family_name: person.family_name,
     full_name: person.full_name,
     profile_picture_url: person.profile_picture_url,
     avatar: person.profile_picture_url,
     generation: getGenerationLabel(node.role),
-    childrenCount: childrenCount,
     relation: relationText(node),
+    relationship_metadata: person.relationship_metadata,
     isSelf: node.isSelf || false,
     description: undefined, // Can be extended if description is available in Person type
   }
@@ -2072,10 +2006,10 @@ function handleNodeClick(node: LayoutNode) {
 
   if ((node.role === 'parent' || node.role === 'parent-super') && node.data) {
     // Parent: Show their tree (parent becomes self, show their siblings, parents, and children)
-    focusedPerson.value = node.data
-    viewMode.value = 'parent'
-    buildLayout()
-    return
+    // focusedPerson.value = node.data
+    // viewMode.value = 'parent'
+    // buildLayout()
+    // return
   }
 
   if (node.role === 'spouse' && node.data) {
@@ -2101,6 +2035,10 @@ function returnToMainTree() {
   buildLayout()
 }
 
+defineExpose({
+  returnToMainTree,
+})
+
 function selectSpouse(spouse: Person) {
   selectedSpouse.value = spouse
   showSpouseSelectionModal.value = false
@@ -2120,6 +2058,14 @@ function handleViewProfile() {
     })
   }
   showMemberModal.value = false
+}
+
+function handleEditMember() {
+  // Close modal - edit functionality can be implemented later
+  // This could open an edit form or navigate to an edit page
+  showMemberModal.value = false
+  // TODO: Implement edit member functionality
+  console.log('Edit member:', selectedMemberForModal.value)
 }
 
 /* ---------- Lifecycle ---------- */

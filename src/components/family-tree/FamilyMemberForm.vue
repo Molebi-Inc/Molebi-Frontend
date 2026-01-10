@@ -30,7 +30,7 @@ import { onMounted, ref, watch, computed } from 'vue'
 import { NTabs, NTabPane } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import { useGetRelationshipsQuery } from '@/services/general.service'
-import NewMemberForm from '@/components/family-tree/NewMemberForm2.vue'
+import NewMemberForm from '@/components/family-tree/NewMemberForm.vue'
 import ExistingFamilyForm from '@/components/family-tree/ExistingFamilyForm.vue'
 import { useFamilyTreeStore } from '@/stores/family-tree.store'
 

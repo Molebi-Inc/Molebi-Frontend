@@ -628,6 +628,109 @@ export const familyMemberGenderMap = (relationship: string): string => {
 }
 
 /**
+ * Get all children for a specific member from the payload
+ * Children are determined by:
+ * 1. Direct children: checking parent_id in relationship_metadata
+ * 2. For grandparents: parents (father/mother) are counted as children
+ * 3. For parents: self and siblings (brother/sister) are counted as children
+ *
+ * Searches across all potential children arrays: children, cousins, nieces_nephews, grandchildren
+ *
+ * @param payload - The family tree payload
+ * @param memberId - The ID of the member to get children for (can be string or number)
+ * @returns Array of FamilyMemberInterface representing the children
+ */
+export const getChildrenForMember = (
+  payload: Payload,
+  memberId: string | number,
+): FamilyMemberInterface[] => {
+  const id = String(memberId)
+  if (!payload || !id || id === 'undefined' || id === 'null' || id === '') {
+    return []
+  }
+
+  const children: FamilyMemberInterface[] = []
+
+  // 1. Direct children: members where parent_id matches the member's ID
+  // This includes children, cousins, nieces_nephews, grandchildren
+  const allPotentialChildren: FamilyMemberInterface[] = [
+    ...(payload.children || []),
+    ...(payload.cousins || []),
+    ...(payload.nieces_nephews || []),
+    ...(payload.grandchildren || []),
+  ]
+
+  const directChildren = allPotentialChildren.filter(
+    (member) => member.id && String(member.relationship_metadata.parent_id ?? '') === id,
+  )
+  children.push(...directChildren)
+
+  // 2. For grandparents: parents (father/mother) are their children
+  // Check if the member is a grandparent by looking in grandparents array
+  const isGrandparent = payload.grandparents?.some((gp) => gp.id && String(gp.id) === id)
+  if (isGrandparent) {
+    // Find parents where related_through matches the grandparent's ID
+    // Parents are children of grandparents
+    const parentChildren = (payload.parents || []).filter(
+      (parent) => parent.id && String(parent.relationship_metadata.related_through ?? '') === id,
+    )
+    children.push(...parentChildren)
+  }
+
+  // 3. For parents: self and siblings (brother/sister) are their children
+  // Check if the member is a parent by:
+  // a) Looking in parents array, OR
+  // b) Checking if self or siblings have this member as their parent_id
+  const isParentInArray = payload.parents?.some((p) => p.id && String(p.id) === id)
+
+  // Also check if this member is a parent by checking if self or siblings reference them
+  const isParentByReference =
+    (payload.self &&
+      payload.self.id &&
+      String(payload.self.relationship_metadata.parent_id ?? '') === id) ||
+    (payload.siblings || []).some(
+      (sibling) => sibling.id && String(sibling.relationship_metadata.parent_id ?? '') === id,
+    )
+
+  if (isParentInArray || isParentByReference) {
+    // Add self if parent_id matches the parent's ID
+    if (
+      payload.self &&
+      payload.self.id &&
+      String(payload.self.relationship_metadata.parent_id ?? '') === id
+    ) {
+      children.push(payload.self)
+    }
+
+    // Add siblings where parent_id matches the parent's ID
+    // Siblings (brother/sister) are children of parents
+    const siblingChildren = (payload.siblings || []).filter(
+      (sibling) => sibling.id && String(sibling.relationship_metadata.parent_id ?? '') === id,
+    )
+    children.push(...siblingChildren)
+  }
+
+  // Remove duplicates (in case a member appears in multiple arrays)
+  const uniqueChildren = children.filter(
+    (member, index, self) => member.id && index === self.findIndex((m) => m.id === member.id),
+  )
+
+  return uniqueChildren
+}
+
+/**
+ * Get the count of children for a specific member from the payload
+ * This is a convenience function that returns just the count
+ *
+ * @param payload - The family tree payload
+ * @param memberId - The ID of the member to get children count for (can be string or number)
+ * @returns Number of children
+ */
+export const getChildrenCountForMember = (payload: Payload, memberId: string | number): number => {
+  return getChildrenForMember(payload, memberId).length
+}
+
+/**
  * Transform payload to view a specific member's family tree
  * This function reorganizes the payload so the selected member becomes "self"
  * and relationships are restructured according to the TODO guidelines
@@ -645,7 +748,22 @@ export function transformPayloadForMember(
     if (!members) return null
     return members.find((m) => String(m.id) === memberId) || null
   }
-
+  const stepParents =
+    originalPayload.parents?.filter((p) =>
+      ['stepmother', 'stepfather'].includes(p.relationship_metadata.relation_type),
+    ) || []
+  const stepSiblings =
+    originalPayload.siblings?.filter((s) =>
+      ['stepbrother', 'stepsister'].includes(s.relationship_metadata.relation_type),
+    ) || []
+  const spParents =
+    originalPayload.parents?.filter((p) =>
+      ['father_in_law', 'mother_in_law'].includes(p.relationship_metadata.relation_type),
+    ) || []
+  const spSiblings =
+    originalPayload.siblings?.filter((s) =>
+      ['brother_in_law', 'sister_in_law'].includes(s.relationship_metadata.relation_type),
+    ) || []
   // Check all member arrays to find the selected member
   const selectedMember =
     findMember(originalPayload.parents) ||
@@ -657,10 +775,10 @@ export function transformPayloadForMember(
     findMember(originalPayload.aunts_uncles) ||
     findMember(originalPayload.nieces_nephews) ||
     findMember(originalPayload.cousins) ||
-    findMember(originalPayload.step_parents) ||
-    findMember(originalPayload.parents_in_law) ||
-    findMember(originalPayload.siblings_in_law) ||
-    findMember(originalPayload.step_siblings) ||
+    findMember(stepParents) ||
+    findMember(spParents) ||
+    findMember(spSiblings) ||
+    findMember(stepSiblings) ||
     (String(originalPayload.self.id) === memberId ? originalPayload.self : null)
 
   if (!selectedMember) {
@@ -736,8 +854,16 @@ export function transformPayloadForMember(
 
     case 'spouse': {
       // Spouse view: Show their parents (parents-in-law), siblings (siblings-in-law), and children
-      const spouseParents = filterByRelatedThrough(originalPayload.parents_in_law, relatedThrough)
-      const spouseSiblings = filterByRelatedThrough(originalPayload.siblings_in_law, relatedThrough)
+      const spParents =
+        originalPayload.parents?.filter((p) =>
+          ['father_in_law', 'mother_in_law'].includes(p.relationship_metadata.relation_type),
+        ) || []
+      const spSiblings =
+        originalPayload.siblings?.filter((s) =>
+          ['brother_in_law', 'sister_in_law'].includes(s.relationship_metadata.relation_type),
+        ) || []
+      const spouseParents = filterByRelatedThrough(spParents, relatedThrough)
+      const spouseSiblings = filterByRelatedThrough(spSiblings, relatedThrough)
       const spouseChildren = filterByParentId(originalPayload.children, null).filter(
         (c) => String(c.relationship_metadata.related_through ?? '') === String(relatedThrough),
       )
@@ -845,9 +971,13 @@ export function transformPayloadForMember(
     case 'step_parent':
     case 'step_father':
     case 'step_mother': {
+      const stepSiblings =
+        originalPayload.siblings?.filter((s) =>
+          ['stepbrother', 'stepsister'].includes(s.relationship_metadata.relation_type),
+        ) || []
       // Step-Parent view: Show their spouse (parent), children (step-siblings), and self's parent
       const spSpouse = findById(originalPayload.parents, relatedThrough || '')
-      const spChildren = filterByParentId(originalPayload.step_siblings, memberId)
+      const spChildren = filterByParentId(stepSiblings, memberId)
 
       return {
         self: selectedMember,
@@ -859,9 +989,17 @@ export function transformPayloadForMember(
     case 'step_sibling':
     case 'half_sibling': {
       // Step-Sibling view: Show their parents (step-parent + original parent), siblings (other step-siblings), and children
-      const ssStepParent = findById(originalPayload.step_parents, parentId || '')
+      const stepParents =
+        originalPayload.parents?.filter((p) =>
+          ['stepmother', 'stepfather'].includes(p.relationship_metadata.relation_type),
+        ) || []
+      const stepSiblings =
+        originalPayload.siblings?.filter((s) =>
+          ['stepbrother', 'stepsister'].includes(s.relationship_metadata.relation_type),
+        ) || []
+      const ssStepParent = findById(stepParents, parentId || '')
       const ssOriginalParent = findById(originalPayload.parents, relatedThrough || '')
-      const ssSiblings = filterByParentId(originalPayload.step_siblings, parentId).filter(
+      const ssSiblings = filterByParentId(stepSiblings, parentId).filter(
         (ss) => String(ss.id) !== memberId,
       )
 
@@ -876,13 +1014,21 @@ export function transformPayloadForMember(
     case 'parent_in_law':
     case 'father_in_law':
     case 'mother_in_law': {
+      const parentsInLaw =
+        originalPayload.parents?.filter((p) =>
+          ['father_in_law', 'mother_in_law'].includes(p.relationship_metadata.relation_type),
+        ) || []
+      const siblingsInLaw =
+        originalPayload.siblings?.filter((s) =>
+          ['brother_in_law', 'sister_in_law'].includes(s.relationship_metadata.relation_type),
+        ) || []
       // Parent-in-Law view: Show their spouse (other parent-in-law), children (spouse + siblings-in-law)
-      const pilSpouse = filterByRelatedThrough(originalPayload.parents_in_law, relatedThrough).find(
+      const pilSpouse = filterByRelatedThrough(parentsInLaw, relatedThrough).find(
         (pil) => String(pil.id) !== memberId,
       )
       const pilChildren = [
         ...filterByRelatedThrough(originalPayload.spouse, relatedThrough),
-        ...filterByRelatedThrough(originalPayload.siblings_in_law, relatedThrough),
+        ...filterByRelatedThrough(siblingsInLaw, relatedThrough),
       ]
 
       return {
@@ -895,10 +1041,14 @@ export function transformPayloadForMember(
     case 'sibling_in_law':
     case 'brother_in_law':
     case 'sister_in_law': {
+      const siblingsInLaw =
+        originalPayload.siblings?.filter((s) =>
+          ['brother_in_law', 'sister_in_law'].includes(s.relationship_metadata.relation_type),
+        ) || []
       // Sibling-in-Law view: Show their parents (parents-in-law), siblings (other siblings-in-law + spouse), and children
-      const silParents = filterByRelatedThrough(originalPayload.parents_in_law, relatedThrough)
+      const silParents = filterByRelatedThrough(siblingsInLaw, relatedThrough)
       const silSiblings = [
-        ...filterByRelatedThrough(originalPayload.siblings_in_law, relatedThrough).filter(
+        ...filterByRelatedThrough(siblingsInLaw, relatedThrough).filter(
           (sil) => String(sil.id) !== memberId,
         ),
         ...filterByRelatedThrough(originalPayload.spouse, relatedThrough),

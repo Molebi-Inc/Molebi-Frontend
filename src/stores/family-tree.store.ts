@@ -13,4 +13,10 @@ export const useFamilyTreeStore = defineStore('family-tree', {
       ;(this as unknown as Record<string, unknown>)[key] = value
     },
   },
+
+  getters: {
+    flatFamilyTree: (state) => {
+      return Object.values(state.familyTreeData?.familyTree || {}).flat()
+    },
+  },
 })

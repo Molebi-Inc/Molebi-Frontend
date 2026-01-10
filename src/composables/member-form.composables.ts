@@ -145,7 +145,7 @@ export const useMemberForm = (relationType: MaybeRefOrGetter<string | null | und
         },
         parent_id: {
           required: true,
-          options: getRelatedThroughOptions(['step_parents']),
+          options: getRelatedThroughOptions(['parents']),
           label: 'Step-Parent',
           tooltip: 'Select your step-parent who is their parent',
         },
@@ -168,7 +168,7 @@ export const useMemberForm = (relationType: MaybeRefOrGetter<string | null | und
         },
         parent_id: {
           required: true,
-          options: getRelatedThroughOptions(['step_parents']),
+          options: getRelatedThroughOptions(['parents']),
           label: 'Step-Parent',
           tooltip: 'Select your step-parent who is their parent',
         },
@@ -451,13 +451,6 @@ export const useMemberForm = (relationType: MaybeRefOrGetter<string | null | und
     const parentId = config.fields.parent_id as { required?: boolean }
     return parentId?.required ?? false
   })
-
-  // const isGenderRequired = computed(() => {
-  //   const config = currentRelationshipConfig.value
-  //   if (!config?.fields || !('gender' in config.fields)) return false
-  //   const gender = config.fields.gender as { required?: boolean }
-  //   return gender?.required ?? false
-  // })
 
   // Get related through label
   const getRelatedThroughLabel = () => {

@@ -1,9 +1,32 @@
 import FamilyTree from '@/views/family-tree/FamilyTree.vue'
+// import FamilyTreeV2 from '@/views/family-tree-v2/FamilyTreeV2.vue'
 import FamilyTreeLayout from '@/layouts/FamilyTreeLayout.vue'
 import FamilyTreeOnboardingView from '@/views/family-tree/FamilyTreeOnboardingView.vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 export const familyTreeRoutes = [
+  // Family Tree V2 Route
+  // {
+  //   path: '/family-trees-v2',
+  //   name: 'App.FamilyTreeV2AppLayout',
+  //   component: AppLayout,
+  //   meta: {
+  //     layout: 'app',
+  //     requiresAuth: true,
+  //   },
+  //   children: [
+  //     {
+  //       path: '',
+  //       name: 'App.FamilyTreeV2View',
+  //       component: FamilyTreeV2,
+  //       meta: {
+  //         pageTitle: 'Family Tree V2',
+  //         fullScreen: 'web',
+  //       },
+  //     },
+  //   ],
+  // },
+  // Original Family Tree Route
   {
     path: '/family-trees',
     name: 'App.FamilyTreeAppLayout',

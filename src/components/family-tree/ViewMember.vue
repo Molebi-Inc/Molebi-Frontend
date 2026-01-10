@@ -1,6 +1,68 @@
 <template>
-  <section :class="wrapperClass">
-    <!-- Variant: soft card (matches mock) -->
+  <!-- Variant: modal (for modal dialogs) -->
+  <div
+    v-if="variant === 'modal'"
+    class="relative w-full bg-white rounded-2xl px-8 py-10 md:px-12 md:py-12 text-center space-y-6"
+  >
+    <div class="flex flex-col items-center space-y-4 pt-8">
+      <!-- Avatar with initials fallback -->
+      <div
+        class="w-36 h-36 md:w-40 md:h-40 rounded-full overflow-hidden shadow-lg flex items-center justify-center"
+        :class="
+          hasAvatar
+            ? 'border-4 border-white'
+            : 'bg-gradient-to-br from-purple-500 to-purple-600 border-4 border-white'
+        "
+      >
+        <img
+          v-if="hasAvatar"
+          :src="avatarSrc"
+          alt="Profile photo"
+          class="w-full h-full object-cover"
+        />
+        <span v-else class="text-white text-4xl md:text-5xl font-semibold">
+          {{ memberInitials }}
+        </span>
+      </div>
+
+      <div class="space-y-2">
+        <h2 class="text-2xl md:text-3xl font-bold text-neutral-900 leading-tight">
+          {{ displayMember.name }}
+        </h2>
+        <p class="text-green-600 text-base font-medium">{{ displayMember.relation }}</p>
+      </div>
+    </div>
+
+    <!-- Individual pill-shaped tags -->
+    <div class="flex flex-wrap justify-center gap-2">
+      <span
+        v-for="tag in tags"
+        :key="tag"
+        class="inline-flex items-center px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-700 font-medium"
+      >
+        {{ tag }}
+      </span>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex flex-col gap-3 pt-2">
+      <MlbButton
+        label="View Family Tree"
+        class="w-full! rounded-xl! bg-[#0B5132]! h-12! text-white! hover:bg-[#0a4730]! font-semibold!"
+        @click="emitProfile"
+      />
+      <!-- <button
+        type="button"
+        class="w-full h-12 rounded-xl bg-white border-2 border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+        @click="emitEdit"
+      >
+        Edit Info
+      </button> -->
+    </div>
+  </div>
+
+  <!-- Variant: soft card (matches mock) -->
+  <section v-else :class="wrapperClass">
     <div
       v-if="variant === 'card'"
       class="relative max-w-3xl mx-auto bg-white rounded-[28px] shadow-[0_20px_60px_rgba(12,12,13,0.08)] border border-[#F1E5D8] px-8 py-10 md:px-12 md:py-12 text-center space-y-6"
@@ -13,52 +75,60 @@
         />
       </div>
 
-      <div class="flex flex-col items-center space-y-4">
+      <div class="flex flex-col items-center space-y-5">
+        <!-- Avatar with initials fallback -->
         <div
-          class="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white shadow-lg"
+          class="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden shadow-lg flex items-center justify-center"
+          :class="
+            hasAvatar
+              ? 'border-4 border-white'
+              : 'bg-gradient-to-br from-purple-500 to-purple-600 border-4 border-white'
+          "
         >
-          <img :src="avatarSrc" alt="Profile photo" class="w-full h-full object-cover" />
+          <img
+            v-if="hasAvatar"
+            :src="avatarSrc"
+            alt="Profile photo"
+            class="w-full h-full object-cover"
+          />
+          <span v-else class="text-white text-3xl md:text-4xl font-semibold">
+            {{ memberInitials }}
+          </span>
         </div>
 
-        <div class="space-y-1">
-          <h2 class="text-2xl md:text-3xl font-semibold text-neutral-900 leading-tight">
+        <div class="space-y-2">
+          <h2 class="text-2xl md:text-3xl font-bold text-neutral-900 leading-tight">
             {{ displayMember.name }}
           </h2>
-          <p class="text-neutral-500 text-base">{{ displayMember.relation }}</p>
-          <!-- <RouterLink
-            v-if="displayMember.profileUrl"
-            :to="displayMember.profileUrl"
-            class="text-primary-700 font-medium underline underline-offset-4"
-            @click.prevent="emitProfile"
-          >
-            Go to profile
-          </RouterLink>
-          <button
-            v-else
-            type="button"
-            class="text-primary-700 font-medium underline underline-offset-4"
-            @click="emitProfile"
-          >
-            Go to profile
-          </button> -->
+          <p class="text-green-600 text-base font-medium">{{ displayMember.relation }}</p>
         </div>
       </div>
 
-      <div
-        class="bg-[#F5F1E8] rounded-full px-4 py-3 md:px-6 md:py-4 inline-flex items-center gap-3 text-sm text-[#0B5132] font-medium"
-      >
-        <span v-for="(tag, index) in tags" :key="tag" class="flex items-center gap-3">
-          <span>{{ tag }}</span>
-          <span v-if="index !== tags.length - 1" class="w-px h-4 bg-[#D6D4CE] block" />
+      <!-- Individual pill-shaped tags -->
+      <div class="flex flex-wrap justify-center gap-2">
+        <span
+          v-for="tag in tags"
+          :key="tag"
+          class="inline-flex items-center px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-700 font-medium"
+        >
+          {{ tag }}
         </span>
       </div>
 
-      <div>
+      <!-- Action buttons -->
+      <div class="flex flex-col gap-3 pt-2">
         <MlbButton
           label="View Family Tree"
-          class="w-full! rounded-xl! bg-primary-700! h-12! text-white! hover:bg-primary-700!"
+          class="w-full! rounded-xl! bg-[#0B5132]! h-12! text-white! hover:bg-[#0a4730]! font-semibold!"
           @click="emitProfile"
         />
+        <!-- <button
+          type="button"
+          class="w-full h-12 rounded-xl bg-white border-2 border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+          @click="emitEdit"
+        >
+          Edit Info
+        </button> -->
       </div>
     </div>
 
@@ -67,62 +137,58 @@
       v-else
       class="max-w-3xl mx-auto bg-white/80 backdrop-blur rounded-2xl border border-[#E5D9C9] px-6 py-7 text-center space-y-5 shadow-sm"
     >
-      <!-- <div class="flex items-center justify-between">
-        <BackButton
-          v-if="showBack"
-          icon="vuesax.linear.arrow-left"
-          class="text-neutral-700!"
-          @update:go-back="emitBack"
-        />
-        <div class="flex-1"></div>
-        <RouterLink
-          v-if="displayMember.profileUrl"
-          :to="displayMember.profileUrl"
-          class="text-primary-700 text-sm font-medium underline underline-offset-4"
-          @click.prevent="emitProfile"
-        >
-          Go to profile
-        </RouterLink>
-        <button
-          v-else
-          type="button"
-          class="text-primary-700 text-sm font-medium underline underline-offset-4"
-          @click="emitProfile"
-        >
-          Go to profile
-        </button>
-      </div> -->
-
       <div class="flex flex-col items-center space-y-3">
-        <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md">
-          <img :src="avatarSrc" alt="Profile photo" class="w-full h-full object-cover" />
+        <!-- Avatar with initials fallback -->
+        <div
+          class="w-24 h-24 rounded-full overflow-hidden shadow-md flex items-center justify-center"
+          :class="
+            hasAvatar
+              ? 'border-4 border-white'
+              : 'bg-gradient-to-br from-purple-500 to-purple-600 border-4 border-white'
+          "
+        >
+          <img
+            v-if="hasAvatar"
+            :src="avatarSrc"
+            alt="Profile photo"
+            class="w-full h-full object-cover"
+          />
+          <span v-else class="text-white text-xl font-semibold">
+            {{ memberInitials }}
+          </span>
         </div>
         <div>
           <h2 class="text-xl md:text-2xl font-semibold text-neutral-900 leading-tight">
             {{ displayMember.name }}
           </h2>
-          <p class="text-neutral-500 text-sm">{{ displayMember.relation }}</p>
+          <p class="text-green-600 text-sm font-medium">{{ displayMember.relation }}</p>
         </div>
       </div>
 
-      <div
-        class="bg-[#F7F2EA] rounded-full px-4 py-3 flex flex-wrap justify-center gap-3 text-sm text-[#0B5132] font-medium"
-      >
+      <!-- Individual pill-shaped tags -->
+      <div class="flex flex-wrap justify-center gap-2">
         <span
-          v-for="(tag, index) in tags"
-          :key="tag + index"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#E5D9C9]"
+          v-for="tag in tags"
+          :key="tag"
+          class="inline-flex items-center px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-700 font-medium"
         >
           {{ tag }}
         </span>
       </div>
 
-      <div>
+      <div class="flex flex-col gap-3">
         <MlbButton
           label="View Family Tree"
-          class="w-full rounded-xl! bg-primary-700! h-12! text-white! hover:bg-primary-700!"
+          class="w-full rounded-xl! bg-[#0B5132]! h-12! text-white! hover:bg-[#0a4730]! font-semibold!"
           @click="emitProfile"
         />
+        <!-- <button
+          type="button"
+          class="w-full h-12 rounded-xl bg-white border-2 border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+          @click="emitEdit"
+        >
+          Edit Info
+        </button> -->
       </div>
     </div>
   </section>
@@ -133,27 +199,13 @@ import { computed } from 'vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import BackButton from '@/components/common/BackButton.vue'
 import { getUserAvatar } from '@/helpers/general.helpers'
-
-type Member = {
-  name?: string
-  first_name?: string
-  last_name?: string
-  full_name?: string
-  avatar?: string | null
-  profile_picture_url?: string | null
-  generation?: string
-  family_name?: string
-  childrenCount?: number | string
-  relation?: string
-  profileUrl?: string
-  isSelf?: boolean
-  description?: string
-}
+import { useFamilyTree } from '@/composables/family-tree.composables'
+import type { NodeMemberInterface } from '@/types/family-tree.types'
 
 const props = withDefaults(
   defineProps<{
-    member?: Member
-    variant?: 'card' | 'compact'
+    member?: NodeMemberInterface
+    variant?: 'card' | 'compact' | 'modal'
     showBack?: boolean
   }>(),
   {
@@ -175,12 +227,15 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'back'): void
   (e: 'view-profile'): void
+  (e: 'edit'): void
 }>()
+
+const { computedChildrenCount } = useFamilyTree()
 
 const displayMember = computed(() => {
   const base = props.member || {}
-  const fullName =
-    base.full_name || base.name || [base.first_name, base.last_name].filter(Boolean).join(' ')
+  const childrenCount = computedChildrenCount(base)
+  const fullName = base.full_name || [base.first_name, base.family_name].filter(Boolean).join(' ')
   return {
     name: fullName || 'Unknown member',
     relation: base.relation || (base.isSelf ? 'You' : 'Family member'),
@@ -189,22 +244,42 @@ const displayMember = computed(() => {
       base.description ||
       'Brief description on the user, or any other thing we feel we should add here, but that would all depend on what the user is inputing on the onboarding mode',
     generation: base.generation || '3rd Generation',
-    familyName: base.family_name + "'s Family" || "Tunde's Family",
+    familyName: base.family_name ? `${base.family_name}'s Family` : null,
     childrenCount:
-      base.childrenCount !== undefined && base.childrenCount !== null
-        ? `${base.childrenCount} ${Number(base.childrenCount) === 1 ? 'Child' : 'Children'}`
-        : 'Children',
+      Number(childrenCount) > 1 ? `${childrenCount} Children` : `${childrenCount} Child`,
     avatar: base.profile_picture_url || base.avatar || null,
     first_name: base.first_name,
-    last_name: base.last_name,
+    last_name: base.family_name,
   }
+})
+
+// Get initials from name
+const memberInitials = computed(() => {
+  const name = displayMember.value.name || ''
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0]![0] || '') + (parts[parts.length - 1]![0] || '')
+  } else if (parts.length === 1) {
+    return parts[0]!.substring(0, 2).toUpperCase()
+  }
+  return 'F'
+})
+
+// Check if avatar exists
+const hasAvatar = computed(() => {
+  return !!(displayMember.value.avatar && displayMember.value.avatar !== '')
 })
 
 const tags = computed(() => {
   const t: string[] = []
   if (displayMember.value.generation) t.push(displayMember.value.generation)
   if (displayMember.value.familyName) t.push(displayMember.value.familyName)
-  if (displayMember.value.childrenCount) t.push(String(displayMember.value.childrenCount))
+  if (
+    displayMember.value.childrenCount !== undefined &&
+    displayMember.value.childrenCount !== null
+  ) {
+    t.push(String(displayMember.value.childrenCount))
+  }
   return t
 })
 
@@ -213,14 +288,18 @@ const avatarSrc = computed(() => {
   return d.avatar || getUserAvatar(d.first_name || 'User', d.last_name || '', d.avatar || undefined)
 })
 
-const wrapperClass = computed(() =>
-  props.variant === 'card'
+const wrapperClass = computed(() => {
+  if (props.variant === 'modal') {
+    return '' // No wrapper styling for modal - parent handles it
+  }
+  return props.variant === 'card'
     ? 'bg-[#F5F1E8] px-4 py-6 md:px-8 md:py-10 rounded-[32px]'
-    : 'bg-[#F5F1E8] px-3 py-4 md:px-6 md:py-8 rounded-[24px]',
-)
+    : 'bg-[#F5F1E8] px-3 py-4 md:px-6 md:py-8 rounded-[24px]'
+})
 
 const emitBack = () => emit('back')
 const emitProfile = () => emit('view-profile')
+const emitEdit = () => emit('edit')
 
 const variant = computed(() => props.variant)
 </script>
@@ -228,5 +307,12 @@ const variant = computed(() => props.variant)
 <style scoped>
 :deep(.n-button) {
   padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Ensure button spacing works */
+.flex.flex-col.gap-3 > * {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 </style>

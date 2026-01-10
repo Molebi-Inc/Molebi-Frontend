@@ -16,6 +16,29 @@ export interface FamilyMemberFormValues {
   date_of_birth: string | null
 }
 
+export type RelationType =
+  | 'father'
+  | 'mother'
+  | 'sibling'
+  | 'spouse'
+  | 'child'
+  | 'stepmother'
+  | 'stepfather'
+  | 'step_sibling'
+  | 'half_sibling'
+  | 'aunt'
+  | 'uncle'
+  | 'cousin'
+  | 'niece'
+  | 'nephew'
+  | 'grandmother'
+  | 'grandfather'
+  | 'grandchildren'
+  | 'father_in_law'
+  | 'mother_in_law'
+  | 'brother_in_law'
+  | 'sister_in_law'
+
 export type GenderType = 'male' | 'female' | 'other' | 'prefer_not_to_say'
 
 export interface FamilyRequestFormValues {
@@ -105,11 +128,8 @@ export const FAMILY_TREE_MEMBERS = [
   'aunts_uncles',
   'nieces_nephews',
   'cousins',
-  'step_parents',
   'children',
-  'parents_in_law',
-  'siblings_in_law',
-  'step_siblings',
+  'in_laws',
 ] as const
 
 // Derive the union type from the const array
@@ -141,4 +161,27 @@ export interface FamilyTreeStoreInterface {
   familyTreeData: FamilyTreeInterface | null
   loading: boolean
   error: string | null
+}
+
+export interface NodeMemberInterface {
+  id?: number
+  name?: string
+  first_name?: string
+  family_name?: string
+  full_name?: string
+  avatar?: string | null
+  profile_picture_url?: string | null
+  generation?: string
+  familyName?: string
+  relation?: string
+  profileUrl?: string
+  isSelf?: boolean
+  description?: string
+  relationship_metadata?: {
+    relation_type: string
+    related_through: number | null
+    parent_id: number | null
+    is_adoptive: boolean
+    is_former: boolean
+  }
 }
