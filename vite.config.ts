@@ -18,10 +18,10 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Molebi - Family Tree & Legacy',
-        short_name: 'Molebi',
+        name: 'Molebi App - Family Tree & Legacy',
+        short_name: 'Molebi App',
         description:
           'Discover. Preserve. Connect. Build your family tree and preserve your legacy.',
         theme_color: '#0F4C3F',
@@ -31,9 +31,40 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         icons: [
+          // Standard PWA icons
           {
             src: 'pwa-64x64.png',
             sizes: '64x64',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-72x72.png',
+            sizes: '72x72',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-96x96.png',
+            sizes: '96x96',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-128x128.png',
+            sizes: '128x128',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-144x144.png',
+            sizes: '144x144',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-152x152.png',
+            sizes: '152x152',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-167x167.png',
+            sizes: '167x167',
             type: 'image/png',
           },
           {
@@ -42,9 +73,21 @@ export default defineConfig({
             type: 'image/png',
           },
           {
+            src: 'pwa-384x384.png',
+            sizes: '384x384',
+            type: 'image/png',
+          },
+          {
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
+          },
+          // Maskable icons for Android adaptive icons
+          {
+            src: 'maskable-icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable',
           },
           {
             src: 'maskable-icon-512x512.png',
