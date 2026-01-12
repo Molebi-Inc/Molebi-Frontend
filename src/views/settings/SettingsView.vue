@@ -191,14 +191,14 @@ const settingsItems = computed<SettingsItem[]>(() => [
   },
   { id: 'help' as const, label: 'Help', component: HelpView, hide: false },
   { id: 'about' as const, label: 'About', component: AboutView, hide: false },
-  {
-    id: 'delete' as const,
-    label: 'Delete Account',
-    component: AboutView,
-    hide: isLargeScreen.value,
-    icon: 'delete',
-    tag: 'danger',
-  },
+  // {
+  //   id: 'delete' as const,
+  //   label: 'Delete Account',
+  //   component: AboutView,
+  //   hide: isLargeScreen.value,
+  //   icon: 'delete',
+  //   tag: 'danger',
+  // },
 ])
 
 const displayName = computed(() => {

@@ -146,25 +146,27 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import type { FormInst, UploadFileInfo } from 'naive-ui'
-import { ref, computed, onMounted, watch } from 'vue'
-import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
+import MlbInput from '@/components/ui/MlbInput.vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
-import { handleApiError } from '@/helpers/error.helpers'
-import { useGetStatesQuery } from '@/services/general.service'
-import type { StateInterface } from '@/types/general.types'
-import { useUpdateProfileMutation } from '@/services/authentication.services'
-import { personalInformationValidation } from '@/validations/authentication.validations'
-import { NForm, NFormItem, NDatePicker, useMessage, NSelect, NUpload } from 'naive-ui'
-import type { PersonalInformationFormValues } from '@/types/authentication.types'
+import { useProfile } from '@/composables/useProfile'
+import type { FormInst, UploadFileInfo } from 'naive-ui'
 import { useProfileStore } from '@/stores/profile.store'
+import { handleApiError } from '@/helpers/error.helpers'
+import type { StateInterface } from '@/types/general.types'
+import { useGetStatesQuery } from '@/services/general.service'
 import { useMemberForm } from '@/composables/member-form.composables'
+import { useUpdateProfileMutation } from '@/services/authentication.services'
+import type { PersonalInformationFormValues } from '@/types/authentication.types'
+import { NForm, NFormItem, NDatePicker, useMessage, NSelect, NUpload } from 'naive-ui'
+import { personalInformationValidation } from '@/validations/authentication.validations'
 
 const $router = useRouter()
 const message = useMessage()
 const profileStore = useProfileStore()
 const statesQuery = useGetStatesQuery()
+const { getProfile } = useProfile()
 const { form, rules } = personalInformationValidation()
 const updateProfileMutation = useUpdateProfileMutation()
 
@@ -240,7 +242,8 @@ watch(
   { immediate: true },
 )
 
-onMounted(() => {
+onMounted(async () => {
+  await getProfile()
   fetchFormData()
   // Query will automatically fetch states when component mounts
   // States are cached for 1 hour, so subsequent visits will be instant

@@ -3,6 +3,30 @@
     <!-- Scroll Content -->
     <div class="flex-1">
       <div class="md:p-8 space-y-8">
+        <!-- Onboarding Completion Banner -->
+        <div
+          v-if="showOnboardingBanner"
+          class="flex items-start gap-2 bg-primary-50 p-3 md:p-4 rounded-xl text-primary-900"
+        >
+          <div class="shrink-0">
+            <MlbIcon name="material.info.outline.rounded" :size="20" />
+          </div>
+          <div class="flex-1">
+            <p class="text-sm md:text-base font-medium mb-2">
+              Complete your profile to unlock all features
+            </p>
+            <p class="text-xs md:text-sm text-primary-700 mb-3">
+              Please add personal information to continue.
+            </p>
+            <MlbButton
+              label="Complete Profile"
+              class="rounded-lg! bg-primary-700! text-white! border-none! h-9! md:h-10! text-sm! md:text-base!"
+              @click="
+                $router.push({ name: 'Guests.OnboardingView', params: { module: 'personal-info' } })
+              "
+            />
+          </div>
+        </div>
         <!-- Did you know card -->
         <!-- <div class="w-full">
           <img
@@ -199,15 +223,17 @@ import type { HeritageDataInterface } from '@/types/heritage.types'
 import welcomeBanner from '@/assets/images/welcome-banner.png'
 import welcomeBannerSmall from '@/assets/images/welcome-banner-small.png'
 import { useGetUserProgressionQuery } from '@/services/general.service'
+import { useProfileStore } from '@/stores/profile.store'
 
-const message = useMessage()
 const $route = useRoute()
 const $router = useRouter()
+const message = useMessage()
+const profileStore = useProfileStore()
 const heritageQuery = useGetHeritageQuery()
 const announcementStore = useAnnouncementStore()
 const familyTreesQuery = useGetFamilyTreesQuery()
-const userProgressionQuery = useGetUserProgressionQuery()
 const familyTraditionStore = useFamilyTraditionStore()
+const userProgressionQuery = useGetUserProgressionQuery()
 const { fetchAnnouncements, fetchFamilyTraditions } = useHome()
 const { startTour: startTourAction, tourIsComplete, skipTour } = useTour()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
@@ -223,6 +249,19 @@ const familyMemberCounts = ref<{ men: number; women: number }>({ men: 0, women: 
 
 const announcements = computed<Announcement[]>(() => announcementStore.announcements)
 const familyTraditions = computed<FamilyTradition[]>(() => familyTraditionStore.familyTraditions)
+
+// Show onboarding banner if user hasn't completed state_id or community_name
+const showOnboardingBanner = computed(() => {
+  const user = profileStore.user
+  return (
+    !user?.family_tree?.state_id ||
+    !user?.community_name ||
+    !user?.first_name ||
+    !user?.family_name ||
+    !user?.gender ||
+    !user?.avatar
+  )
+})
 
 const getHomeFormsMap = (): Record<FormType, HomeFormConfig> => {
   const isEditMode = !!$route.query.fid
