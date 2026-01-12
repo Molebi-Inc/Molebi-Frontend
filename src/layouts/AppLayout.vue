@@ -86,8 +86,8 @@ import { useHome } from '@/composables/useHome'
 const $route = useRoute()
 const profileStore = useProfileStore()
 const { skipTour, nextStep } = useTour()
-const { userProfileLoading, getProfile } = useProfile()
 const { fetchTourStages } = useHome()
+const { userProfileLoading, getProfile } = useProfile()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 onMounted(async () => {
