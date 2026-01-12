@@ -99,6 +99,7 @@
             :options="states"
             placeholder="Select State"
             :disabled="!!user?.state_id"
+            :loading="statesLoading"
             size="large"
             class="w-full mlb-select"
           >
@@ -146,7 +147,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import type { FormInst, UploadFileInfo } from 'naive-ui'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
@@ -163,28 +164,25 @@ import { useMemberForm } from '@/composables/member-form.composables'
 const $router = useRouter()
 const message = useMessage()
 const profileStore = useProfileStore()
-const { refetch: refetchStates } = useGetStatesQuery()
+const statesQuery = useGetStatesQuery()
 const { form, rules } = personalInformationValidation()
 const updateProfileMutation = useUpdateProfileMutation()
 
 const { genderOptions } = useMemberForm('self')
 
 const formRef = ref<FormInst | null>(null)
-const states = ref<{ label: string; value: number }[]>([])
 const loading = computed(() => updateProfileMutation.isPending.value)
+const statesLoading = computed(() => statesQuery.isLoading.value || statesQuery.isFetching.value)
 
-const fetchStates = async () => {
-  try {
-    const response = await refetchStates()
-    states.value =
-      response.data?.data?.map((state: StateInterface) => ({
-        label: state.name,
-        value: state.id,
-      })) ?? []
-  } catch (error) {
-    handleApiError(error, message)
-  }
-}
+// Transform states data into select options format
+const states = computed(() => {
+  return (
+    statesQuery.data.value?.data?.map((state: StateInterface) => ({
+      label: state.name,
+      value: state.id,
+    })) ?? []
+  )
+})
 
 const onFormSubmit = async () => {
   formRef.value?.validate(async (errors) => {
@@ -231,9 +229,21 @@ const fetchFormData = () => {
   }
 }
 
-onMounted(async () => {
+// Watch for query errors and handle them
+watch(
+  () => statesQuery.isError.value,
+  (isError) => {
+    if (isError && statesQuery.error.value) {
+      handleApiError(statesQuery.error.value, message)
+    }
+  },
+  { immediate: true },
+)
+
+onMounted(() => {
   fetchFormData()
-  await fetchStates()
+  // Query will automatically fetch states when component mounts
+  // States are cached for 1 hour, so subsequent visits will be instant
 })
 </script>
 <style scoped>

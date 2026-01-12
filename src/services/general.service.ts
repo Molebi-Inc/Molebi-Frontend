@@ -66,6 +66,10 @@ export const useGetStatesQuery = ({ enabled = true }: { enabled?: boolean } = {}
       })
       return response.data
     },
+    staleTime: 1000 * 60 * 60, // Consider data fresh for 1 hour (states rarely change)
+    gcTime: 1000 * 60 * 60 * 24, // Keep in cache for 24 hours
+    retry: 2, // Retry failed requests up to 2 times
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
   })
 }
 
