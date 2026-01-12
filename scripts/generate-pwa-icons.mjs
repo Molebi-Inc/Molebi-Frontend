@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const PUBLIC_DIR = path.join(__dirname, '../public')
-const SOURCE_DIR = '/Users/azeem/Downloads/molebi-logo'
+const SOURCE_FILE = '/Users/azeem/Downloads/Molebi -05.png'
 
 // Icon sizes required for PWA
 const PWA_SIZES = [64, 192, 512]
@@ -37,8 +37,9 @@ async function generateIcon(sourceBuffer, size, outputPath) {
   await sharp(sourceBuffer)
     .resize(size, size, {
       fit: 'contain',
-      background: { r: 255, g: 255, b: 255, alpha: 0 }
+      background: { r: 255, g: 255, b: 255, alpha: 1 }
     })
+    .flatten({ background: { r: 255, g: 255, b: 255 } }) // Flatten transparency to white
     .png()
     .toFile(outputPath)
   console.log(`Generated: ${path.basename(outputPath)} (${size}x${size})`)
@@ -109,8 +110,9 @@ async function createFaviconIco(sourceBuffer) {
     const pngBuffer = await sharp(sourceBuffer)
       .resize(size, size, {
         fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 0 }
+        background: { r: 255, g: 255, b: 255, alpha: 1 }
       })
+      .flatten({ background: { r: 255, g: 255, b: 255 } }) // Flatten transparency to white
       .png()
       .toBuffer()
 
@@ -172,8 +174,8 @@ async function main() {
   console.log('PWA Icon Generator')
   console.log('==================\n')
 
-  // Use the 512x512 source image
-  const sourcePath = path.join(SOURCE_DIR, 'molebi-512x512.png')
+  // Use the source image
+  const sourcePath = SOURCE_FILE
 
   if (!fs.existsSync(sourcePath)) {
     console.error(`Source image not found: ${sourcePath}`)

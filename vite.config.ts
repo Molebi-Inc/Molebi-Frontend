@@ -20,8 +20,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Molebi - Family Tree & Legacy',
-        short_name: 'Molebi',
+        name: 'Molebi App - Family Tree & Legacy',
+        short_name: 'Molebi App',
         description:
           'Discover. Preserve. Connect. Build your family tree and preserve your legacy.',
         theme_color: '#0F4C3F',
