@@ -94,7 +94,7 @@ export const useHome = () => {
       delete query.ftype
       $router.replace({ name: 'App.HomeView', query: query })
       AlertService.success({
-        subject: edited.value ? 'Updated Family Tradition Sent' : 'Family Tradition Sent',
+        subject: 'Family Tradition Sent', //edited.value ? 'Updated Family Tradition Sent' : 'Family Tradition Sent',
         message: 'Members of this family tradition will receive a notification.',
         showIcon: true,
         imageUrl: 'images/success.png',
@@ -135,7 +135,7 @@ export const useHome = () => {
       delete query.ftype
       $router.replace({ name: 'App.HomeView', query: query })
       AlertService.success({
-        subject: edited.value ? 'Updated Announcement Sent' : 'Announcement Sent',
+        subject: 'Announcement Sent', //edited.value ? 'Updated Announcement Sent' : 'Announcement Sent',
         message: 'Members of this announcement will receive a notification.',
         showIcon: true,
         imageUrl: 'images/success.png',
