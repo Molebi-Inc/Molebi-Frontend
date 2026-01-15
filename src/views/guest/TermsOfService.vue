@@ -1,7 +1,7 @@
 <template>
   <div class="pdf-container">
     <embed
-      src="/src/assets/files/terms-of-service.pdf"
+      src="/terms-of-service.pdf"
       type="application/pdf"
       width="100%"
       height="100%"

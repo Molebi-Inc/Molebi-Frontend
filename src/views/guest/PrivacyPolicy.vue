@@ -1,7 +1,7 @@
 <template>
   <div class="pdf-container">
     <embed
-      src="/src/assets/files/privacy-policy.pdf"
+      src="/privacy-policy.pdf"
       type="application/pdf"
       width="100%"
       height="100%"
