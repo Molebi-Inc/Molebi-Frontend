@@ -53,6 +53,24 @@ export const guestRoutes = {
       },
     },
     {
+      path: '/privacy-policy',
+      name: 'Guests.PrivacyPolicyView',
+      component: () => import('@/views/guest/PrivacyPolicy.vue'),
+      meta: {
+        layout: 'guest',
+        requiresGuest: true,
+      },
+    },
+    {
+      path: '/terms-of-service',
+      name: 'Guests.TermsOfServiceView',
+      component: () => import('@/views/guest/TermsOfService.vue'),
+      meta: {
+        layout: 'guest',
+        requiresGuest: true,
+      },
+    },
+    {
       path: '/auth/:provider(google|facebook|apple)',
       name: 'Guests.SocialAuthenticationView',
       // Use the component directly so Vue Router doesn't treat it as an async loader
