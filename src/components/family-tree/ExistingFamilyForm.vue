@@ -123,14 +123,18 @@ import { handleApiError } from '@/helpers/error.helpers'
 import { NSelect, NForm, NFormItem, NEmpty, NSpin, useMessage } from 'naive-ui'
 import { familyRequestValidation } from '@/validations/family-tree.validations'
 import type { FamilyMemberInterface, FamilyTreeDetails } from '@/types/family-tree.types'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
-const message = useMessage()
+const $route = useRoute()
 const $router = useRouter()
+const message = useMessage()
 const { form, rules } = familyRequestValidation()
 const requestToJoinFamilyMutation = useRequestToJoinFamilyMutation()
 const isPending = computed(() => requestToJoinFamilyMutation.isPending.value)
 
+const $emit = defineEmits<{
+  (e: 'close'): void
+}>()
 defineProps<{
   relationshipOptions: { label: string; value: string }[]
 }>()
@@ -167,7 +171,11 @@ const handleRequestToJoinFamilySubmit = async () => {
     try {
       const response = await requestToJoinFamilyMutation.mutateAsync(form.value)
       message.success(response.message || 'Request to join family sent successfully')
-      $router.push({ name: 'App.FamilyTreeOnboardingView', params: { module: 'complete' } })
+      if ($route.name === 'App.FamilyTreeOnboardingView') {
+        $router.push({ name: 'App.FamilyTreeOnboardingView', params: { module: 'complete' } })
+      } else {
+        $emit('close')
+      }
     } catch (error) {
       handleApiError(error, message)
     }
@@ -176,7 +184,9 @@ const handleRequestToJoinFamilySubmit = async () => {
 
 const handleFetchTreeDetails = async () => {
   const response = await getFamilyMembersByIdentifierQuery.refetch()
-  familyMemberOptions.value = response.data?.data?.data ?? []
+  const queryData = response.data
+  familyMemberOptions.value = queryData?.data ?? []
+  treeDetails.value = queryData?.family_tree ?? null
 }
 
 watch(

@@ -24,7 +24,7 @@
         </n-form-item>
       </div>
 
-      <!-- Priority Select -->
+      <!-- Date and Time Select -->
       <n-input-group class="grid grid-cols-2 gap-4">
         <n-form-item path="date" :show-require-mark="false" :show-feedback="false" class="w-full">
           <template #label>
@@ -60,7 +60,7 @@
         <NSelect
           v-model:value="form.recurrence"
           placeholder="Select Reoccurrence"
-          :options="reoccurrenceOptions"
+          :options="recurrenceOptions"
           size="large"
           class="w-full mlb-select"
         />
@@ -119,8 +119,10 @@ import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
 import { familyTraditionValidation } from '@/validations/dashboard.validations'
 import type { UserSelectorOptions } from '@/components/common/UserSelector.vue'
 import { convertTimeFromHIFormat, convertTimeToHIFormat } from '@/helpers/general.helpers'
-import { dateModeOptions, reoccurrenceOptions, timeOptions } from '@/constants/options.constants'
+import { dateModeOptions, timeOptions } from '@/constants/options.constants'
 import { useMessage, NForm, NFormItem, NInput, NSelect, NDatePicker, NInputGroup } from 'naive-ui'
+import { useGetTraditionRecurrenceTypesQuery } from '@/services/general.service'
+import { capitalize } from '@/helpers/general.helpers'
 
 const message = useMessage()
 const generalStore = useGeneralStore()
@@ -135,6 +137,12 @@ const userSelectorOptions: UserSelectorOptions = {
   name_fields: ['first_name', 'middle_name', 'family_name'],
 }
 const { form, rules } = familyTraditionValidation()
+
+const getTraditionRecurrenceTypesQuery = useGetTraditionRecurrenceTypesQuery({
+  enabled: false,
+})
+
+const recurrenceOptions = ref<{ label: string; value: string }[]>([])
 
 // Mock family members data - replace with actual API call
 const familyMembers = computed(() => generalStore.familyMembers)
@@ -170,6 +178,12 @@ const onFormSubmit = () => {
   })
 }
 
+const fetchRecurrenceTypes = async () => {
+  const response = await getTraditionRecurrenceTypesQuery.refetch()
+  recurrenceOptions.value =
+    response.data?.data?.map((type: string) => ({ label: capitalize(type), value: type })) ?? []
+}
+
 const getEditData = () => {
   const selectedFamilyTradition = familyTraditionStore.selectedFamilyTradition
   if (selectedFamilyTradition) {
@@ -186,6 +200,7 @@ const getEditData = () => {
 }
 
 onMounted(() => {
+  fetchRecurrenceTypes()
   fetchFamilyMembers()
   getEditData()
 })

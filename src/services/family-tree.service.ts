@@ -106,13 +106,13 @@ export const useGetFamilyMembersByIdentifierQuery = (
   },
 ) => {
   return useQuery<
-    ApiResponse<FamilyTreeByUniqueIdentifierResponse>,
+    FamilyTreeByUniqueIdentifierResponse,
     AxiosError<ValidationErrorResponse>
   >({
     queryKey: ['family-members-by-identifier', identifier],
     queryFn: async () => {
       const id = toValue(identifier)
-      const response = await axiosInstance.get<ApiResponse<FamilyTreeByUniqueIdentifierResponse>>(
+      const response = await axiosInstance.get<FamilyTreeByUniqueIdentifierResponse>(
         `/api/user/family-members/by-tree/${id}`,
         {
           headers: {
