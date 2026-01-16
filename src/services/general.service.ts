@@ -147,3 +147,23 @@ export const useGetUserProgressionQuery = ({ enabled = true }: { enabled?: boole
     },
   })
 }
+
+export const useGetTraditionRecurrenceTypesQuery = ({
+  enabled = true,
+}: { enabled?: boolean } = {}) => {
+  return useQuery<ApiResponse<string[]>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['tradition-recurrence-types'],
+    enabled,
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<string[]>>(
+        '/api/user/tradition-recurrence-types',
+        {
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+          },
+        },
+      )
+      return response.data
+    },
+  })
+}

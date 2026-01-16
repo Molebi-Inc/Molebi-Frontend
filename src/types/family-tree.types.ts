@@ -48,8 +48,10 @@ export interface FamilyRequestFormValues {
 }
 
 export interface FamilyTreeByUniqueIdentifierResponse {
-  family_tree: FamilyTreeDetails
+  success: boolean
+  message: string
   data: FamilyMemberInterface[]
+  family_tree: FamilyTreeDetails
 }
 
 export interface FamilyTreeDetails {
