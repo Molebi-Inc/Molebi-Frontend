@@ -11,6 +11,7 @@ import type {
   ForgotPasswordResponseData,
   VerifyEmailResponseData,
   ResendOtpResponseData,
+  InvitationParamsInterface,
 } from '@/types/authentication.types'
 import type { FamilyInfoFormValues } from '@/types/profile.types'
 import type { AxiosError } from 'axios'
@@ -26,6 +27,7 @@ import type {
   SocialAuthenticationProvider,
   SocialAuthenticationRedirectResponseData,
 } from '@/types/authentication.types'
+
 
 const authConfig = useAuthConfig()
 
@@ -235,6 +237,27 @@ export const useSocialAuthenticationRedirectMutation = (provider: SocialAuthenti
       const response = await axiosInstance.post<ApiResponse<SigninResponseData>>(
         `/api/user/auth/${provider}/callback?${new URLSearchParams(params).toString()}`,
       )
+      return response.data
+    },
+  })
+}
+
+export const useRegistrationLinkMutation = () => {
+  return useMutation<ApiResponse<{registration_link: string}>, AxiosError<ValidationErrorResponse>, {family_member_id: number}>({
+    mutationFn: async ({family_member_id}: {family_member_id: number}) => {
+      const response = await axiosInstance.post<ApiResponse<{registration_link: string}>>('/api/user/auth/registration-link', {
+        family_member_id,
+      }, {headers: { Authorization: `Bearer ${authConfig.getToken()}` }})
+      return response.data
+    },
+  })
+}
+
+export const useRegisterWithInvitationMutation = (params: MaybeRefOrGetter<InvitationParamsInterface | null>) => {
+  const paramsValue = computed(() => toValue(params))
+  return useMutation<ApiResponse<SignupResponseData>, AxiosError<ValidationErrorResponse>, SignupFormValues>({
+    mutationFn: async (data: SignupFormValues) => {
+      const response = await axiosInstance.post<ApiResponse<SignupResponseData>>(`/api/user/auth/register/invitation?${new URLSearchParams(paramsValue.value as unknown as Record<string, string>).toString()}`, data)
       return response.data
     },
   })

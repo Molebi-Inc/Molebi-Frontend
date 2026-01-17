@@ -64,6 +64,7 @@
             id="dob"
             name="dob"
             type="date"
+      :is-date-disabled="dateDisabled"
             :disabled="!!user?.dob"
             placeholder="Enter Date of Birth"
             class="w-full"
@@ -202,6 +203,15 @@ const onFormSubmit = async () => {
       handleApiError(error, message)
     }
   })
+}
+
+const dateDisabled = (ts: number) => {
+  // Disable dates after today (future dates)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0) // Set to start of day for accurate comparison
+  const selectedDate = new Date(ts)
+  selectedDate.setHours(0, 0, 0, 0)
+  return selectedDate > today
 }
 
 const getValidFiles = (fileList: UploadFileInfo[]) =>

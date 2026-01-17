@@ -117,7 +117,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import { useAuthConfig } from '@/config/auth.config'
@@ -126,13 +126,24 @@ import type { FormInst, SelectOption } from 'naive-ui'
 import { handleApiError } from '@/helpers/error.helpers'
 import { countryOptions } from '@/constants/options.constants'
 import { useAuthenticationStore } from '@/stores/authentication.store'
-import { useSignupMutation } from '@/services/authentication.services'
+import {
+  useSignupMutation,
+  useRegisterWithInvitationMutation,
+} from '@/services/authentication.services'
 import { signupValidation } from '@/validations/authentication.validations'
 import { NForm, NFormItem, NInput, NSelect, NInputGroup, useMessage } from 'naive-ui'
 import { useSocialSignin } from '@/composables/social-signin.composable'
-import type { SocialAuthenticationProvider } from '@/types/authentication.types'
+import type {
+  SocialAuthenticationProvider,
+  InvitationParamsInterface,
+} from '@/types/authentication.types'
 import OverlayLoader from '@/components/common/OverlayLoader.vue'
 
+const props = defineProps<{
+  invitationParams?: InvitationParamsInterface | null
+}>()
+
+const $route = useRoute()
 const $router = useRouter()
 const message = useMessage()
 const authConfig = useAuthConfig()
@@ -143,7 +154,36 @@ const { handleSocialAuthenticationRedirect } = useSocialSignin()
 
 const formRef = ref<FormInst | null>(null)
 const socialAuthLoader = ref<boolean>(false)
-const loading = computed(() => signupMutation.isPending.value)
+
+// Determine which mutation to use based on invitation params
+const invitationParams = computed<InvitationParamsInterface | null>(() => {
+  if (props.invitationParams) {
+    return props.invitationParams
+  }
+  // Also check route query params as fallback
+  const expires = $route.query.expires
+  const family_member_id = $route.query.family_member_id
+  const signature = $route.query.signature
+  if (expires && family_member_id && signature) {
+    return {
+      expires: Number(expires),
+      family_member_id: Number(family_member_id),
+      signature: String(signature),
+    }
+  }
+  return null
+})
+
+const invitationMutation = invitationParams.value
+  ? useRegisterWithInvitationMutation(invitationParams)
+  : null
+
+const loading = computed(() => {
+  if (invitationMutation) {
+    return invitationMutation.isPending.value
+  }
+  return signupMutation.isPending.value
+})
 
 export type CountrySelectOption = SelectOption & {
   countryName?: string
@@ -211,10 +251,19 @@ const onFormSubmit = async () => {
     try {
       // form.code is `${dialingCode}|${countryCode}`; extract the dialing code part
       const dialingCode = form.value.code ? String(form.value.code).split('|')[0] : ''
-      const response = await signupMutation.mutateAsync({
+      const formData = {
         ...form.value,
         phone: `${dialingCode}${form.value.phone}`,
-      })
+      }
+
+      let response
+
+      // Use invitation mutation if invitation params are present
+      if (props.invitationParams && invitationMutation) {
+        response = await invitationMutation.mutateAsync(formData)
+      } else {
+        response = await signupMutation.mutateAsync(formData)
+      }
       authenticationStore.setStoreProp('signupForm', {
         ...form.value,
         email: form.value.email,
@@ -224,6 +273,7 @@ const onFormSubmit = async () => {
       authConfig.setOtpRequestTime(new Date().toISOString())
 
       $router.push({ name: 'Guests.OnboardingView', params: { module: 'verify-email' } })
+      return
     } catch (error) {
       handleApiError(error, message)
     }

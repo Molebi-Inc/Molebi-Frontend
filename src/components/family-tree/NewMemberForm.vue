@@ -1,20 +1,10 @@
 <template>
   <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col">
     <!-- Relationship Type Selection -->
-    <n-form-item
-      label="Select Relationship"
-      path="relation_type"
-      label-style="color: #807F94; font-weight: 500;"
-      required
-    >
-      <NSelect
-        v-model:value="form.relation_type"
-        :options="relationshipTypeOptions"
-        placeholder="Select Relationship"
-        size="large"
-        class="w-full mlb-select"
-        @update:value="onRelationshipTypeChange"
-      >
+    <n-form-item label="Select Relationship" path="relation_type" label-style="color: #807F94; font-weight: 500;"
+      required>
+      <NSelect v-model:value="form.relation_type" :options="relationshipTypeOptions" placeholder="Select Relationship"
+        size="large" class="w-full mlb-select" @update:value="onRelationshipTypeChange">
         <template #arrow>
           <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
         </template>
@@ -22,49 +12,27 @@
     </n-form-item>
 
     <!-- First Name -->
-    <n-form-item
-      label="First Name"
-      path="first_name"
-      label-style="color: #807F94; font-weight: 500;"
-      required
-    >
+    <n-form-item label="First Name" path="first_name" label-style="color: #807F94; font-weight: 500;" required>
       <MlbInput v-model="form.first_name" placeholder="First Name" custom-class="w-full" />
     </n-form-item>
 
     <!-- Same Family Name  -->
     <div class="flex items-center gap-2 mb-4">
-      <NCheckbox
-        v-model:checked="form.is_same_family_name"
-        size="large"
-        @update:checked="onSameFamilyChange"
-      />
+      <NCheckbox v-model:checked="form.is_same_family_name" size="large" @update:checked="onSameFamilyChange" />
       <label class="text-sm font-medium cursor-pointer select-none text-gray-500">
         Same Family Name
       </label>
     </div>
 
     <!-- Family Name -->
-    <n-form-item
-      label="Family Name"
-      path="family_name"
-      label-style="color: #807F94; font-weight: 500;"
-      required
-    >
-      <MlbInput
-        v-model="form.family_name"
-        placeholder="Family Name"
-        :disabled="!!form.is_same_family_name"
-        custom-class="w-full"
-      />
+    <n-form-item label="Family Name" path="family_name" label-style="color: #807F94; font-weight: 500;" required>
+      <MlbInput v-model="form.family_name" placeholder="Family Name" :disabled="!!form.is_same_family_name"
+        custom-class="w-full" />
     </n-form-item>
 
     <!-- Related Through Field (conditional) -->
-    <n-form-item
-      v-if="showRelatedThrough"
-      path="related_through"
-      label-style="color: #807F94; font-weight: 500;"
-      :required="isRelatedThroughRequired"
-    >
+    <n-form-item v-if="showRelatedThrough" path="related_through" label-style="color: #807F94; font-weight: 500;"
+      :required="isRelatedThroughRequired">
       <template #label>
         <div class="flex items-center gap-2">
           <span>{{ getRelatedThroughLabel() }}</span>
@@ -76,15 +44,9 @@
           </NTooltip>
         </div>
       </template>
-      <NSelect
-        v-model:value="form.related_through"
-        :options="relatedThroughOptions"
-        :placeholder="`Select ${getRelatedThroughLabel()}`"
-        size="large"
-        class="w-full mlb-select"
-        filterable
-        @update:value="onRelatedThroughChange"
-      >
+      <NSelect v-model:value="form.related_through" :options="relatedThroughOptions"
+        :placeholder="`Select ${getRelatedThroughLabel()}`" size="large" class="w-full mlb-select" filterable
+        @update:value="onRelatedThroughChange">
         <template #arrow>
           <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
         </template>
@@ -92,12 +54,8 @@
     </n-form-item>
 
     <!-- Parent ID Field (conditional) -->
-    <n-form-item
-      v-if="showParentId"
-      path="parent_id"
-      label-style="color: #807F94; font-weight: 500;"
-      :required="isParentIdRequired"
-    >
+    <n-form-item v-if="showParentId" path="parent_id" label-style="color: #807F94; font-weight: 500;"
+      :required="isParentIdRequired">
       <template #label>
         <div class="flex items-center gap-2">
           <span>Parent</span>
@@ -109,14 +67,8 @@
           </NTooltip>
         </div>
       </template>
-      <NSelect
-        v-model:value="form.parent_id"
-        :options="parentIdOptions"
-        placeholder="Select Parent"
-        size="large"
-        class="w-full mlb-select"
-        filterable
-      >
+      <NSelect v-model:value="form.parent_id" :options="parentIdOptions" placeholder="Select Parent" size="large"
+        class="w-full mlb-select" filterable>
         <template #arrow>
           <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
         </template>
@@ -124,25 +76,14 @@
     </n-form-item>
 
     <!-- Gender Field (conditional) -->
-    <n-form-item
-      v-if="showGender"
-      path="gender"
-      label-style="color: #807F94; font-weight: 500;"
-      :required="true"
-    >
+    <n-form-item v-if="showGender" path="gender" label-style="color: #807F94; font-weight: 500;" :required="true">
       <template #label>
         <div class="flex items-center gap-2">
           <span>Gender</span>
         </div>
       </template>
-      <NSelect
-        v-model:value="form.gender"
-        :options="genderOptions"
-        placeholder="Select Gender"
-        size="large"
-        class="w-full mlb-select"
-        filterable
-      >
+      <NSelect v-model:value="form.gender" :options="genderOptions" placeholder="Select Gender" size="large"
+        class="w-full mlb-select" filterable>
         <template #arrow>
           <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
         </template>
@@ -152,9 +93,7 @@
     <!-- Is Adoptive Field (conditional) -->
     <div v-if="showIsAdoptive" class="flex items-center gap-2 mb-4">
       <NCheckbox v-model:checked="form.is_adoptive" size="large">
-        <label class="text-sm font-medium cursor-pointer select-none text-gray-500"
-          >Adoptive Parent</label
-        >
+        <label class="text-sm font-medium cursor-pointer select-none text-gray-500">Adoptive Parent</label>
       </NCheckbox>
     </div>
 
@@ -181,20 +120,16 @@
     </div>
 
     <!-- Submit Button -->
-    <MlbButton
-      type="submit"
-      :label="loading ? 'Adding member...' : 'Add Family Member'"
-      :loading="loading"
-      :disabled="loading"
-      class="w-full rounded-xl! bg-primary-700! h-12! text-white! hover:bg-primary-700!"
-      @click="handleSubmit"
-    />
+    <MlbButton type="submit" :label="loading ? 'Adding member...' : 'Add Family Member'" :loading="loading"
+      :disabled="loading" class="w-full rounded-xl! bg-primary-700! h-12! text-white! hover:bg-primary-700!"
+      @click="handleSubmit" />
   </n-form>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useMediaQuery } from '@vueuse/core'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
@@ -205,6 +140,9 @@ import { useAddFamilyMemberMutation } from '@/services/family-tree.service'
 import { familyMemberValidation } from '@/validations/family-tree.validations'
 import { NForm, NFormItem, NSelect, NCheckbox, NTooltip, useMessage, type FormInst } from 'naive-ui'
 import { toMemberForm } from '@/mappers/member.mappers'
+import { AlertService } from '@/services/alert.service'
+import { useRegistrationLinkMutation } from '@/services/authentication.services'
+import { useShareComposable } from '@/composables/useShare'
 
 const $emit = defineEmits<{
   (e: 'close'): void
@@ -214,6 +152,7 @@ const $route = useRoute()
 const $router = useRouter()
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const { form, rules } = familyMemberValidation()
 
@@ -238,6 +177,8 @@ const {
 } = useMemberForm(() => form.value.relation_type as string)
 const profileStore = useProfileStore()
 const addFamilyMemberMutation = useAddFamilyMemberMutation()
+const registrationLinkMutation = useRegistrationLinkMutation()
+const { shareLink } = useShareComposable()
 
 const loading = computed(() => addFamilyMemberMutation.isPending.value)
 
@@ -277,12 +218,17 @@ const handleSubmit = async () => {
       const mappedForm = toMemberForm(form.value)
 
       const response = await addFamilyMemberMutation.mutateAsync(mappedForm)
-      message.success(response.message || 'Family member added successfully')
 
-      if ($route.name === 'App.FamilyTreeOnboardingView') {
-        $router.push({ name: 'App.FamilyTreeOnboardingView', params: { module: 'complete' } })
+      // Get the family member ID from the response
+      // The response data should contain the created member with an id
+      const familyMemberId = response.data?.id
+
+      if (familyMemberId) {
+        // Show success alert with invite option
+        await showSuccessAlertWithInvite(familyMemberId)
       } else {
-        $emit('close')
+        message.success(response.message || 'Family member added successfully')
+        handlePostCreationActions()
       }
 
       // Reset form
@@ -306,6 +252,91 @@ const handleSubmit = async () => {
       handleApiError(error, message)
     }
   })
+}
+
+const showSuccessAlertWithInvite = async (familyMemberId: number) => {
+  await AlertService.success({
+    imageUrl: 'images/new-member-success.png',
+    imageClass: 'w-32 h-32 object-contain',
+    imageAlt: 'New member success',
+    subject: 'Family member added',
+    message: 'Would you like to invite this member to join the family tree?',
+    bottomSheet: !isLargeScreen.value,
+    bottomSheetHeight: 460,
+    confirmButtonText: 'Invite Member',
+    cancelButtonText: 'Close',
+    showCancelButton: true,
+    buttonLayout: 'horizontal',
+    cancelFirst: true,
+    maskClosable: false,
+    customClass: {
+      confirmButton: 'rounded-2xl! bg-primary-700! h-13! text-white!',
+      cancelButton: 'rounded-2xl! bg-white! h-13! text-primary-700! border-primary-200!',
+    },
+    buttonConfig: {
+      confirm: {
+        text: 'Invite Member',
+        action: async () => {
+          try {
+            // Generate registration link
+            const linkResponse = await registrationLinkMutation.mutateAsync({
+              family_member_id: familyMemberId,
+            })
+
+            const registrationLink = linkResponse.data.registration_link
+
+            // Extract query parameters from the registration link
+            const url = new URL(registrationLink)
+            const queryParams = url.search
+
+            // Get VITE_APP_URL from environment and append query parameters
+            const appUrl = import.meta.env.VITE_APP_URL + 'onboarding/signup' || ''
+            const finalUrl = queryParams ? `${appUrl}${queryParams}` : appUrl
+
+            // Share the link
+            const shareResult = await shareLink({
+              title: 'Join our family tree on Molebi App',
+              text: 'I invite you to join our family tree on Molebi App',
+              url: finalUrl,
+            })
+
+            if (shareResult.success) {
+              message.success(
+                shareResult.method === 'clipboard'
+                  ? 'Registration link copied to clipboard'
+                  : 'Link shared successfully',
+              )
+            }
+            handlePostCreationActions()
+          } catch (error) {
+            handleApiError(error, message)
+          }
+        },
+        closeOnClick: true,
+      },
+      cancel: {
+        text: 'Close',
+        closeOnClick: true,
+      },
+    },
+    onClose: () => {
+      handlePostCreationActions()
+    },
+    onCancel: () => {
+      handlePostCreationActions()
+    },
+  })
+
+  // If user resolves the alert (after sharing or clicking close)
+  // The handlePostCreationActions will be called via onClose/onCancel
+}
+
+const handlePostCreationActions = () => {
+  if ($route.name === 'App.FamilyTreeOnboardingView') {
+    $router.push({ name: 'App.FamilyTreeOnboardingView', params: { module: 'complete' } })
+  } else {
+    $emit('close')
+  }
 }
 
 watch(

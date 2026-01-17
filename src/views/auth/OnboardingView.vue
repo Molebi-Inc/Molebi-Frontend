@@ -2,10 +2,11 @@
   <div class="w-full bg-white md:bg-transparent">
     <div :class="['w-full', { 'md:flex justify-center items-center': !component?.has_full_page }]">
       <div
+      v-if="!isLinkExpired"
         :class="[
           {
             'md:border border-secondary-200 md:bg-white ': ['signup', 'personal-info'].includes(
-              $route.params.module as string,
+              String($route.params.module || ''),
             ),
           },
           {
@@ -33,15 +34,20 @@
               {{ component?.description }}
             </p>
           </div>
-          <component :is="component?.component" :key="String($route.params.module ?? '')" />
+          <component
+            :is="component?.component"
+            :key="String($route.params.module ?? '')"
+            :invitation-params="invitationParams"
+          />
         </div>
       </div>
+      <LinkExpiredView v-else />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import OtpForm from '@/components/auth/OtpForm.vue'
 import { maskEmail } from '@/helpers/general.helpers'
@@ -50,9 +56,44 @@ import BackButton from '@/components/common/BackButton.vue'
 import { useAuthenticationStore } from '@/stores/authentication.store'
 import PersonalInformationForm from '@/components/auth/PersonalInformationForm.vue'
 import SeedPhase from '@/components/auth/SeedPhase.vue'
+import LinkExpiredView from '@/components/auth/LinkExpiredView.vue'
+import type { InvitationParamsInterface } from '@/types/authentication.types'
 
 const $route = useRoute()
 const authenticationStore = useAuthenticationStore()
+const isLinkExpired = ref(false)
+const invitationParams = ref<InvitationParamsInterface | null>(null)
+
+const moduleParam = computed(() => String($route.params.module || ''))
+
+// Check if link has expired
+const checkLinkExpiry = () => {
+  const expires = $route.query.expires
+  const family_member_id = $route.query.family_member_id
+  const signature = $route.query.signature
+
+  // Check if invitation params are present
+  if (expires && family_member_id && signature) {
+    invitationParams.value = {
+      expires: Number(expires),
+      family_member_id: Number(family_member_id),
+      signature: String(signature),
+    }
+
+    // Check if link has expired (expires is a timestamp in seconds)
+    const currentTime = Math.floor(Date.now() / 1000) // Current time in seconds
+    const expiresTimestamp = Number(expires)
+
+    if (expiresTimestamp && currentTime > expiresTimestamp) {
+      isLinkExpired.value = true
+      return
+    }
+  }
+}
+
+onMounted(() => {
+  checkLinkExpiry()
+})
 
 const component = computed(() => {
   return {
@@ -79,6 +120,6 @@ const component = computed(() => {
       has_back_button: true,
       component: PersonalInformationForm,
     },
-  }[$route.params.module as string]
+  }[moduleParam.value]
 })
 </script>

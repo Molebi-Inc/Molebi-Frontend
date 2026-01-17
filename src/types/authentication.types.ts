@@ -166,3 +166,10 @@ export type SocialAuthenticationProvider = 'google' | 'facebook' | 'apple'
 export interface SocialAuthenticationRedirectResponseData {
   redirect_url: string
 }
+
+
+export interface InvitationParamsInterface {
+  expires: number
+  family_member_id: number
+  signature: string
+}
