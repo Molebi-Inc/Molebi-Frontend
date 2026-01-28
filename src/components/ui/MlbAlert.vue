@@ -1,36 +1,22 @@
 <template>
   <!-- Modal/Dialog Alert -->
-  <MlbModal
-    v-if="config && config.type !== 'toast' && show"
-    v-model:show="localShow"
-    :bottom-sheet="config.bottomSheet"
+  <MlbModal v-if="config && config.type !== 'toast' && show" v-model:show="localShow" :bottom-sheet="config.bottomSheet"
     :bottom-sheet-height="config.bottomSheetHeight"
-    :class="[config.modalClass, !config.fullPageAlert ? 'rounded-3xl!' : '']"
-    :style="{
+    :class="[config.modalClass, !config.fullPageAlert ? 'rounded-3xl!' : '']" :style="{
       width: config.bottomSheet ? '100%' : config.width || '90%',
       maxWidth: config.bottomSheet ? '100%' : config.maxWidth || '600px',
-    }"
-    :bottom-sheet-footer-class="config.bottomSheetFooterClass"
-    :full-page="config.fullPageAlert"
-  >
+    }" :bottom-sheet-footer-class="config.bottomSheetFooterClass" :full-page="config.fullPageAlert">
     <template #header>
       <div v-if="config.header">
         <component v-if="typeof config.header !== 'string'" :is="config.header" />
         <span v-else v-html="config.header"></span>
       </div>
-      <div
-        v-else-if="config.closable !== false"
-        :class="[
-          'flex mb-4',
-          config.closablePosition === 'right' ? 'justify-end' : 'justify-start',
-        ]"
-      >
-        <button
-          text="config.closeText"
-          class="p-1 hover:bg-gray-100 rounded-full transition-colors"
-          aria-label="Close"
-          @click="handleClose"
-        >
+      <div v-else-if="config.closable !== false" :class="[
+        'flex mb-4',
+        config.closablePosition === 'right' ? 'justify-end' : 'justify-start',
+      ]">
+        <button text="config.closeText" class="p-1 hover:bg-gray-100 rounded-full transition-colors" aria-label="Close"
+          @click="handleClose">
           <div v-if="config.closeText" class="text-sm text-[#626262]">
             {{ config.closeText }}
           </div>
@@ -43,45 +29,30 @@
 
     <div class="py-4">
       <!-- Icon or Image -->
-      <div
-        v-if="config.showIcon !== false && (config.iconName || config.imageUrl)"
-        :class="['flex justify-center mb-4']"
-      >
+      <div v-if="config.showIcon !== false && (config.iconName || config.imageUrl)"
+        :class="['flex justify-center mb-4']">
         <div :class="[config.iconWrapperClass]">
           <!-- Icon -->
-          <MlbIcon
-            v-if="config.iconName && !config.imageUrl"
-            :name="config.iconName"
-            :color="getIconColor(config.iconColor)"
-            :size="config.iconSize || 64"
-          />
+          <MlbIcon v-if="config.iconName && !config.imageUrl" :name="config.iconName"
+            :color="getIconColor(config.iconColor)" :size="config.iconSize || 64" />
           <!-- Image -->
-          <img
-            v-else-if="config.imageUrl"
-            :src="getImageUrl(config.imageUrl)"
+          <img v-else-if="config.imageUrl" :src="getImageUrl(config.imageUrl)"
             :alt="config.imageAlt || config.subject || 'Alert image'"
-            :class="['max-w-full h-auto', config.imageClass || 'w-16 h-16 object-contain']"
-            :style="{
+            :class="['max-w-full h-auto', config.imageClass || 'w-16 h-16 object-contain']" :style="{
               width: config.iconSize ? `${config.iconSize}px` : undefined,
               height: config.iconSize ? `${config.iconSize}px` : undefined,
-            }"
-          />
+            }" />
         </div>
       </div>
 
       <!-- Subject/Title -->
-      <h2
-        v-if="config.subject"
-        :class="[`text-2xl font-semibold mb-4 text-gray-900 text-${config.textAlign || 'center'}`]"
-      >
+      <h2 v-if="config.subject"
+        :class="[`text-2xl font-semibold mb-4 text-gray-900 text-${config.textAlign || 'center'}`]">
         <span v-html="config.subject"></span>
       </h2>
 
       <!-- Message -->
-      <div
-        v-if="config.message"
-        :class="[`text-gray-700 mb-6 text-${config.textAlign || 'center'}`]"
-      >
+      <div v-if="config.message" :class="[`text-gray-700 mb-6 text-${config.textAlign || 'center'}`]">
         <span v-html="config.message"></span>
       </div>
 
@@ -94,91 +65,49 @@
       <!-- Input Fields -->
       <div v-if="config.inputs && config.inputs.length > 0" class="space-y-4 mb-6">
         <n-form ref="formRef" :model="inputValues" :rules="inputRules">
-          <n-form-item
-            v-for="input in config.inputs"
-            :key="input.name"
-            :label="input.label"
-            :path="input.name"
-            :show-require-mark="input.required"
-          >
-            <MlbInput
-              v-if="
-                input.type !== 'textarea' && input.type !== 'number' && input.type !== 'password'
-              "
-              v-model="inputValues[input.name]"
-              :id="input.name"
-              :name="input.name"
-              :type="input.type === 'email' ? 'text' : input.type || 'text'"
-              :placeholder="input.placeholder"
-              custom-class="border-gray-300 focus:border-primary-500"
-            />
-            <n-input-number
-              v-else-if="input.type === 'number'"
-              :value="getNumberValue(input.name)"
-              @update:value="(val) => setNumberValue(input.name, val)"
-              :id="input.name"
-              :name="input.name"
-              :placeholder="input.placeholder"
-              class="w-full"
-            />
-            <MlbPassword
-              v-else-if="input.type === 'password'"
-              v-model="inputValues[input.name]"
-              :id="input.name"
-              :name="input.name"
-              :placeholder="input.placeholder"
-              custom-class="border-gray-300 focus:border-primary-500"
-            />
-            <MlbInput
-              v-else
-              v-model="inputValues[input.name]"
-              :id="input.name"
-              :name="input.name"
-              type="textarea"
-              :rows="input.rows || 4"
-              :placeholder="input.placeholder"
-              custom-class="border-gray-300 focus:border-primary-500"
-            />
+          <n-form-item v-for="input in config.inputs" :key="input.name" :label="input.label" :path="input.name"
+            :show-require-mark="input.required">
+            <MlbInput v-if="
+              input.type !== 'textarea' && input.type !== 'number' && input.type !== 'password'
+            " v-model="inputValues[input.name]" :id="input.name" :name="input.name"
+              :type="input.type === 'email' ? 'text' : input.type || 'text'" :placeholder="input.placeholder"
+              custom-class="border-gray-300 focus:border-primary-500" />
+            <n-input-number v-else-if="input.type === 'number'" :value="getNumberValue(input.name)"
+              @update:value="(val) => setNumberValue(input.name, val)" :id="input.name" :name="input.name"
+              :placeholder="input.placeholder" class="w-full" />
+            <MlbPassword v-else-if="input.type === 'password'" v-model="inputValues[input.name]" :id="input.name"
+              :name="input.name" :placeholder="input.placeholder"
+              custom-class="border-gray-300 focus:border-primary-500" />
+            <MlbInput v-else v-model="inputValues[input.name]" :id="input.name" :name="input.name" type="textarea"
+              :rows="input.rows || 4" :placeholder="input.placeholder"
+              custom-class="border-gray-300 focus:border-primary-500" />
           </n-form-item>
         </n-form>
       </div>
     </div>
 
     <template #footer>
-      <div
-        :class="[
-          'flex',
-          { 'flex-col gap-3': config.buttonLayout === 'vertical' && config.cancelFirst },
-          { 'flex-col-reverse gap-3': config.buttonLayout === 'vertical' && !config.cancelFirst },
-          { 'justify-evenly gap-2': config.buttonLayout === 'horizontal' && config.cancelFirst },
-          { 'flex-row-reverse gap-2': config.buttonLayout === 'horizontal' && !config.cancelFirst },
-        ]"
-      >
+      <div :class="[
+        'flex w-full',
+        { 'flex-col gap-3': config.buttonLayout === 'vertical' && config.cancelFirst },
+        { 'flex-col-reverse gap-3': config.buttonLayout === 'vertical' && !config.cancelFirst },
+        { 'justify-evenly gap-2': config.buttonLayout === 'horizontal' && config.cancelFirst },
+        { 'flex-row-reverse gap-2': config.buttonLayout === 'horizontal' && !config.cancelFirst },
+      ]">
         <!-- Cancel Button -->
-        <MlbButton
-          v-if="!config.showCancelButton && config.cancelButtonText"
-          :label="config.cancelButtonText || 'Cancel'"
-          secondary
-          :loading="config.buttonConfig?.cancel?.loading"
-          :disabled="config.buttonConfig?.cancel?.disabled"
-          :class="[
+        <MlbButton v-if="config.showCancelButton !== false && config.cancelButtonText"
+          :label="config.cancelButtonText || 'Cancel'" secondary :loading="config.buttonConfig?.cancel?.loading"
+          :disabled="config.buttonConfig?.cancel?.disabled" :class="[
             'rounded-lg! px-8! py-2.5!',
             config.customClass?.cancelButton || config.customClass?.secondaryButton,
-          ]"
-          @click="handleCancel"
-        />
+          ]" @click="handleCancel" />
 
         <!-- Confirm Button -->
-        <MlbButton
-          v-if="config.showConfirmButton !== false && config.confirmButtonText"
-          :label="config.confirmButtonText || 'Confirm'"
-          :primary="config.buttonConfig?.confirm?.primary || false"
-          :loading="config.buttonConfig?.confirm?.loading"
-          :disabled="config.buttonConfig?.confirm?.disabled"
+        <MlbButton v-if="config.showConfirmButton !== false && config.confirmButtonText"
+          :label="config.confirmButtonText || 'Confirm'" :primary="config.buttonConfig?.confirm?.primary || false"
+          :loading="config.buttonConfig?.confirm?.loading" :disabled="config.buttonConfig?.confirm?.disabled"
           :class="['rounded-lg! px-8! py-2.5!', getConfirmButtonClass()]"
-          :style="{ 'text-danger-500': getConfirmButtonClass().includes('bg-red') }"
-          @click="handleConfirm"
-        />
+          :style="{ 'text-danger-500': getConfirmButtonClass().includes('bg-red') }" @click="handleConfirm" />
       </div>
     </template>
   </MlbModal>
