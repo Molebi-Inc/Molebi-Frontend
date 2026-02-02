@@ -97,12 +97,12 @@
       </div>
       <div :class="['text-black shrink-0', isDesktop ? 'text-caption' : 'text-xs mt-4']">
         By continuing, you agree to Molebi's
-        <router-link :to="{ name: 'Guests.TermsOfServiceView' }" class="underline"
-          >Terms of Service</router-link
+        <a href="https://molebiapp.com/terms-of-service" target="_blank" class="underline"
+          >Terms of Service</a
         >
         and
-        <router-link :to="{ name: 'Guests.PrivacyPolicyView' }" class="underline"
-          >Privacy Policy</router-link
+        <a href="https://molebiapp.com/privacy-policy" target="_blank" class="underline"
+          >Privacy Policy</a
         >
       </div>
     </div>
