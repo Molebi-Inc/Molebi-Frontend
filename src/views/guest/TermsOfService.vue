@@ -1,17 +1,25 @@
 <template>
-  <div class="pdf-container">
-    <embed
-      src="/terms-of-service.pdf"
-      type="application/pdf"
-      width="100%"
-      height="100%"
-    />
+  <div class="redirect-container">
+    <p>Redirecting to Terms of Service...</p>
   </div>
 </template>
 
+<script setup lang="ts">
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  window.location.href = 'https://molebiapp.com/terms-of-service'
+})
+</script>
+
 <style scoped>
-.pdf-container {
+.redirect-container {
   width: 100vw;
-  height: 100vh; /* Adjust height as needed */
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: system-ui, sans-serif;
+  color: #374151;
 }
 </style>
