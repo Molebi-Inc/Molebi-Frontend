@@ -12,10 +12,11 @@ export const useLogout = () => {
 
   const logout = async () => {
     try {
-      await logoutMutation.mutateAsync()
-
       authConfig.removeToken()
-      await $router.push({ name: 'Guests.SigninView' })
+      await $router.replace({ name: 'Guests.SigninView' })
+
+      // Best-effort server logout; don't block UI on network.
+      logoutMutation.mutateAsync().catch(() => {})
     } catch (error) {
       handleApiError(error, message)
     }

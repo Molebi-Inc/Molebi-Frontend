@@ -145,9 +145,9 @@ const options = ref([
   },
 ])
 
-const handleSelect = async (key: string) => {
+const handleSelect = (key: string) => {
   if (key === 'logout') {
-    await logout()
+    void logout()
   }
 }
 </script>

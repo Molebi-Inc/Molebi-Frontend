@@ -1,96 +1,78 @@
 <template>
   <div>
     <n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
-      <div class="flex flex-col gap-1 mb-11">
-        <n-form-item label="Email" path="email">
-          <MlbInput
-            v-model="form.email"
-            id="email"
-            name="email"
-            type="text"
-            placeholder="Enter Email"
-            custom-class="border-gray-300 focus:border-primary-500"
-          />
+      <div :class="['flex flex-col gap-4 mb-11', { 'grid grid-cols-2 gap-4': constrained && isLargeScreen }]">
+        <n-form-item label="First Name" path="first_name" :show-feedback="!!fieldErrors['first_name']">
+          <MlbInput v-model="form.first_name" id="first_name" name="first_name" type="text"
+            placeholder="Enter First Name" :custom-class="inputCustomClass" />
         </n-form-item>
-        <n-form-item label="Phone Number" path="phone">
+        <n-form-item label="Last Name" path="family_name" :show-feedback="!!fieldErrors['family_name']">
+          <MlbInput v-model="form.family_name" id="family_name" name="family_name" type="text"
+            placeholder="Enter Last Name" :custom-class="inputCustomClass" />
+        </n-form-item>
+        <n-form-item v-if="version !== 'v2'" label="Phone Number" path="phone"
+          :show-feedback="!!fieldErrors['phone'] || !!fieldErrors['code']">
           <n-input-group class="w-full">
-            <n-select
-              v-model:value="form.code"
-              size="large"
-              :style="{ width: '30%' }"
-              placeholder="+234"
-              filterable
-              :consistent-menu-width="false"
-              :options="countryOptions"
-              :render-label="renderCountryLabel"
-              @filter="filterCountryOptions"
-            />
-            <n-input
-              v-model:value="form.phone"
-              class="mlb-input"
-              :style="{ width: '70%' }"
-              placeholder="Enter phone number"
-            />
+            <n-select v-model:value="form.code" size="large" :style="{ width: '30%' }" placeholder="+234" filterable
+              :consistent-menu-width="false" :options="countryOptions" :render-label="renderCountryLabel"
+              @filter="filterCountryOptions" />
+            <n-input v-model:value="form.phone" class="mlb-input" :style="{ width: '70%' }"
+              placeholder="Enter phone number" />
           </n-input-group>
         </n-form-item>
-        <n-form-item label="Password" path="password">
-          <MlbInput
-            v-model="form.password"
-            id="password"
-            name="password"
-            type="password"
-            show-password-on="mousedown"
-            placeholder="Enter your password"
-            custom-class="border-gray-300 focus:border-primary-500"
-          />
+        <n-form-item v-if="version === 'v2'" label="Gender" path="gender"
+          label-style="color: #807F94; font-weight: 500;" required
+          :show-feedback="!!fieldErrors['gender'] || !!fieldErrors['gender']">
+          <NSelect v-model:value="form.gender" class="select-menu" :options="genderOptions" placeholder="Select Gender" size="large"
+            :class="['w-full mlb-select h-[46px]', isV2 && isMobile ? 'bg-brand-green' : '']">
+            <template #arrow>
+              <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
+            </template>
+          </NSelect>
+        </n-form-item>
+        <n-form-item label="Email" path="email" :show-feedback="!!fieldErrors['email']">
+          <MlbInput v-model="form.email" id="email" name="email" type="text" placeholder="Enter Email"
+            :custom-class="inputCustomClass" />
+        </n-form-item>
+        <n-form-item label="Password" path="password" :show-feedback="!!fieldErrors['password']">
+          <MlbInput v-model="form.password" id="password" name="password" type="password" show-password-on="mousedown"
+            placeholder="Enter your password" :custom-class="inputCustomClass" />
+        </n-form-item>
+        <n-form-item label="Confirm Password" path="password_confirmation"
+          :show-feedback="!!fieldErrors['password_confirmation']">
+          <MlbInput v-model="form.password_confirmation" id="password_confirmation" name="password_confirmation"
+            type="password" show-password-on="mousedown" placeholder="Confirm password"
+            :custom-class="inputCustomClass" />
         </n-form-item>
         <div v-if="form.password" class="mb-3">
           <div v-for="item in isPasswordValid" :key="item.label" class="flex items-center">
-            <MlbIcon
-              :name="item.icon"
-              :size="12"
-              :color="item.condition(form.password) ? 'green' : 'red'"
-            />
-            <span
-              :class="[
-                'ml-1 text-xs',
-                item.condition(form.password) ? 'text-green-500' : 'text-red-500',
-              ]"
-              >{{ item.label }}</span
-            >
+            <MlbIcon :name="item.icon" :size="12" :color="item.condition(form.password) ? 'green' : 'red'" />
+            <span :class="[
+              'ml-1 text-xs',
+              item.condition(form.password) ? 'text-green-500' : 'text-red-500',
+            ]">{{ item.label }}</span>
           </div>
         </div>
-        <n-form-item label="Confirm Password" path="password_confirmation">
-          <MlbInput
-            v-model="form.password_confirmation"
-            id="password_confirmation"
-            name="password_confirmation"
-            type="password"
-            show-password-on="mousedown"
-            placeholder="Confirm password"
-            custom-class="border-gray-300 focus:border-primary-500"
-          />
-        </n-form-item>
       </div>
-      <MlbButton
-        type="submit"
-        :label="loading ? 'Signing up...' : 'Continue'"
-        :loading="loading"
-        :disabled="loading"
-        block
-        class="rounded-2xl! bg-primary-700! h-13! text-white!"
-        @click="onFormSubmit"
-      />
+      <MlbButton type="submit" :label="loading ? 'Signing up...' : 'Continue'" :loading="loading" :disabled="loading"
+        block class="rounded-2xl! bg-primary-700! h-13! text-white!" @click="onFormSubmit" />
     </n-form>
+    <div class="mt-5">
+      <div class="w-full rounded-2xl border border-green-200 bg-green-50 px-4 py-3 flex items-start gap-3">
+        <div class="shrink-0 mt-[2px]">
+          <MlbIcon name="vuesax.outline.shield-tick" :size="22" color="#036603" />
+        </div>
+        <p class="text-green-900 text-sm leading-5">
+          <span class="font-semibold">Your information is private</span>
+          and only visible to family members you invite.
+        </p>
+      </div>
+    </div>
     <div class="text-center mt-3 mb-12">
       <p class="text-neutral-600 font-normal fs-14 lh-18">
         Already have an account?
-        <MlbButton
-          text
-          label="Login"
-          class="text-secondary-400! underline!"
-          @click="$router.push({ name: 'Guests.SigninView' })"
-        />
+        <MlbButton text label="Login" class="text-grey-900! underline!"
+          @click="$router.push({ name: 'Guests.SigninView' })" />
       </p>
     </div>
     <div>
@@ -100,11 +82,7 @@
         <div class="grow border-t border-gray-400"></div>
       </div>
       <div class="flex gap-2 justify-center">
-        <MlbButton
-          v-for="option in socialSignInOptions"
-          :key="option.label"
-          @click="handleSocialAuth(option.tag)"
-        >
+        <MlbButton v-for="option in socialSignInOptions" :key="option.label" @click="handleSocialAuth(option.tag)">
           <template #icon>
             <MlbIcon :name="option.icon" />
           </template>
@@ -118,6 +96,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useMediaQuery } from '@vueuse/core'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbInput from '@/components/ui/MlbInput.vue'
 import { useAuthConfig } from '@/config/auth.config'
@@ -138,22 +117,35 @@ import type {
   InvitationParamsInterface,
 } from '@/types/authentication.types'
 import OverlayLoader from '@/components/common/OverlayLoader.vue'
+import { useMemberForm } from '@/composables/member-form.composables'
 
 const props = defineProps<{
   invitationParams?: InvitationParamsInterface | null
+  constrained?: boolean
+  version?: 'v1' | 'v2'
 }>()
 
 const $route = useRoute()
 const $router = useRouter()
 const message = useMessage()
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const authConfig = useAuthConfig()
-const { form, rules } = signupValidation()
+const { form, rules, fieldErrors } = signupValidation()
 const signupMutation = useSignupMutation()
 const authenticationStore = useAuthenticationStore()
 const { handleSocialAuthenticationRedirect } = useSocialSignin()
 
+const { genderOptions } = useMemberForm('self')
+
 const formRef = ref<FormInst | null>(null)
 const socialAuthLoader = ref<boolean>(false)
+const isMobile = useMediaQuery('(max-width: 767px)')
+
+const isV2 = computed(() => props.version === 'v2')
+const inputCustomClass = computed(() => {
+  const base = 'border-gray-300 focus:border-primary-500'
+  return isV2.value && isMobile.value ? `${base} bg-brand-green` : base
+})
 
 // Determine which mutation to use based on invitation params
 const invitationParams = computed<InvitationParamsInterface | null>(() => {
@@ -314,5 +306,17 @@ const handleSocialAuth = async (provider: SocialAuthenticationProvider) => {
 <style scoped>
 :deep(.n-base-selection) {
   height: 100% !important;
+}
+
+:deep(.mlb-select.bg-brand-green) .n-base-selection,
+:deep(.mlb-select.bg-brand-green) .n-base-selection-label,
+:deep(.mlb-select.bg-brand-green) .n-base-selection-input {
+  background-image: linear-gradient(180deg, #f1fbf4 41.55%, #fafafa 138.77%) !important;
+  background-color: transparent !important;
+}
+
+:deep(.mlb-select.bg-brand-green) .n-base-selection-label,
+:deep(.mlb-select.bg-brand-green) .n-base-selection-input {
+  border-radius: 0.5rem !important;
 }
 </style>

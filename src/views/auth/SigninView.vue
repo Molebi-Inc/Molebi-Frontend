@@ -21,66 +21,38 @@
             <n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
               <div class="flex flex-col gap-1">
                 <n-form-item label="Email" path="email">
-                  <MlbInput
-                    v-model="form.email"
-                    id="email"
-                    name="email"
-                    type="text"
-                    placeholder="Enter Email"
-                    custom-class="border-gray-300 focus:border-primary-500"
-                  />
+                  <MlbInput v-model="form.email" id="email" name="email" type="text" placeholder="Enter Email"
+                    custom-class="border-gray-300 focus:border-primary-500" />
                 </n-form-item>
                 <n-form-item label="Password" path="password">
-                  <MlbInput
-                    v-model="form.password"
-                    id="password"
-                    name="password"
-                    type="password"
-                    show-password-on="mousedown"
-                    placeholder="Enter your password"
-                    custom-class="border-gray-300 focus:border-primary-500"
-                  />
+                  <MlbInput v-model="form.password" id="password" name="password" type="password"
+                    show-password-on="mousedown" placeholder="Enter your password"
+                    custom-class="border-gray-300 focus:border-primary-500" />
                 </n-form-item>
               </div>
               <div class="mb-11 flex justify-end items-center gap-1">
                 Forgot Password?
-                <MlbButton
-                  text
-                  label="Click Here"
-                  class="text-secondary-400! underline!"
-                  @click="
-                    !isLargeScreen
-                      ? (active = true)
-                      : $router.push({
-                          name: 'Guests.ForgotPasswordView',
-                          params: { module: 'email' },
-                        })
-                  "
-                />
+                <MlbButton text label="Click Here" class="text-secondary-400! underline!" @click="
+                  !isLargeScreen
+                    ? (active = true)
+                    : $router.push({
+                      name: 'Guests.ForgotPasswordView',
+                      params: { module: 'email' },
+                    })
+                  " />
               </div>
-              <MlbButton
-                block
-                type="submit"
-                label="Login"
-                :loading="signinLoader"
-                :disabled="signinLoader"
-                class="rounded-2xl! bg-primary-700! h-13! text-white!"
-                @click="onFormSubmit"
-              />
+              <MlbButton block type="submit" label="Login" :loading="signinLoader" :disabled="signinLoader"
+                class="rounded-2xl! bg-primary-700! h-13! text-white!" @click="onFormSubmit" />
               <div class="text-center mt-3 mb-12">
                 <p class="text-neutral-600 font-normal fs-14 lh-18">
                   Don’t have an account?
-                  <MlbButton
-                    text
-                    label="Click Here"
-                    class="text-secondary-400! underline!"
-                    @click="
-                      $router.push({
-                        name: 'Guests.OnboardingSignup',
-                        params: { module: 'signup' },
-                      })
-                    "
-                  />
+                  <MlbButton text label="Click Here" class="text-secondary-400! underline!" @click="
+                    handleOnboardingSignup()
+                    // $router.push({
+                    //   name: 'Guests.OnboardingSignup',
+                    //   params: { module: 'signup' },
+                    // })
+                    " />
                 </p>
               </div>
 
@@ -91,11 +63,8 @@
                   <div class="grow border-t border-gray-400"></div>
                 </div>
                 <div class="flex gap-2 justify-center">
-                  <MlbButton
-                    v-for="option in socialSignInOptions"
-                    :key="option.label"
-                    @click="handleSocialAuth(option.tag as SocialAuthenticationProvider)"
-                  >
+                  <MlbButton v-for="option in socialSignInOptions" :key="option.label"
+                    @click="handleSocialAuth(option.tag as SocialAuthenticationProvider)">
                     <template #icon>
                       <MlbIcon :name="option.icon" />
                     </template>
@@ -113,12 +82,7 @@
     </div>
     <n-drawer v-model:show="active" placement="bottom" :height="306" class="rounded-t-3xl!">
       <n-drawer-content>
-        <BackButton
-          class="mb-2"
-          route-name="Guests.SigninView"
-          label="Cancel"
-          @update:go-back="active = false"
-        />
+        <BackButton class="mb-2" route-name="Guests.SigninView" label="Cancel" @update:go-back="active = false" />
         <div class="mb-3">
           <h1 class="text-neutral-900 font-semibold text-2xl mb-1 text-center">Reset Password</h1>
           <p class="text-neutral-600 font-normal text-sm line-height-18 text-center">
@@ -195,6 +159,19 @@ const socialSignInOptions = computed(() => [
   //   icon: 'apple',
   // },
 ])
+const handleOnboardingSignup = () => {
+  if (isLargeScreen.value) {
+    $router.push({
+      name: 'Guests.OnboardingViewWeb',
+      params: { module: 'signup' },
+    })
+  } else {
+    $router.push({
+      name: 'Guests.OnboardingSignup',
+      params: { module: 'signup' },
+    })
+  }
+}
 const handleSocialAuth = async (provider: SocialAuthenticationProvider) => {
   loading.value = true
   try {

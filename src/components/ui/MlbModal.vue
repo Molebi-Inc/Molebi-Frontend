@@ -1,20 +1,9 @@
 <template>
   <div>
-    <n-modal
-      v-if="!bottomSheet"
-      v-model:show="localShow"
-      v-bind="attrs"
-      @update:show="emit('close')"
-      @mask-click="emit('mask-click')"
-    >
-      <n-card
-        :style="cardStyle"
-        :bordered="false"
-        :size="fullPage ? undefined : 'huge'"
-        :class="{ 'full-page-card': fullPage }"
-        role="dialog"
-        aria-modal="true"
-      >
+    <n-modal v-if="!bottomSheet" v-model:show="localShow" v-bind="attrs" @update:show="emit('close')"
+      @mask-click="emit('mask-click')">
+      <n-card :style="cardStyle" :bordered="false" :size="fullPage ? undefined : 'huge'"
+        :class="{ 'full-page-card': fullPage }" role="dialog" aria-modal="true">
         <template #header>
           <slot name="header" />
         </template>
@@ -25,13 +14,8 @@
       </n-card>
     </n-modal>
 
-    <n-drawer
-      v-if="bottomSheet"
-      v-model:show="localShow"
-      placement="bottom"
-      class="rounded-t-3xl!"
-      :height="bottomSheetHeight"
-    >
+    <n-drawer v-if="bottomSheet" v-model:show="localShow" placement="bottom" class="rounded-t-3xl!"
+      :height="bottomSheetHeight">
       <n-drawer-content :footer-class="bottomSheetFooterClass">
         <template #header>
           <slot name="header" />
@@ -51,6 +35,7 @@ import { NModal, NCard, NDrawer, NDrawerContent } from 'naive-ui'
 
 const props = withDefaults(
   defineProps<{
+    maxWidth?: number
     show?: boolean
     fullPage?: boolean
     bottomSheet?: boolean
@@ -58,6 +43,7 @@ const props = withDefaults(
     bottomSheetFooterClass?: string
   }>(),
   {
+    maxWidth: 600,
     bottomSheetHeight: 306,
   },
 )
@@ -93,7 +79,7 @@ const cardStyle = computed(() => {
       borderTopRightRadius: '16px',
     }
   }
-  return { width: '90%', maxWidth: '600px' }
+  return { width: '90%', maxWidth: props.maxWidth + 'px' }
 })
 </script>
 
