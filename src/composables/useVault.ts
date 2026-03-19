@@ -195,7 +195,7 @@ export const useVault = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
       response = await vaultFolderCreation(data as CreateFolderValues)
     }
     await fetchVaultFolders()
-    return { ...(response || {}), key: vaultStore.selectedFolder ? 'edit' : 'create' }
+    return { ...response, key: vaultStore.selectedFolder ? 'edit' : 'create' }
   }
 
   const deleteVaultFolder = async (id: number) => {

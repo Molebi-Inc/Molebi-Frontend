@@ -1,115 +1,99 @@
 <template>
-  <div
-    :class="[
-      'bg-brand-background',
+  <div class="bg-brand-green h-screen">
+    <div class="flex items-center justify-between px-6 py-4">
+      <!-- logo here -->
+      <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
+      <!-- back button here -->
+      <BackButton icon="vuesax.linear.arrow-left" />
+    </div>
+    <div :class="[
       isScrollable
         ? 'min-h-screen overflow-y-auto flex flex-col'
         : isDesktop
           ? 'h-screen overflow-hidden md:grid grid-cols-7'
           : 'h-screen overflow-hidden flex flex-col',
-    ]"
-  >
-    <div
-      :class="[
-        'border-r border-secondary-200 bg-white',
+    ]">
+      <div :class="[
+        'border-r border-secondary-200 ',
         isDesktop
           ? 'col-span-4 md:px-[72px] md:py-[40px] flex flex-col overflow-hidden'
-          : 'px-6 py-8 flex flex-col',
-      ]"
-    >
-      <header v-if="isDesktop" class="shrink-0">
-        <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
-      </header>
-      <div
-        :class="[
+          : 'px-6 pt-6 pb-3 flex flex-col',
+      ]">
+        <header v-if="isDesktop" class="shrink-0">
+          <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
+        </header>
+        <div :class="[
           isDesktop
             ? 'flex-1 flex justify-center items-center min-h-0'
-            : 'flex-1 flex justify-center items-center',
-        ]"
-      >
-        <div
-          :class="[
-            'w-full flex items-center justify-center',
+            : 'flex justify-center items-center',
+        ]">
+          <div :class="[
+            'w-full overflow-hidden mx-auto',
             isDesktop
               ? 'h-full max-w-[344px] max-h-[344px] md:max-w-[540px] md:max-h-[540px]'
               : isScrollable
-                ? 'max-w-[280px] max-h-[280px]'
-                : 'max-w-[320px] max-h-[320px]',
-          ]"
-        >
-          <img :src="component?.image_url" alt="Molebi" class="w-full h-full object-contain" />
+                ? 'max-w-[280px] h-[240px]'
+                : 'max-w-[320px] h-[280px]',
+          ]" @mouseenter="pauseCarousel" @mouseleave="resumeCarousel" @focusin="pauseCarousel"
+            @focusout="resumeCarousel" @touchstart.passive="pauseCarousel" @touchend.passive="resumeCarousel">
+            <div class="flex transition-transform duration-500 ease-in-out h-full"
+              :style="{ transform: `translateX(-${carouselIndex * 100}%)` }">
+              <div v-for="(config, index) in resolvedConfigs" :key="index"
+                class="w-full shrink-0 h-full flex items-center justify-center">
+                <img :src="config.image_url" alt="Molebi" class="w-full h-full object-contain" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <div
-      :class="[
+      <div :class="[
         'flex flex-col',
         isDesktop
           ? 'col-span-3 md:px-[120px] px-6 overflow-hidden py-4 md:py-8 justify-center'
-          : 'px-6 py-6 justify-center flex-1',
-      ]"
-    >
-      <div class="flex justify-start mb-4 md:mb-8 shrink-0">
-        <BackButton
-          v-if="component?.has_back_button && isDesktop"
-          icon="vuesax.linear.arrow-left"
-        />
-      </div>
-      <div class="flex items-center gap-2 mb-2 shrink-0">
-        <div
-          v-for="i in 3"
-          :key="i"
-          :class="[
+          : 'px-6 pt-3 pb-6 justify-start flex-1',
+      ]">
+        <div class="flex justify-start mb-4 md:mb-8 shrink-0">
+          <BackButton v-if="activeConfig?.has_back_button && isDesktop" icon="vuesax.linear.arrow-left" />
+        </div>
+        <div class="flex items-center gap-2 mb-2 shrink-0">
+          <div v-for="i in resolvedConfigs.length" :key="i" :class="[
             'h-2 rounded-full',
-            i === component?.step ? 'w-6 bg-primary-300' : 'w-2 bg-gray-100',
-          ]"
-        ></div>
-      </div>
-      <h1
-        :class="[
-          'font-semibold mb-2 text-black shrink-0',
+            i - 1 === carouselIndex ? 'w-6 bg-primary-300' : 'w-2 bg-gray-100',
+          ]"></div>
+        </div>
+        <h1 :class="[
+          'font-semibold mb-2 text-black shrink-0 text-left',
           isDesktop ? 'text-2xl' : isScrollable ? 'text-xl' : 'text-xl',
-        ]"
-      >
-        {{ component?.title }}
-      </h1>
-      <p :class="['text-black shrink-0', isDesktop ? 'text-body-sm mb-4 md:mb-0' : 'text-sm mb-4']">
-        {{ component?.description }}
-      </p>
-      <div
-        :class="[
+        ]">
+          {{ activeConfig?.title }}
+        </h1>
+        <p :class="['text-black shrink-0 text-left', isDesktop ? 'text-body-sm mb-4 md:mb-0' : 'text-sm mb-4']">
+          {{ activeConfig?.description }}
+        </p>
+        <div :class="[
           'flex flex-col gap-3 shrink-0',
           isDesktop ? 'mt-4 md:mt-12 mb-2 md:mb-3.5 md:gap-4' : 'mt-6 mb-4',
-        ]"
-      >
-        <MlbButton
-          :label="component?.primary_button_label"
-          block
-          class="bg-primary-700! text-white! rounded-2xl! h-13!"
-          @click="component && $router.push(component.primary_button_route)"
-        />
-        <MlbButton
-          block
-          :label="component?.secondary_button_label"
+        ]">
+          <MlbButton label="Next" block class="bg-primary-700! text-white! rounded-2xl! h-13!"
+            @click="$router.push({ name: 'Guests.OnboardingSignup', params: { module: 'signup' } })" />
+          <!-- <MlbButton :label="activeConfig?.primary_button_label" block class="bg-primary-700! text-white! rounded-2xl! h-13!"
+          @click="activeConfig && $router.push(activeConfig.primary_button_route)" /> -->
+          <!-- <MlbButton block :label="activeConfig?.secondary_button_label"
           class="bg-primary-50! text-primary-900! rounded-2xl! h-13! border-primary-700!"
-          @click="component && $router.push(component.secondary_button_route)"
-        />
-      </div>
-      <div :class="['text-black shrink-0', isDesktop ? 'text-caption' : 'text-xs mt-4']">
-        By continuing, you agree to Molebi's
-        <a href="https://molebiapp.com/terms-of-service" target="_blank" class="underline"
-          >Terms of Service</a
-        >
-        and
-        <a href="https://molebiapp.com/privacy-policy" target="_blank" class="underline"
-          >Privacy Policy</a
-        >
+          @click="activeConfig && $router.push(activeConfig.secondary_button_route)" /> -->
+        </div>
+        <div :class="['text-black shrink-0', isDesktop ? 'text-caption' : 'text-xs mt-4']">
+          By continuing, you agree to Molebi's
+          <a href="https://molebiapp.com/terms-of-service" target="_blank" class="underline">Terms of Service</a>
+          and
+          <a href="https://molebiapp.com/privacy-policy" target="_blank" class="underline">Privacy Policy</a>
+        </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import { useRouter, useRoute } from 'vue-router'
 import BackButton from '@/components/common/BackButton.vue'
@@ -137,7 +121,7 @@ type ComponentConfig = {
 type ModuleKey = 'welcome' | 'connection' | 'vault'
 
 // Import all images dynamically using import.meta.glob
-const imageModules = import.meta.glob(['/src/assets/svg/*.svg', '/src/assets/images/*.png'], {
+const imageModules = import.meta.glob(['/src/assets/svg/*.svg', '/src/assets/images/*.png', '/src/assets/gifs/*.gif'], {
   eager: true,
   query: '?url',
   import: 'default',
@@ -146,10 +130,10 @@ const imageModules = import.meta.glob(['/src/assets/svg/*.svg', '/src/assets/ima
 const componentConfigs: Record<ModuleKey, ComponentConfig> = {
   welcome: {
     step: 1,
-    image_url: '/src/assets/svg/tree.svg',
-    title: 'Watch Your Family Grow',
+    image_url: '/src/assets/gifs/welcome_page.gif',
+    title: 'Build your Family Tree with Photos in minutes',
     description:
-      'See your family come to life as a growing tree—every new member adds a branch, and every connection deepens your story.',
+      'Private family tree builder, genealogy search tool, and invite-only family network to keep memories, relatives, and family conversations in one place.',
     primary_button_label: 'Next',
     secondary_button_label: 'Skip',
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'connection' } },
@@ -157,11 +141,11 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
   },
   connection: {
     step: 2,
-    image_url: '/src/assets/images/feature-card.png',
-    title: 'Stay Rooted, Stay Connected',
+    image_url: '/src/assets/gifs/safe_space.gif',
+    title: 'Safer than Social Media for Families',
     has_back_button: true,
     description:
-      'Discover and preserve the stories, traditions, and values that shape your heritage. Explore your town of origin, share insights, and connect with others who carry the same cultural roots—all within one shared space of belonging.',
+      'Molebi is a private family-only social app with secure messaging for families, invite-only circles, and WhatsApp alternatives that respect all family members',
     primary_button_label: 'Next',
     secondary_button_label: 'Skip',
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'vault' } },
@@ -169,11 +153,11 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
   },
   vault: {
     step: 3,
-    image_url: '/src/assets/images/folder.png',
-    title: 'Protect What Matters Most',
+    image_url: '/src/assets/gifs/private_media.gif',
+    title: 'Private albums, videos, and cultural heritage',
     has_back_button: true,
     description:
-      'Your Vault keeps precious memories, files, and voice notes safe—locked away for your eyes only. With Time Capsules, save messages, photos, or letters to be opened on a special day in the future. Because some moments deserve to wait.',
+      'Store photos, videos, and audio stories in one secure family archive. From weddings to naming ceremonies, Molebi keeps the moments that matter safe for the next generation.',
     primary_button_label: "Let's get started",
     secondary_button_label: 'I already have an account',
     primary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
@@ -181,18 +165,80 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
   },
 }
 
-const component = computed<ComponentConfig | undefined>(() => {
-  const module = $route.params.module as ModuleKey
-  const config = componentConfigs[module]
+const moduleOrder: ModuleKey[] = ['welcome', 'connection', 'vault']
 
-  if (!config) return undefined
+const resolvedConfigs = computed<ComponentConfig[]>(() =>
+  moduleOrder
+    .map((key) => componentConfigs[key])
+    .filter(Boolean)
+    .map((config) => ({
+      ...config,
+      image_url: (imageModules[config.image_url] as string) || '',
+    })),
+)
 
-  // Get the proper URL from the imported modules
-  const imageUrl = (imageModules[config.image_url] as string) || ''
+const getIndexFromRoute = (): number => {
+  const routeModule = ($route.params.module as ModuleKey | undefined) ?? 'welcome'
+  const idx = moduleOrder.indexOf(routeModule)
+  return idx >= 0 ? idx : 0
+}
 
-  return {
-    ...config,
-    image_url: imageUrl,
+const carouselIndex = ref(getIndexFromRoute())
+const activeConfig = computed(() => resolvedConfigs.value[carouselIndex.value])
+
+watch(
+  () => $route.params.module,
+  () => {
+    carouselIndex.value = getIndexFromRoute()
+  },
+)
+
+let carouselTimer: ReturnType<typeof setInterval> | null = null
+const isCarouselPaused = ref(false)
+
+const clearCarouselTimer = () => {
+  if (carouselTimer) {
+    clearInterval(carouselTimer)
+    carouselTimer = null
   }
+}
+
+const pauseCarousel = () => {
+  isCarouselPaused.value = true
+}
+
+const resumeCarousel = () => {
+  isCarouselPaused.value = false
+}
+
+const startCarouselAutoScroll = () => {
+  clearCarouselTimer()
+  if (resolvedConfigs.value.length <= 1) return
+  carouselTimer = setInterval(() => {
+    if (isCarouselPaused.value) return
+    carouselIndex.value = (carouselIndex.value + 1) % resolvedConfigs.value.length
+  }, 10_000)
+}
+
+watch(carouselIndex, (idx) => {
+  const key = moduleOrder[idx]
+  if (!key) return
+  if ($route.params.module === key) return
+  $router.replace({ name: 'Guests.LandingView', params: { module: key } })
+})
+
+const onVisibilityChange = () => {
+  if (document.hidden) pauseCarousel()
+  else resumeCarousel()
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', onVisibilityChange, { passive: true })
+  startCarouselAutoScroll()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+  clearCarouselTimer()
 })
 </script>

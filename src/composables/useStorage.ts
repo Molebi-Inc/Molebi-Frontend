@@ -103,7 +103,7 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
       response = await storageFolderCreation(data)
     }
     await fetchStorageFolders()
-    return { ...(response || {}), key: storageStore.selectedFolder ? 'edit' : 'create' }
+    return { ...response, key: storageStore.selectedFolder ? 'edit' : 'create' }
   }
 
   const deleteStorageFolder = async (id: number) => {

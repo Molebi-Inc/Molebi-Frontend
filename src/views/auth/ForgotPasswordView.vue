@@ -8,10 +8,8 @@
             <h1 class="text-neutral-900 font-semibold text-2xl mb-2 text-left md:text-center">
               {{ component?.title }}
             </h1>
-            <p
-              class="text-neutral-600 font-normal text-sm text-left md:text-center"
-              v-html="component?.description"
-            ></p>
+            <p class="text-neutral-600 font-normal text-sm text-left md:text-center" v-html="component?.description">
+            </p>
           </div>
           <component :is="component?.component" :key="String($route.params.module)" />
         </div>
@@ -47,7 +45,7 @@ const component = computed(() => {
       component: OtpForm,
       key: 'otp',
       title: 'Verify Your Email',
-      description: `We sent a 4 digit code to ${maskEmail(authenticationStore.resetPasswordForm?.email)}`,
+      description: `We sent a 6 digit code to ${maskEmail(authenticationStore.resetPasswordForm?.email)}`,
     },
     reset: {
       component: ChangePasswordForm,
