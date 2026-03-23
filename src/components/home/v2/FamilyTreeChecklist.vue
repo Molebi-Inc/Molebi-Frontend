@@ -12,7 +12,7 @@ defineEmits<{ (e: 'add-relative'): void }>()
 
     <!-- Content -->
     <div class="flex-1 min-w-0">
-      <p class="text-[10px] font-semibold text-neutral-400 tracking-widest uppercase mb-2">
+      <p class="text-xs md:text-[10px] font-semibold text-neutral-400 tracking-widest uppercase mb-2">
         Family tree checklist
       </p>
       <p class="text-sm text-neutral-700 leading-relaxed mb-4">
@@ -20,7 +20,7 @@ defineEmits<{ (e: 'add-relative'): void }>()
         family together. It could be your father, mother, brother, sister or a close relative...
       </p>
       <button
-        class="bg-primary-800 hover:bg-primary-900 text-white text-sm font-semibold px-6 py-2.5 rounded-full transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+        class="bg-primary hover:bg-primary-900 text-white text-sm font-semibold w-full md:w-auto px-6 py-2.5 rounded-full transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         @click="$emit('add-relative')">
         Add a relative
       </button>

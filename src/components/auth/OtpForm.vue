@@ -7,7 +7,7 @@
         feedback-style="display: flex; justify-content: center; color: #737373; margin-bottom: 10px;"
         :show-require-mark="false" path="otp">
         <div class="mt-5">
-          <MlbInputOtp v-model="form.otp" name="otp" :length="6" :gap="24" size="large" :mask="false"
+          <MlbInputOtp v-model="form.otp" name="otp" :length="6" :gap="32" size="large" :mask="false"
             custom-class="otp-input-wrapper border-gray-300 focus:border-primary-500" />
         </div>
       </n-form-item>
@@ -24,7 +24,7 @@
         </p>
       </div>
     </div>
-    <MlbButton type="submit" label="Verify Account" block class="rounded-2xl! bg-primary-700! h-13! text-white!"
+    <MlbButton type="submit" label="Verify Account" block class="rounded-2xl! bg-primary! h-13! text-white!"
       @click="onFormSubmit" />
   </n-form>
 </template>
@@ -176,5 +176,18 @@ onUnmounted(() => {
 
 :deep(.otp-input-wrapper .n-input-wrapper:focus) {
   background-color: #f1f1f1 !important;
+}
+
+:deep(.otp-input-wrapper .n-input) {
+  height: 48px !important;
+  width: 48px !important;
+}
+
+/* Large screens: slightly larger OTP boxes for better readability. */
+@media (min-width: 1024px) {
+  :deep(.otp-input-wrapper .n-input) {
+    height: 60px !important;
+    width: 60px !important;
+  }
 }
 </style>

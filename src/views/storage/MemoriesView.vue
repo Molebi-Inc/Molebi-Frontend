@@ -1,59 +1,14 @@
 <template>
-  <div class="min-h-screen bg-[#F4FAF5] flex flex-col">
-    <!-- ── Top bar: search + action ──────────────────────────────────────────── -->
-    <div class="flex items-center gap-3 px-6 md:px-8 py-4 bg-[#F4FAF5]">
-      <!-- Search -->
-      <div class="flex-1 relative">
-        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
-            <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-          </svg>
-        </div>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search for a document, folder, file..."
-          class="w-full pl-9 pr-4 py-2.5 bg-white border border-neutral-200 rounded-full text-sm text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400"
-        />
-        <!-- Filter button -->
-        <button class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 4H16M5 9H13M8 14H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Add memories button (desktop) -->
-      <button
-        class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-primary-700 text-white rounded-full text-sm font-semibold hover:bg-primary-800 transition-colors whitespace-nowrap"
-        @click="handleAddMemories"
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M8 2V14M2 8H14" stroke="white" stroke-width="2" stroke-linecap="round" />
-        </svg>
-        Add memories
-      </button>
-    </div>
-
+  <div class="min-h-screen flex flex-col">
     <!-- ── Mobile tabs ─────────────────────────────────────────────────────── -->
     <div class="md:hidden flex border-b border-neutral-200 bg-white px-4">
-      <button
-        v-for="tab in ['All Memories', 'Album'] as const"
-        :key="tab"
-        class="flex-1 py-3 text-sm font-medium transition-colors relative"
-        :class="
-          mobileTab === tab
-            ? 'text-primary-700'
-            : 'text-neutral-500 hover:text-neutral-700'
-        "
-        @click="onMobileTabChange(tab)"
-      >
+      <button v-for="tab in ['All Memories', 'Album'] as const" :key="tab"
+        class="flex-1 py-3 text-sm font-medium transition-colors relative" :class="mobileTab === tab
+          ? 'text-primary-700'
+          : 'text-neutral-500 hover:text-neutral-700'
+          " @click="onMobileTabChange(tab)">
         {{ tab }}
-        <div
-          v-if="mobileTab === tab"
-          class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-700 rounded-full"
-        />
+        <div v-if="mobileTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-700 rounded-full" />
       </button>
     </div>
 
@@ -61,73 +16,94 @@
     <div class="flex-1 flex">
 
       <!-- Desktop two-column layout -->
-      <div class="hidden md:flex gap-4 px-8 py-5 w-full items-start">
+      <div class="hidden md:flex gap-4 px-8 py-5 w-full items-stretch">
         <!-- Sidebar -->
-        <MemoriesSidebar
-          :folders="folders"
-          :active-album-id="selectedAlbumId"
-          @select-all="selectedAlbumId = null"
-          @select-all-albums="selectedAlbumId = null"
-          @select-album="selectAlbum"
-          @create-album="showCreateAlbum = true"
-        />
+        <MemoriesSidebar :folders="folders" :active-album-id="selectedAlbumId" @select-all="selectedAlbumId = null"
+          @select-all-albums="selectedAlbumId = null" @select-album="selectAlbum"
+          @create-album="showCreateAlbum = true" />
 
-        <!-- Content panel -->
-        <div class="flex-1 min-w-0 bg-white rounded-2xl overflow-hidden">
-          <!-- Album header (when album selected) -->
-          <div v-if="selectedAlbumId !== null" class="flex items-center gap-3 px-5 py-4 border-b border-neutral-100">
+        <!-- Main content column: top bar + content panel -->
+        <div class="flex-1 min-w-0 flex flex-col gap-3">
+
+          <!-- ── Top bar: search + action ── -->
+          <div class="flex items-center gap-3">
+            <!-- Search -->
+            <div class="flex-1 relative">
+              <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+              </div>
+              <input v-model="searchQuery" type="text" placeholder="Search for a document, folder, file..."
+                class="w-full pl-9 pr-4 py-2.5 bg-white border border-neutral-200 rounded-full text-sm text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400" />
+              <!-- Filter button -->
+              <button
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2 4H16M5 9H13M8 14H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+            <!-- Add memories button -->
             <button
-              class="text-neutral-500 hover:text-neutral-800 transition-colors"
-              @click="selectedAlbumId = null"
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              class="flex items-center gap-2 px-5 py-2.5 bg-primary-700 text-white rounded-full text-sm font-semibold hover:bg-primary-800 transition-colors whitespace-nowrap"
+              @click="handleAddMemories">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 2V14M2 8H14" stroke="white" stroke-width="2" stroke-linecap="round" />
               </svg>
+              Add memories
             </button>
-            <h2 class="flex-1 text-base font-semibold text-neutral-900">{{ selectedAlbum?.name }}</h2>
-            <AlbumActionsMenu
-              @edit="activeModal = 'edit'"
-              @share="activeModal = 'share'"
-              @tag="activeModal = 'tag'"
-              @delete="activeModal = 'delete'"
-            />
           </div>
 
-          <!-- Loading -->
-          <div v-if="mediaLoading" class="flex items-center justify-center py-20">
-            <div class="w-8 h-8 border-2 border-primary-700 border-t-transparent rounded-full animate-spin" />
+          <!-- Content panel -->
+          <div class="flex-1 min-w-0 bg-white rounded-2xl overflow-hidden flex flex-col">
+            <!-- Album header (when album selected) -->
+            <div v-if="selectedAlbumId !== null" class="flex items-center gap-3 px-5 py-4 border-b border-neutral-100">
+              <button class="text-neutral-500 hover:text-neutral-800 transition-colors" @click="selectedAlbumId = null">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+              </button>
+              <h2 class="flex-1 text-base font-semibold text-neutral-900">{{ selectedAlbum?.name }}</h2>
+              <AlbumActionsMenu @edit="activeModal = 'edit'" @share="activeModal = 'share'" @tag="activeModal = 'tag'"
+                @delete="activeModal = 'delete'" />
+            </div>
+
+            <!-- Loading -->
+            <div v-if="mediaLoading" class="flex items-center justify-center py-20">
+              <div class="w-8 h-8 border-2 border-primary-700 border-t-transparent rounded-full animate-spin" />
+            </div>
+
+            <!-- Empty state -->
+            <MemoriesEmptyState v-else-if="displayedMedia.length === 0" :album-name="selectedAlbum?.name"
+              @add="handleAddMemories" />
+
+            <!-- Media grid -->
+            <div v-else class="p-5">
+              <MemoriesMediaGrid :items="displayedMedia" @item-click="openViewer(displayedMedia, $event)" />
+            </div>
           </div>
 
-          <!-- Empty state -->
-          <MemoriesEmptyState
-            v-else-if="displayedMedia.length === 0"
-            :album-name="selectedAlbum?.name"
-            @add="handleAddMemories"
-          />
+        </div><!-- end main content column -->
 
-          <!-- Media grid -->
-          <div v-else class="p-5">
-            <MemoriesMediaGrid :items="displayedMedia" @item-click="openViewer(displayedMedia, $event)" />
-          </div>
-        </div>
       </div>
 
       <!-- Mobile: All Memories tab -->
       <div v-if="mobileTab === 'All Memories'" class="md:hidden flex-1 flex flex-col relative">
         <!-- Album detail header on mobile -->
-        <div v-if="mobileAlbumId !== null" class="flex items-center justify-between px-4 py-3 bg-white border-b border-neutral-100">
+        <div v-if="mobileAlbumId !== null"
+          class="flex items-center justify-between px-4 py-3 bg-white border-b border-neutral-100">
           <button class="text-neutral-600 p-1" @click="mobileAlbumId = null">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
             </svg>
           </button>
           <h2 class="text-sm font-semibold text-neutral-900">{{ mobileSelectedAlbum?.name }}</h2>
-          <AlbumActionsMenu
-            @edit="activeModal = 'edit'"
-            @share="activeModal = 'share'"
-            @tag="activeModal = 'tag'"
-            @delete="activeModal = 'delete'"
-          />
+          <AlbumActionsMenu @edit="activeModal = 'edit'" @share="activeModal = 'share'" @tag="activeModal = 'tag'"
+            @delete="activeModal = 'delete'" />
         </div>
 
         <!-- File count (album detail) -->
@@ -147,12 +123,8 @@
         </div>
 
         <!-- Empty state -->
-        <MemoriesEmptyState
-          v-else-if="mobileDisplayedMedia.length === 0"
-          :album-name="mobileSelectedAlbum?.name"
-          class="flex-1"
-          @add="handleAddMemories"
-        />
+        <MemoriesEmptyState v-else-if="mobileDisplayedMedia.length === 0" :album-name="mobileSelectedAlbum?.name"
+          class="flex-1" @add="handleAddMemories" />
 
         <!-- Grid -->
         <div v-else class="px-3 py-3 pb-24">
@@ -163,31 +135,19 @@
           </MemoriesMediaGrid>
         </div>
 
-        <MemoriesAddFab
-          v-if="mobileDisplayedMedia.length === 0"
-          @add-media="handleAddMemories"
-          @add-audio="handleAddMemories"
-        />
+        <MemoriesAddFab v-if="mobileDisplayedMedia.length === 0" @add-media="handleAddMemories"
+          @add-audio="handleAddMemories" />
       </div>
 
       <!-- Mobile: Album tab -->
       <div v-else class="md:hidden flex-1 flex flex-col pb-24">
         <!-- Empty albums -->
-        <MemoriesEmptyState
-          v-if="folders.length === 0"
-          class="flex-1"
-          @add="showCreateAlbum = true"
-        />
+        <MemoriesEmptyState v-if="folders.length === 0" class="flex-1" @add="showCreateAlbum = true" />
 
         <!-- Album list -->
         <div v-else class="flex-1">
-          <MemoriesAlbumRow
-            v-for="album in folders"
-            :key="album.id"
-            :album="album"
-            variant="list"
-            @select="onMobileAlbumSelect(album.id)"
-          />
+          <MemoriesAlbumRow v-for="album in folders" :key="album.id" :album="album" variant="list"
+            @select="onMobileAlbumSelect(album.id)" />
         </div>
 
         <!-- FAB -->
@@ -196,62 +156,28 @@
     </div>
 
     <!-- ── Album action modals ───────────────────────────────────────────── -->
-    <EditAlbumModal
-      :show="activeModal === 'edit'"
-      :initial-name="activeAlbum?.name"
-      :initial-description="activeAlbum?.description"
-      :loading="albumCreating as boolean"
-      @update:show="activeModal = null"
-      @save="handleEditAlbum"
-    />
-    <DeleteAlbumModal
-      :show="activeModal === 'delete'"
-      :album-name="activeAlbum?.name ?? ''"
-      :loading="deleteLoading"
-      @update:show="activeModal = null"
-      @confirm="handleDeleteAlbum"
-    />
-    <ShareAlbumModal
-      :show="activeModal === 'share'"
-      :album-name="activeAlbum?.name ?? ''"
-      :album-id="activeAlbum?.id ?? null"
-      @update:show="activeModal = null"
-      @shared="fetchStorageFolders"
-    />
-    <TagFamilyModal
-      :show="activeModal === 'tag'"
-      :album-name="activeAlbum?.name ?? ''"
-      :album-id="activeAlbum?.id ?? null"
-      @update:show="activeModal = null"
-      @tagged="fetchStorageFolders"
-    />
+    <EditAlbumModal :show="activeModal === 'edit'" :initial-name="activeAlbum?.name"
+      :initial-description="activeAlbum?.description" :loading="albumCreating as boolean"
+      @update:show="activeModal = null" @save="handleEditAlbum" />
+    <DeleteAlbumModal :show="activeModal === 'delete'" :album-name="activeAlbum?.name ?? ''" :loading="deleteLoading"
+      @update:show="activeModal = null" @confirm="handleDeleteAlbum" />
+    <ShareAlbumModal :show="activeModal === 'share'" :album-name="activeAlbum?.name ?? ''"
+      :album-id="activeAlbum?.id ?? null" @update:show="activeModal = null" @shared="fetchStorageFolders" />
+    <TagFamilyModal :show="activeModal === 'tag'" :album-name="activeAlbum?.name ?? ''"
+      :album-id="activeAlbum?.id ?? null" @update:show="activeModal = null" @tagged="fetchStorageFolders" />
 
     <!-- ── Create album modal ─────────────────────────────────────────────── -->
-    <CreateAlbumModal
-      ref="createAlbumModalRef"
-      :show="showCreateAlbum"
-      :loading="albumCreating as boolean"
-      @update:show="showCreateAlbum = $event"
-      @create="submitCreateAlbum"
-      @add-media="onAlbumCreatedAddMedia"
-    />
+    <CreateAlbumModal ref="createAlbumModalRef" :show="showCreateAlbum" :loading="albumCreating as boolean"
+      @update:show="showCreateAlbum = $event" @create="submitCreateAlbum" @add-media="onAlbumCreatedAddMedia" />
 
     <!-- ── Media viewer ──────────────────────────────────────────────────── -->
-    <MediaViewerModal
-      :show="showViewer"
-      :items="viewerItems"
-      :initial-index="viewerIndex"
+    <MediaViewerModal :show="showViewer" :items="viewerItems" :initial-index="viewerIndex"
       :album-name="selectedAlbum?.name || mobileSelectedAlbum?.name"
       :description="selectedAlbum?.description || mobileSelectedAlbum?.description"
-      @update:show="showViewer = $event"
-    />
+      @update:show="showViewer = $event" />
 
     <!-- ── Add memory modal ───────────────────────────────────────────────── -->
-    <AddMemoryModal
-      :show="showAddMemory"
-      @update:show="showAddMemory = $event"
-      @submit="handleMemorySubmit"
-    />
+    <AddMemoryModal :show="showAddMemory" @update:show="showAddMemory = $event" @submit="handleMemorySubmit" />
   </div>
 </template>
 

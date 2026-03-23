@@ -8,7 +8,7 @@ export const useStorageStore = defineStore('storage', {
     folders: [],
     foldersLoading: false,
     folderMedia: [],
-    folderMediaLoading: true,
+    folderMediaLoading: false,
   }),
 
   actions: {

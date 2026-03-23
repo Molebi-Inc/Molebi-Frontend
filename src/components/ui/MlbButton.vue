@@ -31,7 +31,7 @@ withDefaults(defineProps<Props>(), {
     :loading="loading"
     :class="[
       'cursor-pointer disabled:cursor-not-allowed disabled:opacity-50',
-      primary ? 'bg-primary-700! text-white! hover:bg-primary-800' : '',
+      primary ? 'bg-primary! text-white! hover:bg-primary-900' : '',
     ]"
   >
     <slot name="icon" />

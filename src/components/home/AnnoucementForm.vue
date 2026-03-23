@@ -18,7 +18,7 @@
           <n-input
             v-model:value="form.content"
             type="textarea"
-            placeholder="Add a Content..."
+            placeholder="What do you want to announce..."
             rows="2"
             class="w-full borderless"
           />
@@ -40,7 +40,7 @@
       </n-form-item> -->
 
       <!-- Priority Select -->
-      <n-form-item path="priority" :show-require-mark="false" :show-feedback="false">
+      <!-- <n-form-item path="priority" :show-require-mark="false" :show-feedback="false">
         <template #label>
           <label for="priority" class="text-sm font-medium text-gray-500">Select Priority</label>
         </template>
@@ -51,11 +51,11 @@
           size="large"
           class="w-full mlb-select"
         />
-      </n-form-item>
+      </n-form-item> -->
 
       <!-- Family Member Selection -->
       <UserSelector
-        label="Family Members"
+        label="Tag Family Member"
         :form="form"
         :users="familyMembers"
         :options="userSelectorOptions"
@@ -63,10 +63,10 @@
       />
 
       <!-- Reminder Checkbox -->
-      <div class="flex items-center gap-2 mb-11">
+      <!-- <div class="flex items-center gap-2 mb-11">
         <NCheckbox v-model:checked="form.create_reminder" />
         <label class="text-sm font-medium text-gray-500">Create a reminder</label>
-      </div>
+      </div> -->
 
       <!-- Create Button -->
       <MlbButton

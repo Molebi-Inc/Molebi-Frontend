@@ -23,8 +23,8 @@
         <n-form-item v-if="version === 'v2'" label="Gender" path="gender"
           label-style="color: #807F94; font-weight: 500;" required
           :show-feedback="!!fieldErrors['gender'] || !!fieldErrors['gender']">
-          <NSelect v-model:value="form.gender" class="select-menu" :options="genderOptions" placeholder="Select Gender" size="large"
-            :class="['w-full mlb-select h-[46px]', isV2 && isMobile ? 'bg-brand-green' : '']">
+          <NSelect v-model:value="form.gender" class="select-menu" :options="genderOptions" placeholder="Select Gender"
+            size="large" :class="['w-full mlb-select h-[46px]', isV2 && isMobile ? 'bg-brand-green' : '']">
             <template #arrow>
               <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
             </template>
@@ -55,7 +55,7 @@
         </div>
       </div>
       <MlbButton type="submit" :label="loading ? 'Signing up...' : 'Continue'" :loading="loading" :disabled="loading"
-        block class="rounded-2xl! bg-primary-700! h-13! text-white!" @click="onFormSubmit" />
+        block class="rounded-2xl! bg-primary! h-13! text-white!" @click="onFormSubmit" />
     </n-form>
     <div class="mt-5">
       <div class="w-full rounded-2xl border border-green-200 bg-green-50 px-4 py-3 flex items-start gap-3">

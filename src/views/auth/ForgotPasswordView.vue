@@ -1,7 +1,7 @@
 <template>
   <section>
     <div class="md:flex justify-center items-center h-screen">
-      <div class="px-6 py-24 md:p-12 md:w-[522px] rounded-3xl h-full">
+      <div class="px-6 py-24 md:p-12 md:w-[548px] rounded-3xl h-full">
         <BackButton v-if="!component?.hideBackButton" icon="vuesax.linear.arrow-left" />
         <div class="flex flex-col gap-[45px] h-full mt-12 mb-11.5">
           <div>

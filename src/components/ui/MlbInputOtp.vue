@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { NInputOtp } from 'naive-ui'
 
 interface Props {
@@ -16,7 +18,7 @@ interface Props {
   showPasswordOn?: 'mousedown' | 'click'
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   size: 'medium',
   customClass: '',
   length: 4,
@@ -24,6 +26,9 @@ withDefaults(defineProps<Props>(), {
   mask: true,
   block: false,
 })
+
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
+const resolvedSize = computed(() => !isLargeScreen.value ? 'large' : props.size)
 
 const emit = defineEmits<{
   (e: 'finish', value: string[] | null): void
@@ -37,16 +42,23 @@ function onFinish(value: string[] | null) {
 
 <template>
   <label v-if="label" :for="name" class="text-sm font-medium text-gray-700">{{ label }}</label>
-  <NInputOtp
-    class="h-10! rounded-sm!"
-    :value="modelValue"
-    :mask="mask"
-    :size="size"
-    :gap="gap"
-    :length="length"
-    :block="block"
-    :class="customClass"
-    :on-finish="onFinish"
-    @update:value="emit('update:modelValue', $event)"
-  />
+  <NInputOtp class="otp-input rounded-sm!" :value="modelValue" :mask="mask" :size="resolvedSize"
+    :gap="isLargeScreen ? gap : 16" :length="length" :block="block" :class="customClass" :on-finish="onFinish"
+    @update:value="emit('update:modelValue', $event)" />
 </template>
+
+<style scoped>
+/* Default sizing when callers don't apply their own wrapper class styles. */
+:deep(.otp-input:not(.otp-input-wrapper) .n-input.n-input--resizable.n-input--stateful) {
+  height: 48px !important;
+  width: 48px !important;
+}
+
+/* Large screens: slightly larger OTP boxes for better readability. */
+@media (min-width: 1024px) {
+  :deep(.otp-input:not(.otp-input-wrapper) .n-input.n-input--resizable.n-input--stateful) {
+    height: 60px !important;
+    width: 60px !important;
+  }
+}
+</style>

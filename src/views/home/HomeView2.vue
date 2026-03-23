@@ -25,7 +25,7 @@
 
         <!-- Mobile: single-column layout -->
         <div class="md:hidden bg-white px-4 pt-5 pb-24 space-y-4">
-            <p class="text-sm text-neutral-600">
+            <p class="text-sm text-neutral-600 px-4">
                 Welcome back 👋 <strong class="text-neutral-900">{{ userName }}</strong>
             </p>
             <HeroBanner @try-now="goToVault" />
@@ -38,11 +38,39 @@
         </div>
     </main>
 
+    <MlbModal v-model:show="showHomeFormModal" class="rounded-3xl!" :bottom-sheet="!isLargeScreen"
+        :bottom-sheet-height="462" @close="handleCloseForm">
+        <template #header>
+            <div class="flex items-center justify-between">
+                <div>
+                    <BackButton :label="isLargeScreen ? 'Go Back' : 'Cancel'"
+                        :icon="isLargeScreen ? 'vuesax.linear.arrow-left' : ''" class="mb-6" :previous-route="false"
+                        @update:go-back="handleCloseForm" />
+                </div>
+                <div class="text-center flex-1">
+                    <h1 class="text-base font-bold text-gray-900 hidden md:block">
+                        {{ homeFormTitle }}
+                    </h1>
+                </div>
+                <div></div>
+            </div>
+        </template>
+
+        <!-- <h1 class="text-2xl font-bold text-gray-900 text-center mb-11 hidden md:block"> -->
+        <h1 class="text-2xl font-bold text-gray-900 text-center mb-11">
+            {{ homeFormTitle }}
+        </h1>
+
+        <AnnouncementForm v-if="$route.query.ftype === 'announcement'" :key="String($route.query.fid ?? 'new')"
+            @close="handleCloseForm" />
+    </MlbModal>
+
     <WelcomeModal v-model:show="showWelcomeModal" />
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useMediaQuery } from '@vueuse/core'
 import { useProfileStore } from '@/stores/profile.store'
 import { useGeneralStore } from '@/stores/general.store'
 import { useAnnouncementStore } from '@/stores/announcement.store'
@@ -57,11 +85,17 @@ import FamilyTreeActions from '@/components/home/v2/FamilyTreeActions.vue'
 import FamilyUpdates from '@/components/home/v2/FamilyUpdates.vue'
 import WelcomeModal from '@/components/home/v2/WelcomeModal.vue'
 import HomeBottomLeftTree from '@/components/home/v2/HomeBottomLeftTree.vue'
+import MlbModal from '@/components/ui/MlbModal.vue'
+import BackButton from '@/components/common/BackButton.vue'
+import AnnouncementForm from '@/components/home/AnnoucementForm.vue'
 
 const $router = useRouter()
 const $route = useRoute()
 
 const showWelcomeModal = ref(false)
+const showHomeFormModal = ref(false)
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
+
 const profileStore = useProfileStore()
 const generalStore = useGeneralStore()
 const announcementStore = useAnnouncementStore()
@@ -73,6 +107,13 @@ const familyMembersCount = computed(() => generalStore.familyMembers.length)
 const announcements = computed(() => announcementStore.announcements)
 const loadingAnnouncements = computed(() => announcementStore.loading)
 
+const homeFormTitle = computed(() => {
+    if ($route.query.ftype === 'announcement') {
+        return $route.query.fid ? 'Edit Family Update' : 'New Family Update'
+    }
+    return ''
+})
+
 onMounted(async () => {
     await Promise.all([fetchAnnouncements(), fetchFamilyMembers()])
     if ($route.query.welcome === '1') {
@@ -80,6 +121,14 @@ onMounted(async () => {
         $router.replace({ query: { ...$route.query, welcome: undefined } })
     }
 })
+
+watch(
+    () => $route.query.ftype,
+    (newFtype) => {
+        showHomeFormModal.value = newFtype === 'announcement'
+    },
+    { immediate: true },
+)
 
 // ── Navigation handlers ──────────────────────────────────────────────────────
 
@@ -99,6 +148,16 @@ const handleEditAnnouncement = (item: Announcement) => {
 const handleDeleteAnnouncement = (id: number) => deleteAnnouncement(id)
 
 const handleCreateAnnouncement = () => {
-    $router.push({ name: 'App.HomeView', query: { ftype: 'announcement' } })
+    announcementStore.setStoreProp('selectedAnnouncement', null)
+    const query = { ...$route.query, ftype: 'announcement' }
+    delete (query as Record<string, unknown>).fid
+    $router.push({ name: 'App.HomeView', query })
+}
+
+const handleCloseForm = () => {
+    const query = { ...$route.query }
+    if (query.ftype) delete query.ftype
+    if (query.fid) delete query.fid
+    $router.replace({ name: 'App.HomeView', query })
 }
 </script>

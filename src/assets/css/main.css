@@ -11,6 +11,7 @@
   --color-placeholder: #9c9bab;
 
   /* === Colors === */
+  --color-primary: #0f7234;
   --color-primary-50: #f2f9f2;
   --color-primary-100: #b8eedd;
   --color-primary-200: #8be2c7;
@@ -24,7 +25,7 @@
 
   /* === Secondary Colors === */
   --color-secondary-50: #fff5ed;
-  --color-secondary-100: #f9e6bc;
+  --color-secondary-100: #ffead9;
   --color-secondary-200: #f5d58f;
   --color-secondary-300: #f1c561;
   --color-secondary-400: #db6f23;
