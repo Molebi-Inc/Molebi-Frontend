@@ -69,7 +69,7 @@ const hasMore = computed(() => props.items.length > PREVIEW_COUNT)
         Oops, looks like there are no updates yet! Add an update
       </p>
       <button
-        class="bg-primary-800 hover:bg-primary-900 text-white text-sm font-semibold px-6 py-3 rounded-3xl transition-colors w-[80%] md:w-auto cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+        class="bg-primary hover:bg-primary-900 text-white text-sm font-semibold px-6 py-3 rounded-3xl transition-colors w-[80%] md:w-auto cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         @click="$emit('create')">
         <span class="hidden md:inline">Add your first update</span>
         <span class="md:hidden">Create your first announcement</span>
