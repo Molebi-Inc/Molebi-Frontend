@@ -34,7 +34,7 @@ const actions = [
         <div class="w-11 h-11 rounded-xl  flex items-center justify-center">
           <MlbIcon :name="action.icon" :size="22" class="text-primary-700" />
         </div>
-        <span class="text-xs font-medium text-neutral-700 text-center leading-tight">
+        <span class="text-xs font-medium text-neutral-700 text-center leading-tight whitespace-nowrap">
           {{ action.label }}
         </span>
       </button>
