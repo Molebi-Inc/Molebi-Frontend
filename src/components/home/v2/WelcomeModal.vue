@@ -1,6 +1,6 @@
 <template>
-  <MlbModal class="rounded-3xl!" :show="show" :max-width="800" @update:show="emit('update:show', $event)"
-    @mask-click="close">
+  <MlbModal class="rounded-3xl!" :show="show" :full-page="!isLargeScreen" :max-width="800"
+    @update:show="emit('update:show', $event)" @mask-click="close">
     <div class="flex flex-col items-center text-center px-2 pt-2 pb-4">
       <!-- Verified illustration -->
       <div class="relative mb-6 mt-2">
@@ -15,7 +15,7 @@
       </p>
 
       <!-- Feature cards -->
-      <div class="grid grid-cols-3 gap-3 w-full mb-6">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 w-full mb-6">
         <!-- Add family members -->
         <button
           class="flex flex-col items-center gap-2 rounded-2xl p-4 text-left bg-neutral-50 hover:bg-neutral-100 transition-colors border border-neutral-100 cursor-pointer"
@@ -45,7 +45,7 @@
 
         <!-- Explore your culture -->
         <button
-          class="flex flex-col items-center gap-2 rounded-2xl p-4 text-left bg-[#FFE6A6] hover:bg-amber-100 transition-colors border border-amber-100 cursor-pointer"
+          class="flex flex-col items-center gap-2 rounded-2xl p-4 text-left bg-[#FFE6A6] hover:bg-amber-100 transition-colors border border-amber-100 cursor-pointer col-span-2 md:col-span-1"
           @click="handleAction('culture')">
           <div class="w-full h-24 rounded-xl bg-white flex items-center justify-center overflow-hidden mb-1">
             <img src="@/assets/images/culture.png" alt="Explore culture"
@@ -61,7 +61,7 @@
       <!-- Action buttons -->
       <div class="flex gap-3 w-full">
         <button
-          class="flex-1 h-24 rounded-2xl bg-primary-700 text-white font-semibold text-sm hover:bg-primary-800 transition-colors cursor-pointer"
+          class="flex-1 h-15 md:h-24 rounded-2xl bg-primary-700 text-white font-semibold text-xs md:text-sm hover:bg-primary-800 transition-colors cursor-pointer"
           @click="close">
           Go to Home Screen
         </button>
@@ -71,10 +71,8 @@
           Try Demo
         </button> -->
         <button
-          class="flex-1 h-24 rounded-2xl bg-[#DB6F23] text-white font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          :disabled="true"
-          @click="handleAction('vault')"
-        >
+          class="flex-1 h-15 md:h-24 rounded-2xl bg-[#DB6F23] text-white font-semibold text-xs md:text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          :disabled="true" @click="handleAction('vault')">
           Try Demo
         </button>
       </div>
@@ -85,12 +83,14 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import MlbModal from '@/components/ui/MlbModal.vue'
+import { useMediaQuery } from '@vueuse/core'
 
 defineProps<{ show: boolean }>()
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
 }>()
 
+const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const $router = useRouter()
 
 const close = () => emit('update:show', false)
