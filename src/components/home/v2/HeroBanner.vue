@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
+import heroBannerMemories from '@/assets/images/hero_banner_memories.png'
+import heroBannerTimeCapsule from '@/assets/images/hero_banner_time_capsule.png'
+import heroBannerCulture from '@/assets/images/hero_banner_culture.png'
+import frameBgGreen from '@/assets/backgrounds/frame-bg-green.png'
+import frameBgWhite from '@/assets/backgrounds/frame-bg-white.png'
 
 type BannerEvent = 'try-now' | 'add-relative' | 'explore-culture'
 
@@ -20,7 +25,7 @@ const banners: Banner[] = [
     cta: "Try It Now",
     textColor: "white",
     image: {
-      src: "/src/assets/images/hero_banner_memories.png", alt: "Family memories"
+      src: heroBannerMemories, alt: "Family memories"
     },
     event: "try-now",
   },
@@ -30,7 +35,7 @@ const banners: Banner[] = [
       "A message, advice, prayer, or secret your children, your spouse, or grandchildren will receive in the future",
     cta: "Try Time Capsule Now",
     textColor: "primary-900",
-    image: { src: "/src/assets/images/hero_banner_time_capsule.png", alt: "Time capsule" },
+    image: { src: heroBannerTimeCapsule, alt: "Time capsule" },
     event: "add-relative",
   },
   {
@@ -39,7 +44,7 @@ const banners: Banner[] = [
       "Learn about your family’s customs, traditions, hometown, history and heritage in a way that is fun and easy to share",
     cta: "Explore your Tradition Now",
     textColor: "white",
-    image: { src: "/src/assets/images/hero_banner_culture.png", alt: "Culture" },
+    image: { src: heroBannerCulture, alt: "Culture" },
     event: "explore-culture",
   },
 ]
@@ -56,8 +61,8 @@ const currentBanner = computed(() => banners[currentIndex.value]!)
 const currentBackgroundImage = computed(() => {
   // Odd element position (1st, 3rd, ...) => green. Even positions => white.
   return currentIndex.value % 2 === 0
-    ? '/src/assets/backgrounds/frame-bg-green.png'
-    : '/src/assets/backgrounds/frame-bg-white.png'
+    ? frameBgGreen
+    : frameBgWhite
 })
 
 const isEvenBannerIndex = computed(() => currentIndex.value % 2 === 0)
