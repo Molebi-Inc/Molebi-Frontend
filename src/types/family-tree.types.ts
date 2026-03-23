@@ -1,4 +1,4 @@
-export interface FamilyMemberFormValues {
+ export interface FamilyMemberFormValues {
   id?: number
   first_name: string
   middle_name: string

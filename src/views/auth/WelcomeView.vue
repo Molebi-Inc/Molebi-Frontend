@@ -20,10 +20,10 @@
                 </div>
                 <div class="w-full flex flex-col items-center gap-3">
                     <MlbButton v-if="hasFinishedScrolling" label="Let’s get started" block
-                        class="md:w-[25%]! w-full! bg-primary-700! text-white! rounded-3xl! h-13! heartbeat"
+                        class="md:w-[35%]! w-full! bg-primary! text-white! rounded-xl! h-13! heartbeat"
                         @click="nextAction()" />
-                    <MlbButton label="Skip"
-                        class="md:w-[25%]! w-full! bg-primary-100! text-primary-900! rounded-3xl! h-13! border-primary-700!"
+                    <MlbButton v-if="!hasFinishedScrolling" label="Skip"
+                        class="md:w-[25%]! w-full! bg-primary-100! text-primary-900! rounded-3xl! h-13! border-primary!"
                         @click="nextAction()" />
                 </div>
             </div>

@@ -292,7 +292,6 @@ const handleGoBack = () => {
 
 onMounted(async () => {
   await fetchTimeCapsules()
-  console.log('tourIsComplete', tourIsComplete.value)
   if (!tourIsComplete.value) {
     startTour('time_capsule')
   }

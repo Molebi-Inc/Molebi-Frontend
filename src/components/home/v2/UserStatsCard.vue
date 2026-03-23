@@ -60,11 +60,12 @@ const profileStore = useProfileStore()
 
     <!-- CTAs -->
     <button
-      class="w-full bg-primary-800 hover:bg-primary-900 text-white text-sm font-semibold py-3 rounded-3xl transition-colors mb-3 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+      class="w-full bg-primary hover:bg-primary-900 text-white text-sm font-semibold py-3 rounded-3xl transition-colors mb-3 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
       @click="$emit('add-members')">
       Add family members
     </button>
-    <button class="w-full text-sm text-neutral-500 hover:text-neutral-800 py-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+    <button
+      class="w-full text-sm text-neutral-500 hover:text-neutral-800 py-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
       @click="$emit('add-memories')">
       Add memories
     </button>

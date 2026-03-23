@@ -14,7 +14,8 @@
         <circle cx="92" cy="44" r="10" fill="#C7D2FE" />
         <rect x="58" y="50" width="44" height="22" rx="0" fill="white" />
         <!-- Upload arrow -->
-        <path d="M80 52 L80 70 M73 59 L80 52 L87 59" stroke="#6366F1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M80 52 L80 70 M73 59 L80 52 L87 59" stroke="#6366F1" stroke-width="3" stroke-linecap="round"
+          stroke-linejoin="round" />
       </svg>
     </div>
 
@@ -25,14 +26,13 @@
       {{
         albumName
           ? `Save photos, videos, audios or voice note, related to ${albumName} event.`
-          : 'Save your important moments here so they remain in your family forever. Every photo, every voice note, every document tells a story.'
+          : "Save your important moments here so they remain in your family forever. Every photo, every voice note, every document tells a story."
       }}
     </p>
 
     <button
       class="flex items-center gap-2 px-6 py-3 bg-primary-700 text-white rounded-full text-sm font-semibold hover:bg-primary-800 transition-colors"
-      @click="$emit('add')"
-    >
+      @click="$emit('add')">
       <span class="text-base leading-none">+</span>
       {{ albumName ? 'Upload First Memory' : 'Add your first memory' }}
     </button>

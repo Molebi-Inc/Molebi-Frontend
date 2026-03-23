@@ -8,7 +8,7 @@
           ),
         },
         {
-          'px-6 py-8 md:p-12 md:w-[522px] h-full md:rounded-3xl': !component?.has_full_page,
+          'px-6 py-8 md:p-12 md:w-[620px] h-full md:rounded-3xl': !component?.has_full_page,
           'w-full': component?.has_full_page,
         },
       ]">

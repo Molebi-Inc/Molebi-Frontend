@@ -42,7 +42,7 @@
                   " />
               </div>
               <MlbButton block type="submit" label="Login" :loading="signinLoader" :disabled="signinLoader"
-                class="rounded-2xl! bg-primary-700! h-13! text-white!" @click="onFormSubmit" />
+                class="rounded-2xl! bg-primary! h-13! text-white!" @click="onFormSubmit" />
               <div class="text-center mt-3 mb-12">
                 <p class="text-neutral-600 font-normal fs-14 lh-18">
                   Don’t have an account?
