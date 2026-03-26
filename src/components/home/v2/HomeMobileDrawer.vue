@@ -76,7 +76,7 @@ const handleHelpSelect = () => {
 const navLinks = [
   { label: 'Home', icon: 'vuesax.broken.home-2', routeName: 'App.HomeView' },
   { label: 'Family Tree', icon: 'family-tree', routeName: 'App.FamilyTreeView' },
-  { label: 'Memories', icon: 'vuesax.outline.folder-open', routeName: 'App.StorageLayout' },
+  { label: 'Memories', icon: 'vuesax.outline.folder-open', routeName: 'App.StorageFolderView' },
   { label: 'Time capsules', icon: 'time-capsule', routeName: 'App.TimeCapsules.View' },
   { label: 'Vault', icon: 'vault', routeName: 'App.VaultView' },
 ]

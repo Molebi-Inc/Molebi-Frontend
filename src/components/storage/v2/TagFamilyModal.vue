@@ -1,26 +1,21 @@
 <template>
-  <MlbModal
-    :show="show"
-    :bottom-sheet="isMobile"
-    :bottom-sheet-height="500"
-    @update:show="$emit('update:show', $event)"
-  >
-    <div class="flex flex-col gap-4 py-1">
+  <MlbModal :show="show" :bottom-sheet="isMobile" :bottom-sheet-height="320"
+    @update:show="$emit('update:show', $event)">
+    <template #header>
       <!-- Header -->
       <div>
         <h3 class="text-base font-semibold text-neutral-900">{{ albumName }}</h3>
         <p class="text-xs text-neutral-400 mt-0.5">Tag family members to this memory</p>
       </div>
-
+    </template>
+    <div class="flex flex-col gap-4 py-1">
       <!-- Member picker -->
       <FamilyMemberPicker :selected="selectedIds" @toggle="toggleMember" />
 
       <!-- Tag button -->
       <button
         class="w-full py-3.5 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-50"
-        :disabled="selectedIds.length === 0 || loading"
-        @click="handleTag"
-      >
+        :disabled="selectedIds.length === 0 || loading" @click="handleTag">
         {{ loading ? 'Tagging…' : 'Tag' }}
       </button>
     </div>

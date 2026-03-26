@@ -145,7 +145,7 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
     title: 'Safer than Social Media for Families',
     has_back_button: true,
     description:
-      'Molebi is a private family-only social app with secure messaging for families, invite-only circles, and WhatsApp alternatives that respect all family members',
+      'Molebi is a private family-only social app for families, invite-only circles, and WhatsApp alternatives that respect all family members.',
     primary_button_label: 'Next',
     secondary_button_label: 'Skip',
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'vault' } },

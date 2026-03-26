@@ -3,39 +3,20 @@
     <n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
       <div class="flex flex-col gap-1 mb-11">
         <n-form-item label="" path="avatar">
-          <n-upload
-            :max="1"
-            directory-dnd
-            accept="image/*"
-            list-type="image-card"
-            trigger-class="trigger4dragger"
-            file-list-class="flex! justify-center items-center rounded-full!"
-            @update:file-list="updateFileList"
-          >
+          <n-upload :max="1" directory-dnd accept="image/*" list-type="image-card" trigger-class="trigger4dragger"
+            file-list-class="flex! justify-center items-center rounded-full!" @update:file-list="updateFileList">
             Click to Upload
           </n-upload>
         </n-form-item>
         <n-form-item label="First Name" path="first_name">
-          <MlbInput
-            v-model="form.first_name"
-            id="first_name"
-            name="first_name"
-            type="text"
-            :disabled="!!user?.first_name"
-            placeholder="Enter First Name"
-            custom-class="border-gray-300 focus:border-primary-500"
-          />
+          <MlbInput v-model="form.first_name" id="first_name" name="first_name" type="text"
+            :disabled="!!user?.first_name" placeholder="Enter First Name"
+            custom-class="border-gray-300 focus:border-primary-500" />
         </n-form-item>
         <n-form-item label="Middle Name" path="middle_name">
-          <MlbInput
-            v-model="form.middle_name"
-            id="middle_name"
-            name="middle_name"
-            type="text"
-            :disabled="!!user?.middle_name"
-            placeholder="Enter Middle Name"
-            custom-class="border-gray-300 focus:border-primary-500"
-          />
+          <MlbInput v-model="form.middle_name" id="middle_name" name="middle_name" type="text"
+            :disabled="!!user?.middle_name" placeholder="Enter Middle Name"
+            custom-class="border-gray-300 focus:border-primary-500" />
         </n-form-item>
         <!-- <n-form-item label="Nickname" path="nickname">
           <MlbInput
@@ -48,79 +29,34 @@
           />
         </n-form-item> -->
         <n-form-item label="Family Name / Surname" path="family_name">
-          <MlbInput
-            v-model="form.family_name"
-            id="family_name"
-            name="family_name"
-            type="text"
-            :disabled="!!user?.family_name"
-            placeholder="Enter Family Name"
-            custom-class="border-gray-300 focus:border-primary-500"
-          />
+          <MlbInput v-model="form.family_name" id="family_name" name="family_name" type="text"
+            :disabled="!!user?.family_name" placeholder="Enter Family Name"
+            custom-class="border-gray-300 focus:border-primary-500" />
         </n-form-item>
         <n-form-item label="Date of Birth" path="dob">
-          <n-date-picker
-            v-model:formatted-value="form.dob"
-            id="dob"
-            name="dob"
-            type="date"
-      :is-date-disabled="dateDisabled"
-            :disabled="!!user?.dob"
-            placeholder="Enter Date of Birth"
-            class="w-full"
-          />
+          <n-date-picker v-model:formatted-value="form.dob" id="dob" name="dob" type="date"
+            :is-date-disabled="dateDisabled" :disabled="!!user?.dob" placeholder="Enter Date of Birth" class="w-full" />
         </n-form-item>
-        <n-form-item
-          label="Gender"
-          path="gender"
-          label-style="color: #807F94; font-weight: 500;"
-          required
-        >
-          <NSelect
-            v-model:value="form.gender"
-            :options="genderOptions"
-            placeholder="Select Gender"
-            :disabled="!!user?.gender"
-            size="large"
-            class="w-full mlb-select"
-          >
+        <n-form-item label="Gender" path="gender" label-style="color: #807F94; font-weight: 500;" required>
+          <NSelect v-model:value="form.gender" :options="genderOptions" placeholder="Select Gender"
+            :disabled="!!user?.gender" size="large" class="w-full mlb-select">
             <template #arrow>
               <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
             </template>
           </NSelect>
         </n-form-item>
-        <n-form-item
-          label="State of Origin"
-          path="state_id"
-          label-style="color: #807F94; font-weight: 500;"
-          required
-        >
-          <NSelect
-            v-model:value="form.state_id"
-            :options="states"
-            placeholder="Select State"
-            :disabled="!!user?.state_id"
-            :loading="statesLoading"
-            size="large"
-            class="w-full mlb-select"
-          >
+        <n-form-item label="State of Origin" path="state_id" label-style="color: #807F94; font-weight: 500;" required>
+          <NSelect v-model:value="form.state_id" :options="states" placeholder="Select State"
+            :disabled="!!user?.state_id" :loading="statesLoading" size="large" class="w-full mlb-select">
             <template #arrow>
               <MlbIcon name="vuesax.linear.arrow-down-2" :size="20" />
             </template>
           </NSelect>
         </n-form-item>
-        <n-form-item
-          label="Community/Local Government"
-          path="community_name"
-          label-style="color: #807F94; font-weight: 500;"
-          required
-        >
-          <MlbInput
-            v-model="form.community_name"
-            placeholder="Enter Community"
-            custom-class="w-full"
-            :disabled="!!user?.community_name"
-          />
+        <n-form-item label="Community/Local Government" path="community_name"
+          label-style="color: #807F94; font-weight: 500;" required>
+          <MlbInput v-model="form.community_name" placeholder="Enter Community" custom-class="w-full"
+            :disabled="!!user?.community_name" />
         </n-form-item>
       </div>
       <div class="flex items-start gap-2 bg-primary-50 p-3 rounded-xl text-primary-900 mb-11">
@@ -132,15 +68,8 @@
           your permission and your date of birth would not be visible to anyone but you.
         </div>
       </div>
-      <MlbButton
-        type="submit"
-        :label="loading ? 'Continuing...' : 'Continue'"
-        :loading="loading"
-        :disabled="loading"
-        block
-        class="rounded-2xl! bg-primary-700! h-13! text-white!"
-        @click="onFormSubmit"
-      />
+      <MlbButton type="submit" :label="loading ? 'Continuing...' : 'Continue'" :loading="loading" :disabled="loading"
+        block class="rounded-2xl! bg-primary-700! h-13! text-white!" @click="onFormSubmit" />
     </n-form>
   </div>
 </template>
@@ -221,7 +150,7 @@ const getValidFiles = (fileList: UploadFileInfo[]) =>
 
 const updateFileList = (fileList: UploadFileInfo[]) => {
   console.log('fileList', fileList)
-  ;(form.value as PersonalInformationFormValues).avatar = getValidFiles(fileList)[0]
+    ; (form.value as PersonalInformationFormValues).avatar = getValidFiles(fileList)[0]
 }
 
 const user = computed(() => profileStore.user)
