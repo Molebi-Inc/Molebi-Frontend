@@ -91,6 +91,7 @@
               :alt="item.name || 'Image'"
               class="w-full h-full object-cover"
               loading="lazy"
+              @error="onImageError"
             />
             <div
               class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity flex items-center justify-center"
@@ -234,6 +235,7 @@
                 :alt="item.name || 'Image'"
                 class="w-full h-full object-cover"
                 loading="lazy"
+                @error="onImageError"
               />
               <div
                 class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity flex items-center justify-center"
@@ -357,6 +359,7 @@ import SkeletalLoader from '@/components/common/SkeletalLoader.vue'
 import { useMediaQuery } from '@vueuse/core'
 import MlbButton from '@/components/ui/MlbButton.vue'
 import { downloadFile } from '@/helpers/general.helpers'
+import emptyMemory from '@/assets/images/empty-memory.png'
 
 // Props
 interface Props {
@@ -473,6 +476,14 @@ const closePreview = () => {
   showPreviewModal.value = false
   // Reset media player when closing
   selectedMedia.value = null as unknown as AttachmentInterface
+}
+
+const onImageError = (e: Event) => {
+  const img = e.target as HTMLImageElement | null
+  if (!img) return
+  // Avoid infinite loops if the fallback itself fails
+  if (img.src.includes(emptyMemory)) return
+  img.src = emptyMemory
 }
 
 const formatDate = (dateString: string) => {
