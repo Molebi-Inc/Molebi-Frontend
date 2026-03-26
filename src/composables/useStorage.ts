@@ -39,14 +39,20 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
   // Query for storage folder - reactive to route changes
   const getStorageFolderQuery = useGetStorageFolderQuery(
     computed(
-      () => queryEnabled && !!routeFolderId.value && $route.name === 'App.StorageFolderView',
+      () =>
+        queryEnabled &&
+        !!routeFolderId.value &&
+        ['App.StorageFolderView', 'App.StorageFolderDetailsView'].includes($route.name as string),
     ),
     routeFolderId,
   )
 
   const getFolderMediaQuery = useGetFolderMediaQuery(
     computed(
-      () => queryEnabled && !!routeFolderId.value && $route.name === 'App.StorageFolderView',
+      () =>
+        queryEnabled &&
+        !!routeFolderId.value &&
+        ['App.StorageFolderView', 'App.StorageFolderDetailsView'].includes($route.name as string),
     ),
     routeFolderId,
   )

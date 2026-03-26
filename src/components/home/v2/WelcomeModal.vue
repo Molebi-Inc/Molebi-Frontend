@@ -98,7 +98,7 @@ const close = () => emit('update:show', false)
 const handleAction = (action: 'family' | 'memory' | 'culture' | 'vault') => {
   close()
   if (action === 'family') $router.push({ name: 'App.FamilyTreeView' })
-  else if (action === 'memory') $router.push({ name: 'App.StorageLayout' })
+  else if (action === 'memory') $router.push({ name: 'App.StorageFolderView' })
   else if (action === 'culture') $router.push({ name: 'App.Heritage' })
   else if (action === 'vault') $router.push({ name: 'App.VaultView' })
 }

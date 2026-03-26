@@ -11,7 +11,7 @@ const $router = useRouter()
 const navLinks = [
   { label: 'Home', icon: 'vuesax.broken.home-2', routeName: 'App.HomeView' },
   { label: 'Family Tree', icon: 'family-tree', routeName: 'App.FamilyTreeView' },
-  { label: 'Memories', icon: 'vuesax.outline.folder-open', routeName: 'App.StorageLayout' },
+  { label: 'Memories', icon: 'vuesax.outline.folder-open', routeName: 'App.StorageFolderView' },
   { label: 'Time capsules', icon: 'time-capsule', routeName: 'App.TimeCapsules.View' },
   { label: 'Vault', icon: 'vault', routeName: 'App.VaultView' },
 ]
@@ -30,7 +30,7 @@ const menuOptions = [
   },
   {
     label: 'Memories',
-    key: 'App.StorageLayout',
+    key: 'App.StorageFolderView',
     icon: () => h(MlbIcon, { name: 'vuesax.outline.folder-open', size: 16, color: '#737373' }),
   },
   {

@@ -1,13 +1,7 @@
 <template>
-  <NDropdown
-    :options="options"
-    trigger="click"
-    placement="bottom-end"
-    @select="handleSelect"
-  >
+  <NDropdown :options="options" trigger="click" placement="bottom-end" @select="handleSelect">
     <button
-      class="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
-    >
+      class="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors rotate-90">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <circle cx="9" cy="4.5" r="1.4" fill="currentColor" />
         <circle cx="9" cy="9" r="1.4" fill="currentColor" />

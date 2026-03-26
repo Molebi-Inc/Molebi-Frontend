@@ -2,10 +2,10 @@
   <div v-if="userProfileLoading">
     <PageLoader />
   </div>
-  <div v-else class="min-h-screen flex flex-col relative overflow-x-hidden bg-brand-green">
+  <div v-else class="min-h-screen flex flex-col relative overflow-x-hidden bg-primary-50 md:bg-brand-green">
     <!-- Soft yellow gradient wash behind nav + left card (top-left third only) -->
     <div v-if="$route.name === 'App.HomeView'"
-      class="pointer-events-none absolute inset-x-0 top-0 h-[420px] md:h-[520px]" style="
+      class="pointer-events-none absolute inset-x-0 top-0 h-[420px] md:h-[520px] hidden md:block" style="
         background:
           radial-gradient(720px 420px at 12% 18%, rgba(255, 213, 128, 0.58), rgba(255, 213, 128, 0) 52%),
           linear-gradient(to bottom, rgba(255, 245, 225, 0.55), rgba(255, 245, 225, 0) 70%);

@@ -111,7 +111,7 @@ const sidebarItems: SidebarItem[] = [
     id: 'storage',
     label: 'Storage',
     icon: 'vuesax.outline.folder-open',
-    route: { name: 'App.StorageLayout' },
+    route: { name: 'App.StorageFolderView' },
     main: true,
   },
   {
