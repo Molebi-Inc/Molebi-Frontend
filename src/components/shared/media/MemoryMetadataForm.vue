@@ -42,7 +42,7 @@ const locationOptions = [
   { label: 'Vancouver, Canada', value: 'Vancouver, Canada' },
   { label: 'Mexico City, Mexico', value: 'Mexico City, Mexico' },
   { label: 'London, United Kingdom', value: 'London, United Kingdom' },
-  { label: 'Manchester, United Kingdom', value: 'Manchester, United Kingdom' },
+  { label: 'Manchester, United Ki/ngdom', value: 'Manchester, United Kingdom' },
   { label: 'Paris, France', value: 'Paris, France' },
   { label: 'Berlin, Germany', value: 'Berlin, Germany' },
   { label: 'Rome, Italy', value: 'Rome, Italy' },
