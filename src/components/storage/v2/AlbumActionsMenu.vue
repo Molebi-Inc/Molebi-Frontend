@@ -59,24 +59,24 @@ const options = [
         ],
       ),
   },
-  {
-    label: 'Tag Family Members',
-    key: 'tag',
-    icon: () =>
-      h(
-        'svg',
-        { width: 15, height: 15, viewBox: '0 0 15 15', fill: 'none', xmlns: 'http://www.w3.org/2000/svg' },
-        [
-          h('path', {
-            d: 'M2 8L7 2H13V8L8 13L2 8ZM9.5 5.5H9.51',
-            stroke: '#737373',
-            'stroke-width': '1.3',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-        ],
-      ),
-  },
+  // {
+  //   label: 'Tag Family Members',
+  //   key: 'tag',
+  //   icon: () =>
+  //     h(
+  //       'svg',
+  //       { width: 15, height: 15, viewBox: '0 0 15 15', fill: 'none', xmlns: 'http://www.w3.org/2000/svg' },
+  //       [
+  //         h('path', {
+  //           d: 'M2 8L7 2H13V8L8 13L2 8ZM9.5 5.5H9.51',
+  //           stroke: '#737373',
+  //           'stroke-width': '1.3',
+  //           'stroke-linecap': 'round',
+  //           'stroke-linejoin': 'round',
+  //         }),
+  //       ],
+  //     ),
+  // },
   { type: 'divider', key: 'd1' },
   {
     label: () => h('span', { style: { color: '#DC2626' } }, 'Delete'),

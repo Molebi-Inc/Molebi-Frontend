@@ -5,19 +5,12 @@
   ]" @dragover.prevent="isDragging = true" @dragleave="isDragging = false" @drop.prevent="onDrop"
     @click="triggerInput">
     <!-- Illustration -->
-    <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-      <!-- Scattered photos illustration -->
-      <!-- <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="12" width="12" height="10" rx="2" fill="#C4B5FD" transform="rotate(-10 4 12)" />
-        <rect x="16" y="14" width="12" height="10" rx="2" fill="#A5B4FC" transform="rotate(8 16 14)" />
-        <circle cx="16" cy="11" r="7" fill="#7C3AED" fill-opacity="0.15" />
-        <path d="M16 7V15M13 10L16 7L19 10" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg> -->
-      <img src="@/assets/images/empty-memory.png" alt="Scattered photos" class="w-full h-full object-cover" />
+    <div class="w-25 h-25 flex items-center justify-center">
+      <img src="@/assets/images/empty-memory.png" alt="Scattered photos" class="w-25 h-25 object-cover" />
     </div>
 
     <div class="text-center">
-      <p class="text-sm font-medium text-neutral-700">{{ label }}</p>
+      <p :class="['font-medium text-neutral-700', isMobile ? 'text-sm' : 'text-2xl']">{{ label }}</p>
     </div>
 
     <button type="button"
@@ -32,6 +25,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
+
+const isMobile = useMediaQuery('(max-width: 767px)')
 
 withDefaults(
   defineProps<{

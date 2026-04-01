@@ -4,11 +4,11 @@
       @mask-click="emit('mask-click')">
       <n-card :style="cardStyle" :bordered="false" :size="fullPage ? undefined : 'huge'"
         :class="{ 'full-page-card': fullPage }" role="dialog" aria-modal="true">
-        <template #header>
+        <template v-if="!headerless && hasHeader" #header>
           <slot name="header" />
         </template>
         <slot />
-        <template #footer>
+        <template v-if="hasFooter" #footer>
           <slot name="footer" />
         </template>
       </n-card>
@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue'
+import { computed, useAttrs, useSlots } from 'vue'
 import { NModal, NCard, NDrawer, NDrawerContent } from 'naive-ui'
 
 const props = withDefaults(
@@ -41,10 +41,16 @@ const props = withDefaults(
     bottomSheet?: boolean
     bottomSheetHeight?: number
     bottomSheetFooterClass?: string
+    /**
+     * When true, hides the `#header` region even if a `header` slot is provided.
+     * Useful for truly headerless modals.
+     */
+    headerless?: boolean
   }>(),
   {
     maxWidth: 600,
     bottomSheetHeight: 306,
+    headerless: false,
   },
 )
 
@@ -55,6 +61,13 @@ const emit = defineEmits<{
 }>()
 
 const attrs = useAttrs()
+const slots = useSlots()
+
+const headerless = computed(() => Boolean(props.headerless))
+
+const hasHeader = computed(() => Boolean(slots.header))
+const hasFooter = computed(() => Boolean(slots.footer))
+
 const localShow = computed({
   get: () => props.show ?? false,
   set: (value: boolean) => emit('update:show', value),

@@ -38,6 +38,8 @@ export interface StorageStoreInterface {
   selectedFolder: StorageFolderInterface | null
   folderMedia: AttachmentInterface[]
   folderMediaLoading: boolean
+  allMedia: AttachmentInterface[]
+  allMediaLoading: boolean
   folders: StorageFolderInterface[]
   foldersLoading: boolean
 }

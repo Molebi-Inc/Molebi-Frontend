@@ -1,7 +1,7 @@
 <template>
   <!-- Step 1: Content type selector -->
   <MlbModal v-if="step === 'type-select'" :show="show" :bottom-sheet="isMobile" :bottom-sheet-height="300"
-    @update:show="onClose">
+    class="rounded-3xl!" @update:show="onClose">
     <template #header>
       <h3 class="text-center text-lg font-semibold text-neutral-800">Select your memory type</h3>
     </template>
@@ -10,16 +10,16 @@
 
   <!-- Photo/Video flow -->
   <MlbModal v-else-if="step === 'photo-drop' || step === 'photo-preview'" :show="show" :bottom-sheet="isMobile"
-    :bottom-sheet-height="400" @update:show="onClose">
+    :bottom-sheet-height="400" class="rounded-3xl!" @update:show="onClose">
     <template #header>
-      <div class="flex items-center justify-between">
-        <button class="text-neutral-500 hover:text-neutral-800 transition-colors" @click="goBack">
+      <div :class="['flex items-center', !isMobile ? 'justify-center' : 'justify-between']">
+        <button v-if="isMobile" class="text-neutral-500 hover:text-neutral-800 transition-colors" @click="goBack">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
               stroke-linejoin="round" />
           </svg>
         </button>
-        <h3 class="text-sm font-semibold text-neutral-800">Add new memory</h3>
+        <h3 :class="[isMobile ? 'text-sm' : 'text-2xl', 'font-semibold text-neutral-800']">Add new memory</h3>
         <!-- <button class="text-neutral-400 hover:text-neutral-600 transition-colors" @click="onClose">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M3 3L15 15M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -38,7 +38,7 @@
         <input ref="fileInputRef" type="file" accept="image/*,video/*" multiple class="hidden" @change="onMoreFiles" />
       </div>
 
-      <button
+      <button v-if="!!selectedFiles.length"
         class="mt-auto px-8 py-3 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40"
         :disabled="selectedFiles.length === 0" @click="step = 'photo-meta'">
         Next
@@ -48,7 +48,23 @@
 
   <!-- Photo metadata (wide modal on desktop) -->
   <MlbModal v-else-if="step === 'photo-meta'" :show="show" :bottom-sheet="isMobile" :bottom-sheet-height="540"
-    style="--modal-max-width: 860px" @update:show="onClose">
+    style="--modal-max-width: 860px" class="rounded-3xl!" @update:show="onClose">
+    <template #header>
+      <div class="flex items-center justify-between md:hidden">
+        <button class="text-neutral-500 hover:text-neutral-800" @click="step = 'photo-preview'">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </button>
+        <h3 class="text-sm font-semibold text-neutral-800">Add new memory</h3>
+        <button class="text-neutral-400" @click="onClose">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M3 3L15 15M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+    </template>
     <div class="flex flex-col md:flex-row gap-0 md:gap-6 md:min-h-[440px]">
       <!-- Left: photo carousel -->
       <div class="hidden md:flex flex-col flex-1 bg-neutral-900 rounded-xl overflow-hidden relative">
@@ -91,7 +107,7 @@
 
       <!-- Right: metadata form -->
       <div class="flex-1 flex flex-col gap-4 md:py-1">
-        <div class="flex items-center justify-between md:hidden">
+        <!-- <div class="flex items-center justify-between md:hidden">
           <button class="text-neutral-500 hover:text-neutral-800" @click="step = 'photo-preview'">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
@@ -104,7 +120,7 @@
               <path d="M3 3L15 15M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             </svg>
           </button>
-        </div>
+        </div> -->
         <MemoryMetadataForm v-model="metadata" />
         <button
           class="w-full py-3 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40 mt-auto"
@@ -117,7 +133,7 @@
 
   <!-- Audio flow -->
   <MlbModal v-else-if="step === 'audio' || step === 'audio-meta'" :show="show" :bottom-sheet="isMobile"
-    :bottom-sheet-height="step === 'audio-meta' ? 560 : 460"
+    :bottom-sheet-height="step === 'audio-meta' ? 560 : 460" class="rounded-3xl!"
     :style="step === 'audio-meta' ? '--modal-max-width: 860px' : ''" @update:show="onClose">
     <div class="flex flex-col md:flex-row gap-0 md:gap-6" :class="step === 'audio-meta' ? 'md:min-h-[400px]' : ''">
       <!-- Audio recorder / preview left panel -->
@@ -190,7 +206,7 @@
 
   <!-- Success -->
   <MlbModal v-else-if="step === 'success'" :show="show" :bottom-sheet="isMobile" :bottom-sheet-height="300"
-    @update:show="onClose">
+    class="rounded-3xl!" @update:show="onClose">
     <UploadSuccessState :title="successType === 'audio' ? 'Audio Uploaded' : 'File Uploaded'" :description="successType === 'audio'
       ? 'You have successfully uploaded a new audio file to memory.'
       : 'You have successfully uploaded a new file to memory.'" action-label="Close" action-variant="outline"
