@@ -28,6 +28,8 @@ export interface AttachmentInterface {
   description?: string | null
   // location?: string | null
   event_date?: string | null
+  likes_count?: number
+  is_liked?: boolean
   metadata?: {
     location?: string | null
   }

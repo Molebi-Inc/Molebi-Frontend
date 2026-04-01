@@ -49,7 +49,7 @@
               </button>
             </div>
             <!-- Add memories button -->
-            <button v-if="selectedAlbumId !== null && albumMedia.length > 0"
+            <button v-if="displayedMedia.length > 0"
               class="flex items-center gap-2 px-5 py-2.5 bg-primary-700 text-white rounded-full text-sm font-semibold hover:bg-primary-800 transition-colors whitespace-nowrap"
               @click="openAddMemories()">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -82,7 +82,8 @@
             <!-- Empty state -->
             <MemoriesEmptyState v-else-if="displayedMedia.length === 0 && selectedAlbumId !== null"
               :album-name="selectedAlbum?.name" @add="openAddMemories()" />
-            <MemoriesEmptyState v-else-if="displayedMedia.length === 0" :album-name="selectedAlbum?.name" />
+            <MemoriesEmptyState v-else-if="displayedMedia.length === 0" :album-name="selectedAlbum?.name"
+              @add="openAddMemories()" />
 
             <!-- Media grid -->
             <div v-else class="p-5">
@@ -129,12 +130,15 @@
         <MemoriesEmptyState v-else-if="mobileDisplayedMedia.length === 0 && mobileAlbumId !== null"
           :album-name="mobileSelectedAlbum?.name" class="flex-1" @add="openAddMemories()" />
         <MemoriesEmptyState v-else-if="mobileDisplayedMedia.length === 0" :album-name="mobileSelectedAlbum?.name"
-          class="flex-1" />
+          class="flex-1" @add="openAddMemories()" />
 
         <!-- Grid -->
         <div v-else class="px-3 py-3 pb-24">
           <MemoriesMediaGrid :items="mobileDisplayedMedia" @item-click="openViewer(mobileDisplayedMedia, $event)">
             <template v-if="mobileAlbumId !== null" #fab>
+              <MemoriesAddFab @add-media="openAddMemories('photo-video')" @add-audio="openAddMemories('audio')" />
+            </template>
+            <template v-else #fab>
               <MemoriesAddFab @add-media="openAddMemories('photo-video')" @add-audio="openAddMemories('audio')" />
             </template>
           </MemoriesMediaGrid>
@@ -180,10 +184,11 @@
       @add-media="onAlbumCreatedAddMedia" />
 
     <!-- ── Media viewer ──────────────────────────────────────────────────── -->
-    <MediaViewerModal :show="showViewer" :items="viewerItems" :initial-index="viewerIndex"
+    <!-- <MediaViewerModal :show="showViewer" :items="viewerItems" :initial-index="viewerIndex"
       :album-name="selectedAlbum?.name || mobileSelectedAlbum?.name"
       :description="selectedAlbum?.description || mobileSelectedAlbum?.description"
-      @update:show="showViewer = $event" />
+      @update:show="showViewer = $event" /> -->
+    <MediaViewerModal2 :show="showViewer" :media="viewerItems[viewerIndex] ?? null" @update:show="showViewer = $event" />
 
     <!-- ── Add memory modal ───────────────────────────────────────────────── -->
     <AddMemoryModal :show="showAddMemory" :initial-type="addMemoryInitialType" @update:show="onAddMemoryModalShowChange"
@@ -199,7 +204,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { useStorage } from '@/composables/useStorage'
 import { useStorageStore } from '@/stores/storage.store'
 import type { StorageFolderInterface } from '@/types/storage.types'
-import { useUpdateFolderMutation, useDeleteFolderMutation } from '@/services/storage.services'
+import {
+  useAddFilesWithoutFolderMutation,
+  useUpdateFolderMutation,
+  useDeleteFolderMutation,
+} from '@/services/storage.services'
 import MemoriesSidebar from '@/components/storage/v2/MemoriesSidebar.vue'
 import MemoriesEmptyState from '@/components/storage/v2/MemoriesEmptyState.vue'
 import MemoriesMediaGrid from '@/components/storage/v2/MemoriesMediaGrid.vue'
@@ -207,7 +216,7 @@ import MemoriesAlbumRow from '@/components/storage/v2/MemoriesAlbumRow.vue'
 import MemoriesAddFab from '@/components/storage/v2/MemoriesAddFab.vue'
 import CreateAlbumModal from '@/components/storage/v2/CreateAlbumModal.vue'
 import AddMemoryModal from '@/components/storage/v2/AddMemoryModal.vue'
-import MediaViewerModal from '@/components/shared/media/MediaViewerModal.vue'
+// import MediaViewerModal from '@/components/shared/media/MediaViewerModal.vue'
 import AlbumActionsMenu from '@/components/storage/v2/AlbumActionsMenu.vue'
 import EditAlbumModal from '@/components/storage/v2/EditAlbumModal.vue'
 import DeleteAlbumModal from '@/components/storage/v2/DeleteAlbumModal.vue'
@@ -215,6 +224,7 @@ import ShareAlbumModal from '@/components/storage/v2/ShareAlbumModal.vue'
 import TagFamilyModal from '@/components/storage/v2/TagFamilyModal.vue'
 import type { AttachmentInterface } from '@/types/vault.types'
 import { useCreateMemoryMutation } from '@/services/memory.service'
+import MediaViewerModal2 from '@/components/shared/media/MediaViewerModal2.vue'
 
 const message = useMessage()
 const $route = useRoute()
@@ -225,11 +235,13 @@ const {
   fetchStorageFolders,
   handleCreateFolder,
   fetchFolderMedia,
+  fetchAllMedia,
   loading: albumCreating,
 } = useStorage()
 const updateFolderMutation = useUpdateFolderMutation()
 const deleteFolderMutation = useDeleteFolderMutation()
 const { mutateAsync: createMemory } = useCreateMemoryMutation()
+const { mutateAsync: createMemoryWithoutFolder } = useAddFilesWithoutFolderMutation()
 
 const createAlbumModalRef = ref<InstanceType<typeof CreateAlbumModal> | null>(null)
 
@@ -284,13 +296,13 @@ const mobileSelectedAlbum = computed<StorageFolderInterface | null>(() => {
 // The album currently in context for actions (desktop or mobile)
 const activeAlbum = computed(() => selectedAlbum.value ?? mobileSelectedAlbum.value)
 
-// Desktop: all media (flattened from all folders) or album media
-const allMedia = computed(() => folders.value.flatMap((f) => f.media ?? []))
+// Desktop/mobile: all media from the "all-media" endpoint or album media
+const allMedia = computed(() => storageStore.allMedia)
 
 const albumMedia = computed(() => storageStore.folderMedia)
 
 const mediaLoading = computed(
-  () => storageStore.foldersLoading || storageStore.folderMediaLoading,
+  () => storageStore.foldersLoading || storageStore.folderMediaLoading || storageStore.allMediaLoading,
 )
 
 const displayedMedia = computed(() => {
@@ -306,7 +318,9 @@ const displayedMedia = computed(() => {
 
 // Mobile all-memories tab
 const mobileAlbumMedia = computed(() => storageStore.folderMedia)
-const mobileMediaLoading = computed(() => storageStore.folderMediaLoading)
+const mobileMediaLoading = computed(
+  () => storageStore.folderMediaLoading || storageStore.allMediaLoading,
+)
 
 const mobileDisplayedMedia = computed(() => {
   if (mobileAlbumId.value !== null) return mobileAlbumMedia.value
@@ -370,7 +384,7 @@ const openViewer = (items: AttachmentInterface[], item: AttachmentInterface) => 
 }
 
 const openAddMemories = (type: 'photo-video' | 'audio' | null = null) => {
-  if (!activeAlbum.value) return
+  // if (!activeAlbum.value) return
   addMemoryInitialType.value = type
   showAddMemory.value = true
 }
@@ -402,19 +416,26 @@ const onAlbumCreatedAddMedia = () => {
 }
 
 const handleMemorySubmit = async (formData: FormData) => {
-  if (!storageStore.selectedFolder) {
-    message.warning('Please select an album first')
-    return
-  }
   try {
-    await createMemory({ id: storageStore.selectedFolder.id, formData })
+    const viewingFolder = selectedAlbumId.value !== null || mobileAlbumId.value !== null
+    if (viewingFolder) {
+      const folderId = activeAlbum.value?.id
+      if (folderId === undefined) {
+        message.error('Failed to upload memory: missing album id')
+        return
+      }
+
+      await createMemory({ id: folderId, formData })
+      await fetchFolderMedia()
+      return
+    }
+
+    await createMemoryWithoutFolder(formData)
+    await fetchAllMedia()
   } catch {
     message.error('Failed to upload memory')
     return
   }
-
-  await fetchFolderMedia()
-  if (selectedAlbumId.value !== null) await fetchFolderMedia()
 }
 
 const handleEditAlbum = async (data: { name: string }) => {
@@ -455,6 +476,8 @@ watch([selectedAlbumId, mobileAlbumId], async ([id, mid]) => {
     storageStore.setStoreProp('selectedFolder', folders.value.find((f) => f.id === id) ?? null)
     await fetchStorageFolder()
     await fetchFolderMedia()
+  } else {
+    await fetchAllMedia()
   }
 })
 
@@ -468,6 +491,9 @@ watch(routeFolderId, () => {
 onMounted(async () => {
   await fetchStorageFolders()
   syncFromRoute()
+  if (selectedAlbumId.value === null && mobileAlbumId.value === null) {
+    await fetchAllMedia()
+  }
   didInit = true
 })
 </script>

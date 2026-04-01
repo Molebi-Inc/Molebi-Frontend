@@ -7,7 +7,7 @@
       rows="4" class="w-full borderless" />
 
     <!-- Location -->
-    <div class="flex items-center gap-3 py-3 border-b border-neutral-100 rounded-lg px-1">
+    <div class="flex items-center gap-3 py-3 px-1">
       <div class="flex items-center gap-3 text-neutral-500 min-w-[18px]">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -103,7 +103,6 @@ const toggleMember = (id: number | undefined) => {
 
 :deep(.family-picker-bottom-only input) {
   border: 0 !important;
-  border-bottom: 1px solid rgb(229 229 229) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   padding-left: 0 !important;

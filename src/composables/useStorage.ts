@@ -7,6 +7,7 @@ import {
   useGetStorageFoldersQuery,
   useAddFilesMutation,
   useGetFolderMediaQuery,
+  useGetAllMediaQuery,
   useGetStorageFolderQuery,
   useDeleteStorageMediaMutation,
 } from '@/services/storage.services'
@@ -55,6 +56,16 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
         ['App.StorageFolderView', 'App.StorageFolderDetailsView'].includes($route.name as string),
     ),
     routeFolderId,
+  )
+
+  const getAllMediaQuery = useGetAllMediaQuery(
+    computed(
+      () =>
+        queryEnabled &&
+        !routeFolderId.value &&
+        $route.name === 'App.StorageFolderView',
+    ),
+    10,
   )
 
   const { refetch: refetchStorageFolders } = useGetStorageFoldersQuery(queryEnabled)
@@ -170,6 +181,17 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     return response
   }
 
+  const fetchAllMedia = async () => {
+    storageStore.setStoreProp('allMediaLoading', true)
+    try {
+      const response = await getAllMediaQuery.refetch()
+      storageStore.setStoreProp('allMedia', response.data?.data || [])
+      return response
+    } finally {
+      storageStore.setStoreProp('allMediaLoading', false)
+    }
+  }
+
   const handleDeleteMedia = async (mediaIds: number[]) => {
     try {
       for (const mediaId of mediaIds) {
@@ -193,6 +215,7 @@ export const useStorage = (queryEnabled: MaybeRefOrGetter<boolean> = true) => {
     handleCreateFolder,
     fetchStorageFolders,
     fetchFolderMedia,
+    fetchAllMedia,
     handleCreateFile,
     handleDeleteMedia,
   }

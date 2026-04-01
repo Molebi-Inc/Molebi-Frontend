@@ -225,3 +225,40 @@ export const useGenerateShareableLinkMutation = () => {
     },
   })
 }
+
+export const useAddFilesWithoutFolderMutation = () => {
+  return useMutation<ApiResponse, AxiosError<ValidationErrorResponse>, FormData>({
+    mutationFn: async (formData: FormData) => {
+      const response = await axiosInstance.post<ApiResponse>(`/api/user/storage/media`, formData, {
+        headers: {
+          Authorization: `Bearer ${authConfig.getToken()}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      return response.data
+    },
+  })
+}
+
+export const useGetAllMediaQuery = (
+  enabled: MaybeRefOrGetter<boolean> = true,
+  perPage: number = 10,
+) => {
+  return useQuery<
+    ApiResponse<AttachmentInterface[]>,
+    AxiosError<ValidationErrorResponse>
+  >({
+    queryKey: ['all-media', perPage],
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<AttachmentInterface[]>>(
+        '/api/user/storage/folders/all-media',
+        {
+          params: { per_page: perPage },
+          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+        },
+      )
+      return response.data
+    },
+    enabled: toValue(enabled),
+  })
+}
