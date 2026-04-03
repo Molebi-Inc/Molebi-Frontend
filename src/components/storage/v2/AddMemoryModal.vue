@@ -65,7 +65,7 @@
         </button>
       </div>
     </template>
-    <div class="flex flex-col md:flex-row gap-0 md:gap-6 md:min-h-[440px]">
+    <div class="flex flex-col md:flex-row gap-0 md:gap-6 md:h-[440px]">
       <!-- Left: photo carousel -->
       <div class="hidden md:flex flex-col flex-1 bg-neutral-900 rounded-xl overflow-hidden relative">
         <img v-if="currentPreview" :src="currentPreview" class="w-full h-full object-cover" alt="preview" />
@@ -106,24 +106,12 @@
       </div>
 
       <!-- Right: metadata form -->
-      <div class="flex-1 flex flex-col gap-4 md:py-1">
-        <!-- <div class="flex items-center justify-between md:hidden">
-          <button class="text-neutral-500 hover:text-neutral-800" @click="step = 'photo-preview'">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-          </button>
-          <h3 class="text-sm font-semibold text-neutral-800">Add new memory</h3>
-          <button class="text-neutral-400" @click="onClose">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M3 3L15 15M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-            </svg>
-          </button>
-        </div> -->
-        <MemoryMetadataForm v-model="metadata" />
+      <div class="flex-1 flex flex-col md:overflow-hidden md:py-1">
+        <div class="flex-1 overflow-y-auto">
+          <MemoryMetadataForm v-model="metadata" />
+        </div>
         <button
-          class="w-full py-3 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40 mt-auto"
+          class="w-full py-3 mt-4 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40"
           :disabled="!metadata.title.trim() || submitting" @click="submitMemory">
           {{ submitting ? 'Saving…' : 'Add Memory' }}
         </button>
@@ -135,23 +123,26 @@
   <MlbModal v-else-if="step === 'audio' || step === 'audio-meta'" :show="show" :bottom-sheet="isMobile"
     :bottom-sheet-height="step === 'audio-meta' ? 560 : 460" class="rounded-3xl!"
     :style="step === 'audio-meta' ? '--modal-max-width: 860px' : ''" @update:show="onClose">
-    <div class="flex flex-col md:flex-row gap-0 md:gap-6" :class="step === 'audio-meta' ? 'md:min-h-[400px]' : ''">
+    <template #header>
+      <div class="flex items-center justify-between">
+        <button class="text-neutral-500 hover:text-neutral-800 transition-colors" @click="goBack">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </button>
+        <h3 class="text-sm md:text-2xl font-semibold text-neutral-800">Add new memory</h3>
+        <button class="text-neutral-400 hover:text-neutral-600 transition-colors md:hidden" @click="onClose">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M3 3L15 15M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </button>
+        <div class="hidden md:block w-5" />
+      </div>
+    </template>
+    <div class="flex flex-col md:flex-row gap-0 md:gap-6" :class="step === 'audio-meta' ? 'md:h-[440px]' : ''">
       <!-- Audio recorder / preview left panel -->
       <div :class="step === 'audio-meta' ? 'hidden md:flex flex-col flex-1' : 'flex-1'">
-        <div class="flex items-center justify-between mb-4">
-          <button class="text-neutral-500 hover:text-neutral-800 transition-colors" @click="goBack">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-          </button>
-          <h3 class="text-sm font-semibold text-neutral-800">Add new memory</h3>
-          <button class="text-neutral-400 hover:text-neutral-600 transition-colors" @click="onClose">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M3 3L15 15M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-            </svg>
-          </button>
-        </div>
 
         <div v-if="step === 'audio-meta'"
           class="flex-1 flex flex-col items-center justify-center bg-neutral-800 rounded-2xl p-6">
@@ -173,30 +164,17 @@
       </div>
 
       <!-- Metadata form (right on desktop, full on mobile) -->
-      <div v-if="step === 'audio-meta'" class="flex-1 flex flex-col gap-4 md:py-1">
-        <div class="flex items-center justify-between md:hidden mb-1">
-          <button class="text-neutral-500" @click="step = 'audio'">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-          </button>
-          <h3 class="text-sm font-semibold text-neutral-800">Add new memory</h3>
-          <button class="text-neutral-400" @click="onClose">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M3 3L15 15M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-            </svg>
-          </button>
-        </div>
-
+      <div v-if="step === 'audio-meta'" class="flex-1 flex flex-col md:overflow-hidden md:py-1">
         <!-- Mobile: show audio player on metadata screen too -->
         <div v-if="recordedAudio" class="md:hidden mb-2">
           <AudioPreviewPlayer :audio-url="recordedAudio.url" />
         </div>
 
-        <MemoryMetadataForm v-model="metadata" />
+        <div class="flex-1 overflow-y-auto">
+          <MemoryMetadataForm v-model="metadata" />
+        </div>
         <button
-          class="w-full py-3 rounded-4xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40 mt-auto"
+          class="w-full py-3 mt-4 rounded-4xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40"
           :disabled="!metadata.title.trim() || submitting" @click="submitMemory">
           {{ submitting ? 'Saving…' : 'Add Memory' }}
         </button>

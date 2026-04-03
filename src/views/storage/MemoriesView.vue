@@ -188,7 +188,8 @@
       :album-name="selectedAlbum?.name || mobileSelectedAlbum?.name"
       :description="selectedAlbum?.description || mobileSelectedAlbum?.description"
       @update:show="showViewer = $event" /> -->
-    <MediaViewerModal2 :show="showViewer" :media="viewerItems[viewerIndex] ?? null" @update:show="showViewer = $event" />
+    <MediaViewerModal2 :show="showViewer" :media="viewerItems[viewerIndex] ?? null"
+      @update:show="showViewer = $event" />
 
     <!-- ── Add memory modal ───────────────────────────────────────────────── -->
     <AddMemoryModal :show="showAddMemory" :initial-type="addMemoryInitialType" @update:show="onAddMemoryModalShowChange"
@@ -424,9 +425,18 @@ const handleMemorySubmit = async (formData: FormData) => {
         message.error('Failed to upload memory: missing album id')
         return
       }
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'media') {
+          value.forEach((file: File) => {
+            formData.append(`files[]`, file)
+          })
+        } else {
+          formData.append(key, value)
+        }
+      })
 
       await createMemory({ id: folderId, formData })
-      await fetchFolderMedia()
+      await Promise.all([fetchFolderMedia(), fetchStorageFolders()])
       return
     }
 

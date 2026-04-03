@@ -145,12 +145,16 @@ export const useGetFolderMediaQuery = (
       const response = await axiosInstance.get<ApiResponse<AttachmentInterface[]>>(
         `/api/user/storage/folders/${folderId}/media`,
         {
-          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+            'Cache-Control': 'no-cache',
+          },
         },
       )
       return response.data
     },
     enabled,
+    staleTime: 0,
   })
 }
 
@@ -244,21 +248,22 @@ export const useGetAllMediaQuery = (
   enabled: MaybeRefOrGetter<boolean> = true,
   perPage: number = 10,
 ) => {
-  return useQuery<
-    ApiResponse<AttachmentInterface[]>,
-    AxiosError<ValidationErrorResponse>
-  >({
+  return useQuery<ApiResponse<AttachmentInterface[]>, AxiosError<ValidationErrorResponse>>({
     queryKey: ['all-media', perPage],
     queryFn: async () => {
       const response = await axiosInstance.get<ApiResponse<AttachmentInterface[]>>(
         '/api/user/storage/folders/all-media',
         {
           params: { per_page: perPage },
-          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+            'Cache-Control': 'no-cache',
+          },
         },
       )
       return response.data
     },
     enabled: toValue(enabled),
+    staleTime: 0,
   })
 }

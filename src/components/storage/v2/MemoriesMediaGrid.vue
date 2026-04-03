@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import type { AttachmentInterface } from '@/types/vault.types'
-import emptyMemory from '@/assets/images/empty-memory.png'
+import emptyMemory from '@/assets/images/audio-thumbnail.png'
 
 defineProps<{ items: AttachmentInterface[] }>()
 defineEmits<{ (e: 'item-click', item: AttachmentInterface): void }>()
