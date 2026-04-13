@@ -664,10 +664,16 @@ const handleAddMember = () => {
 
 const refreshTree = async () => {
   try {
-    const res = await familyTreesQuery.refetch()
-    if (res.data?.data) {
-      familyTreeData.value = res.data.data
-      treePayload.value = buildPayload(res.data.data)
+    const [treeRes, insightsRes] = await Promise.all([
+      familyTreesQuery.refetch(),
+      familyInsightsQuery.refetch(),
+    ])
+    if (treeRes.data?.data) {
+      familyTreeData.value = treeRes.data.data
+      treePayload.value = buildPayload(treeRes.data.data)
+    }
+    if (insightsRes.data?.data) {
+      familyInsights.value = insightsRes.data.data
     }
   } catch (error) {
     handleApiError(error, message)

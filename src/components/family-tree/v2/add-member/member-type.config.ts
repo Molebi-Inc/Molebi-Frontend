@@ -236,7 +236,7 @@ export const defaultFormData = (): V2MemberFormData => ({
   date_of_birth: null,
   is_deceased: false,
   email: '',
-  send_invite: true,
+  send_invite: false,
   relation_type: null,
   gender: 'male',
   related_through: null,

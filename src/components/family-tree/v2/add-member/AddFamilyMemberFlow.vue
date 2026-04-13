@@ -43,6 +43,7 @@ import { useMediaQuery } from '@vueuse/core'
 import { NDrawer, NDrawerContent, useMessage } from 'naive-ui'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import { useRegistrationLinkMutation } from '@/services/authentication.services'
+import { useGetFamilyInsightsQuery } from '@/services/family-tree.service'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useShareComposable } from '@/composables/useShare'
 import type { MemberTypeConfig } from './member-type.config'
@@ -75,6 +76,7 @@ const emit = defineEmits<{
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 const message = useMessage()
 const registrationLinkMutation = useRegistrationLinkMutation()
+const familyInsightsQuery = useGetFamilyInsightsQuery({ enabled: false })
 const { shareLink } = useShareComposable()
 
 const step = ref<Step>('select')
@@ -118,6 +120,9 @@ const handleSuccess = (member: CreatedMember) => {
   createdMember.value = member
   step.value = 'success'
   emit('member-added')
+  void familyInsightsQuery.refetch().catch((error) => {
+    handleApiError(error, message)
+  })
 }
 
 const handleAddAnother = () => {

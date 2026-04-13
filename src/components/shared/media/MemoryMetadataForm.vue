@@ -15,7 +15,7 @@
             fill="currentColor" />
         </svg>
       </div>
-      <n-select class="location-select" v-model:value="form.metadata.location" :options="locationOptions"
+      <n-select class="location-select" v-model:value="form.metadata.location" :options="locationOptions" filterable
         placeholder="Select a location in the world" clearable />
     </div>
 
@@ -30,11 +30,13 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { NInput, NDatePicker, NSelect } from 'naive-ui'
 import FamilyMemberPicker from '@/components/shared/media/FamilyMemberPicker.vue'
+import { useGetStatesQuery } from '@/services/general.service'
 import type { CreateMemoryValues } from '@/types/memory.types'
 
-const locationOptions = [
+const baseLocationOptions = [
   { label: 'New York, United States', value: 'New York, United States' },
   { label: 'Los Angeles, United States', value: 'Los Angeles, United States' },
   { label: 'Chicago, United States', value: 'Chicago, United States' },
@@ -67,6 +69,19 @@ const locationOptions = [
   { label: 'Sydney, Australia', value: 'Sydney, Australia' },
   { label: 'Melbourne, Australia', value: 'Melbourne, Australia' },
 ]
+
+const statesQuery = useGetStatesQuery()
+
+const locationOptions = computed(() => {
+  const stateOptions = (statesQuery.data.value?.data ?? []).map((state) => {
+    const label = `${state.name}, Nigeria`
+    return { label, value: label }
+  })
+
+  const merged = [...baseLocationOptions, ...stateOptions]
+  // Deduplicate by value while preserving order.
+  return merged.filter((opt, idx, arr) => arr.findIndex((item) => item.value === opt.value) === idx)
+})
 
 
 const form = defineModel<CreateMemoryValues>('modelValue', {

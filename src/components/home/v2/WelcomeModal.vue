@@ -1,7 +1,18 @@
 <template>
   <MlbModal class="rounded-3xl!" :show="show" :full-page="!isLargeScreen" :max-width="800"
     @update:show="emit('update:show', $event)" @mask-click="close">
-    <div class="flex flex-col items-center text-center px-2 pt-2 pb-4">
+    <div :class="[
+      'relative flex flex-col items-center text-center px-2 pt-2 pb-4',
+      isLargeScreen ? '' : 'w-full min-h-full bg-white overflow-y-auto',
+    ]">
+      <button
+        class="absolute top-2 right-2 w-9 h-9 rounded-full text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100 transition-colors flex items-center justify-center"
+        aria-label="Close welcome modal" @click="close">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+          <path
+            d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+        </svg>
+      </button>
       <!-- Verified illustration -->
       <div class="relative mb-6 mt-2">
         <img src="@/assets/images/blue-success.png" alt="Verified" class="w-30 h-30 object-contain" />

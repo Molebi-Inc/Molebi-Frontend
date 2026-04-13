@@ -15,7 +15,9 @@
 
             <!-- Right: main content stack -->
             <div class="flex-1 min-w-0 space-y-5">
-                <HeroBanner @try-now="goToVault" />
+                <HeroBanner @try-now="$router.push({ name: 'App.StorageFolderView' })"
+                    @time-capsule="$router.push({ name: 'App.TimeCapsules.View' })"
+                    @explore-culture="$router.push({ name: 'App.HeritageView' })" />
                 <FamilyTreeChecklist :user-name="userName" @add-relative="goToFamilyTree" />
                 <FamilyUpdates :items="announcements" :loading="loadingAnnouncements" @create="handleCreateAnnouncement"
                     @view-all="handleCreateAnnouncement" @edit-item="handleEditAnnouncement"
@@ -28,10 +30,12 @@
             <p class="text-sm text-neutral-600 px-4">
                 Welcome back 👋 <strong class="text-neutral-900">{{ userName }}</strong>
             </p>
-            <HeroBanner @try-now="goToVault" />
+            <HeroBanner @try-now="$router.push({ name: 'App.StorageFolderView' })"
+                @time-capsule="$router.push({ name: 'App.TimeCapsules.View' })"
+                @explore-culture="$router.push({ name: 'App.HeritageView' })" />
             <FamilyTreeChecklist :user-name="userName" @add-relative="goToFamilyTree" />
             <FamilyTreeActions @add-relative="goToFamilyTree" @add-memory="goToStorage"
-                @explore-culture="$router.push({ name: 'App.Heritage' })" />
+                @explore-culture="$router.push({ name: 'App.HeritageView' })" />
             <FamilyUpdates :items="announcements" :loading="loadingAnnouncements" @create="handleCreateAnnouncement"
                 @view-all="handleCreateAnnouncement" @edit-item="handleEditAnnouncement"
                 @delete-item="handleDeleteAnnouncement" />

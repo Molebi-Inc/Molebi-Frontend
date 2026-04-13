@@ -6,7 +6,7 @@ import heroBannerCulture from '@/assets/images/hero_banner_culture.png'
 import frameBgGreen from '@/assets/backgrounds/frame-bg-green.png'
 import frameBgWhite from '@/assets/backgrounds/frame-bg-white.png'
 
-type BannerEvent = 'try-now' | 'add-relative' | 'explore-culture'
+type BannerEvent = 'try-now' | 'time-capsule' | 'explore-culture'
 
 interface Banner {
   title: string
@@ -36,7 +36,7 @@ const banners: Banner[] = [
     cta: "Try Time Capsule Now",
     textColor: "primary-900",
     image: { src: heroBannerTimeCapsule, alt: "Time capsule" },
-    event: "add-relative",
+    event: "time-capsule",
   },
   {
     title: "Know more about your traditions and culture",

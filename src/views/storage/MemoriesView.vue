@@ -192,8 +192,8 @@
       @update:show="showViewer = $event" />
 
     <!-- ── Add memory modal ───────────────────────────────────────────────── -->
-    <AddMemoryModal :show="showAddMemory" :initial-type="addMemoryInitialType" @update:show="onAddMemoryModalShowChange"
-      @submit="handleMemorySubmit" />
+    <AddMemoryModal :show="showAddMemory" :initial-type="addMemoryInitialType"
+      :submit-handler="handleMemorySubmit" @update:show="onAddMemoryModalShowChange" />
   </div>
 </template>
 
