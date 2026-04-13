@@ -4,7 +4,7 @@ export const vaultRoutes = [
   {
     path: '/vaults',
     name: 'App.VaultLayout',
-    component: () => import('@/layouts/AppLayout.vue'),
+    component: () => import('@/layouts/AppLayoutV2.vue'),
     meta: {
       layout: 'app',
       requiresAuth: true,

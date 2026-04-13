@@ -20,6 +20,7 @@ export const familyMemberValidation = () => {
     is_former: false,
     is_deceased: false,
     date_of_birth: null,
+    relation_name: undefined,
   })
 
   const { relationshipsRequiringRelatedThrough, relationshipsRequiringParentId, getDefaultGender } =
