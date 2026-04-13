@@ -209,13 +209,14 @@ import type { CreateMemoryValues } from '@/types/memory.types'
 const props = withDefaults(defineProps<{
   show: boolean
   initialType?: 'photo-video' | 'audio' | null
+  submitHandler?: (data: FormData) => Promise<void> | void
 }>(), {
   initialType: null,
+  submitHandler: undefined,
 })
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
-  (e: 'submit', data: FormData): Promise<void> | void
 }>()
 
 const isMobile = useMediaQuery('(max-width: 767px)')
@@ -306,16 +307,13 @@ const submitMemory = async () => {
     metadata.value.family_member_ids.forEach((id) => formData.append('family_member_ids[]', String(id)))
     formData.append('metadata[location]', metadata.value.metadata.location)
     files.forEach((file) => formData.append('files[]', file))
-
-    await emit('submit', formData)
-  } catch {
-    // Intentionally ignore errors so the success modal still shows.
+    if (!props.submitHandler) return
+    await props.submitHandler(formData)
+    successType.value = isAudio ? 'audio' : 'photo'
+    step.value = 'success'
   } finally {
     submitting.value = false
   }
-
-  successType.value = isAudio ? 'audio' : 'photo'
-  step.value = 'success'
 }
 
 const onClose = () => {

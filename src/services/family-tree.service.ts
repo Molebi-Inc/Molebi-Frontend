@@ -28,15 +28,17 @@ export const useAddFamilyMemberMutation = () => {
   return useMutation<
     ApiResponse<FamilyMemberFormValues>,
     AxiosError<ValidationErrorResponse>,
-    FamilyMemberFormValues
+    FamilyMemberFormValues | FormData
   >({
-    mutationFn: async (data: FamilyMemberFormValues) => {
+    mutationFn: async (data: FamilyMemberFormValues | FormData) => {
+      const isMultipart = data instanceof FormData
       const response = await axiosInstance.post<ApiResponse<FamilyMemberFormValues>>(
         '/api/user/family-members',
         data,
         {
           headers: {
             Authorization: `Bearer ${authConfig.getToken()}`,
+            ...(isMultipart ? { 'Content-Type': 'multipart/form-data' } : {}),
           },
         },
       )
@@ -267,9 +269,10 @@ export const useDeleteTimelineMutation = (familyMemberId: MaybeRef<string | numb
   })
 }
 
-export const useGetFamilyInsightsQuery = () => {
+export const useGetFamilyInsightsQuery = (options?: { enabled?: boolean }) => {
   return useQuery<ApiResponse<FamilyInsightInterface>, AxiosError<ValidationErrorResponse>>({
     queryKey: ['family-insights'],
+    enabled: options?.enabled ?? true,
     queryFn: async () => {
       const response = await axiosInstance.get<ApiResponse<FamilyInsightInterface>>(
         '/api/user/family-trees/insights',

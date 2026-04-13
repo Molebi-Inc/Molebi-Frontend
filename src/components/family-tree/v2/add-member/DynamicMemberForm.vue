@@ -132,8 +132,11 @@
       <!-- Invite checkbox -->
       <label class="flex items-center gap-3 cursor-pointer">
         <span class="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 transition-colors"
-          :class="form.send_invite ? 'bg-primary-600 border-primary-600' : 'border-neutral-300'"
-          @click="form.send_invite = !form.send_invite">
+          :class="[
+            form.send_invite ? 'bg-primary-600 border-primary-600' : 'border-neutral-300',
+            canToggleInvite ? '' : 'opacity-50 cursor-not-allowed',
+          ]"
+          @click="toggleInvite">
           <svg v-if="form.send_invite" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white"
             class="w-3 h-3">
             <path fill-rule="evenodd"
@@ -141,7 +144,9 @@
               clip-rule="evenodd" />
           </svg>
         </span>
-        <span class="text-sm text-neutral-700">Invite to join family tree</span>
+        <span class="text-sm" :class="canToggleInvite ? 'text-neutral-700' : 'text-neutral-400'">
+          Invite to join family tree
+        </span>
       </label>
     </div>
 
@@ -256,6 +261,27 @@ const handlePhotoChange = (event: Event) => {
 }
 
 const isFormValid = computed(() => Boolean(form.value.first_name.trim()))
+const canToggleInvite = computed(() => Boolean(form.value.email?.trim()))
+
+const getUploadFile = (value: unknown): File | null => {
+  if (value instanceof File) return value
+  if (value instanceof Blob) return new File([value], 'profile-picture')
+  return null
+}
+
+const toggleInvite = () => {
+  if (!canToggleInvite.value) return
+  form.value.send_invite = !form.value.send_invite
+}
+
+watch(
+  () => form.value.email,
+  (email) => {
+    if (!email?.trim() && form.value.send_invite) {
+      form.value.send_invite = false
+    }
+  },
+)
 
 /** Map V2MemberFormData → FamilyMemberFormValues for the API */
 const buildApiPayload = (): FamilyMemberFormValues => {
@@ -327,19 +353,23 @@ const handleSubmit = async () => {
 
   try {
     const payload = buildApiPayload()
+    const uploadFile = getUploadFile(payload.profile_picture)
 
-    // Use FormData when there's a photo
+    // Use FormData only when we have an actual binary file.
     let apiData: FamilyMemberFormValues | FormData
-    if (payload.profile_picture) {
+    if (uploadFile) {
       const fd = new FormData()
       Object.entries(payload).forEach(([k, v]) => {
         if (v !== null && v !== undefined) {
-          fd.append(k, v instanceof File ? v : String(v))
+          if (k === 'profile_picture') return
+          fd.append(k, String(v))
         }
       })
-      apiData = fd as unknown as FamilyMemberFormValues
+      fd.append('profile_picture', uploadFile)
+      apiData = fd
     } else {
-      const { profile_picture: _photo, ...rest } = payload
+      const { profile_picture, ...rest } = payload
+      void profile_picture
       apiData = rest as FamilyMemberFormValues
     }
 

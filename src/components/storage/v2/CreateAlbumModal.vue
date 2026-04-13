@@ -1,6 +1,6 @@
 <template>
   <MlbModal :show="show" :bottom-sheet="isMobile" :bottom-sheet-height="state === 'success' ? 320 : 260"
-    @update:show="onClose">
+    class="rounded-3xl!" @update:show="onClose">
     <template #header>
       <div class="flex items-center justify-between">
         <div>
@@ -33,7 +33,7 @@
     <!-- Success state -->
     <div v-else class="flex flex-col py-1">
       <!-- Back -->
-      <button
+      <!-- <button
         class="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-800 mb-4 transition-colors self-start"
         @click="onClose">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -41,7 +41,7 @@
             stroke-linejoin="round" />
         </svg>
         Go back
-      </button>
+      </button> -->
 
       <UploadSuccessState :title="`New Album &quot;${albumName}&quot; Created`"
         description="Now add photos, videos and audio documents to your album to make it easy for your family to explore and engage."

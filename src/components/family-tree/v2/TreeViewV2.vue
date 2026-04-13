@@ -5,7 +5,7 @@
     <!-- Pan container: clips overflow, captures drag events -->
     <div class="absolute inset-0 overflow-hidden select-none" :class="isPanning ? 'cursor-grabbing' : 'cursor-grab'"
       @mousedown="startPan" @mousemove="doPan" @mouseup="endPan" @mouseleave="endPan"
-      @touchstart.prevent="startPanTouch" @touchmove.prevent="doPanTouch" @touchend="endPan">
+      @touchstart="startPanTouch" @touchmove="doPanTouch" @touchend="endPanTouch">
 
       <!-- Loading -->
       <div v-if="isLoading" class="h-full flex items-center justify-center pointer-events-none">
@@ -273,6 +273,9 @@ const highlightMember = (member: FamilyMemberInterface) => {
 const panX = ref(0)
 const panY = ref(0)
 const isPanning = ref(false)
+/** Minimum px movement before a touch is treated as a pan (not a tap). */
+const PAN_THRESHOLD = 8
+let _touchMoved = false
 const _panStart = { x: 0, y: 0, panX: 0, panY: 0 }
 
 const startPan = (e: MouseEvent) => {
@@ -296,7 +299,8 @@ const startPanTouch = (e: TouchEvent) => {
   if (e.touches.length !== 1) return
   const touch = e.touches.item(0)
   if (!touch) return
-  isPanning.value = true
+  _touchMoved = false
+  isPanning.value = false   // not panning yet — wait for movement past threshold
   _panStart.x = touch.clientX
   _panStart.y = touch.clientY
   _panStart.panX = panX.value
@@ -304,11 +308,25 @@ const startPanTouch = (e: TouchEvent) => {
 }
 
 const doPanTouch = (e: TouchEvent) => {
-  if (!isPanning.value || e.touches.length !== 1) return
+  if (e.touches.length !== 1) return
   const touch = e.touches.item(0)
   if (!touch) return
-  panX.value = _panStart.panX + (touch.clientX - _panStart.x)
-  panY.value = _panStart.panY + (touch.clientY - _panStart.y)
+  const dx = touch.clientX - _panStart.x
+  const dy = touch.clientY - _panStart.y
+
+  if (!_touchMoved && Math.hypot(dx, dy) < PAN_THRESHOLD) return
+
+  // Threshold exceeded: this is a pan gesture
+  _touchMoved = true
+  isPanning.value = true
+  e.preventDefault()   // prevent scroll only once we know it's a pan
+  panX.value = _panStart.panX + dx
+  panY.value = _panStart.panY + dy
+}
+
+const endPanTouch = () => {
+  isPanning.value = false
+  _touchMoved = false
 }
 
 const resetPan = () => { panX.value = 0; panY.value = 0 }

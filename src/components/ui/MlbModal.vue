@@ -1,7 +1,7 @@
 <template>
   <div>
-    <n-modal v-if="!bottomSheet" v-model:show="localShow" v-bind="attrs" @update:show="emit('close')"
-      @mask-click="emit('mask-click')">
+    <n-modal v-if="!bottomSheet" v-model:show="localShow" v-bind="attrs" :content-scrollable="true"
+      @update:show="emit('close')" @mask-click="emit('mask-click')">
       <n-card :style="cardStyle" :bordered="false" :size="fullPage ? undefined : 'huge'"
         :class="{ 'full-page-card': fullPage }" role="dialog" aria-modal="true" :header-style="headerStyle"
         :header-class="headerClass">
@@ -79,7 +79,7 @@ const localShow = computed({
 
 const cardStyle = computed(() => {
   if (props.fullPage) {
-    return { width: '100vw', maxWidth: '100vw', height: '100vh' }
+    return { width: '100vw', maxWidth: '100vw', height: '100%' }
   }
   if (props.bottomSheet) {
     return {
