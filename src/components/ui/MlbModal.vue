@@ -3,7 +3,8 @@
     <n-modal v-if="!bottomSheet" v-model:show="localShow" v-bind="attrs" @update:show="emit('close')"
       @mask-click="emit('mask-click')">
       <n-card :style="cardStyle" :bordered="false" :size="fullPage ? undefined : 'huge'"
-        :class="{ 'full-page-card': fullPage }" role="dialog" aria-modal="true">
+        :class="{ 'full-page-card': fullPage }" role="dialog" aria-modal="true" :header-style="headerStyle"
+        :header-class="headerClass">
         <template v-if="!headerless && hasHeader" #header>
           <slot name="header" />
         </template>
@@ -32,6 +33,7 @@
 <script setup lang="ts">
 import { computed, useAttrs, useSlots } from 'vue'
 import { NModal, NCard, NDrawer, NDrawerContent } from 'naive-ui'
+import type { CSSProperties } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -46,6 +48,8 @@ const props = withDefaults(
      * Useful for truly headerless modals.
      */
     headerless?: boolean
+    headerStyle?: CSSProperties
+    headerClass?: string
   }>(),
   {
     maxWidth: 600,
