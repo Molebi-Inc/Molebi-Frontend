@@ -1,13 +1,15 @@
 <template>
   <div class="flex flex-col bg-white overflow-y-auto h-full" :class="containerClass">
     <!-- User Profile Header -->
-    <div class="flex items-center gap-3 px-5 py-4 border-b border-neutral-100 shrink-0">
+    <button type="button" role="button"
+      class="w-full flex items-center gap-3 px-5 py-4 border-b border-neutral-100 shrink-0 text-left hover:bg-neutral-50 transition-colors"
+      @click="emit('view-self-profile')">
       <img :src="userAvatarUrl" :alt="userName" class="w-11 h-11 rounded-full object-cover shrink-0" />
       <div class="min-w-0">
         <p class="font-semibold text-neutral-900 text-sm truncate">{{ userName }}</p>
         <p class="text-xs text-neutral-400 truncate">Viewing: {{ viewingLabel }}</p>
       </div>
-    </div>
+    </button>
 
     <!-- Scrollable sections -->
     <div class="flex-1 overflow-y-auto divide-y divide-neutral-100">
@@ -142,6 +144,7 @@ const emit = defineEmits<{
   (e: 'update:showPhotos', value: boolean): void
   (e: 'update:showNames', value: boolean): void
   (e: 'open-tree-settings'): void
+  (e: 'view-self-profile'): void
 }>()
 
 const openSections = reactive({

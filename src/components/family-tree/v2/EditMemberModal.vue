@@ -1,28 +1,18 @@
 <template>
-  <MlbModal :show="show" :max-width="480" :bottom-sheet="isMobile" :bottom-sheet-height="680"
-    class="rounded-3xl!" @update:show="$emit('update:show', false)">
+  <MlbModal :show="show" :max-width="480" :bottom-sheet="isMobile" :bottom-sheet-height="680" class="rounded-3xl!"
+    @update:show="$emit('update:show', false)">
     <template #header>
       <div class="flex items-center justify-between">
         <button
           class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors"
           @click="$emit('update:show', false)">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+            <path
+              d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
           </svg>
         </button>
         <h3 class="text-base font-semibold text-neutral-900">Edit Member</h3>
-        <button
-          class="w-7 h-7 flex items-center justify-center text-primary-700 hover:text-primary-800 transition-colors"
-          :class="{ 'opacity-40 pointer-events-none': isSaving }"
-          @click="save">
-          <svg v-if="isSaving" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-4 h-4 animate-spin">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
-          </svg>
-          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
-          </svg>
-        </button>
+        <div class="w-7 h-7" />
       </div>
     </template>
 
@@ -33,8 +23,8 @@
         <label class="relative cursor-pointer group">
           <div
             class="w-20 h-20 rounded-full border-2 border-dashed border-neutral-300 group-hover:border-primary-400 flex items-center justify-center overflow-hidden transition-colors bg-neutral-50">
-            <img v-if="photoPreview || currentPhotoUrl" :src="photoPreview ?? currentPhotoUrl ?? ''"
-              alt="Profile photo" class="w-full h-full object-cover" />
+            <img v-if="photoPreview || currentPhotoUrl" :src="photoPreview ?? currentPhotoUrl ?? ''" alt="Profile photo"
+              class="w-full h-full object-cover" />
             <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
               class="w-10 h-10 text-neutral-300">
               <path fill-rule="evenodd"
@@ -138,6 +128,19 @@
             </span>
           </label>
         </div>
+      </div>
+
+      <div class="pt-2 flex justify-center">
+        <button
+          class="w-100 px-6 h-11 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          :disabled="isSaving" @click="save">
+          <svg v-if="isSaving" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            class="w-4 h-4 animate-spin">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
+          </svg>
+          <span>{{ isSaving ? 'Saving...' : 'Save' }}</span>
+        </button>
       </div>
     </div>
   </MlbModal>
@@ -243,11 +246,11 @@ const save = async () => {
 
     const data = {
       first_name: form.value.first_name.trim(),
-      middle_name: form.value.middle_name.trim(),
+      // middle_name: form.value.middle_name.trim() ?? null,
       family_name: form.value.family_name.trim(),
       is_same_family_name: false,
-      nickname: form.value.nickname.trim(),
-      relation_type: relationType,
+      // nickname: form.value.nickname.trim() ?? null,
+      // relation_type: relationType,
       relation_name: relationType as RelationType,
       gender: form.value.gender,
       related_through: props.member.relationship_metadata?.related_through ?? null,
@@ -266,6 +269,10 @@ const save = async () => {
       const fd = new FormData()
       Object.entries(data).forEach(([k, v]) => {
         if (v !== null && v !== undefined) {
+          if (typeof v === 'boolean') {
+            fd.append(k, v ? '1' : '0')
+            return
+          }
           fd.append(k, v instanceof File ? v : String(v))
         }
       })
@@ -274,18 +281,21 @@ const save = async () => {
       apiPayload = data
     }
 
-    await updateMutation.mutateAsync({ id: props.member.id, data: apiPayload as any })
+    const response = await updateMutation.mutateAsync({ id: props.member.id, data: apiPayload as any })
+    const savedMember = response.data as Partial<EditableMember> | undefined
 
     const updatedMember: EditableMember = {
       ...props.member,
+      ...savedMember,
       first_name: form.value.first_name.trim(),
-      middle_name: form.value.middle_name.trim(),
+      // middle_name: form.value.middle_name.trim(),
       family_name: form.value.family_name.trim(),
       full_name: `${form.value.first_name.trim()} ${form.value.family_name.trim()}`.trim(),
-      nickname: form.value.nickname.trim() || null,
+      // nickname: form.value.nickname.trim() || null,
       gender: form.value.gender,
       date_of_birth: form.value.date_of_birth,
       is_deceased: form.value.is_deceased,
+      profile_picture_url: savedMember?.profile_picture_url ?? props.member.profile_picture_url,
     }
 
     emit('saved', updatedMember)

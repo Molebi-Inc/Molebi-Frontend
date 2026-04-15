@@ -10,7 +10,8 @@
           :youngest-birth-year="familyInsights?.youngest_member_birth_year ?? 'N/A'" :family-view="familyView"
           :branch="branch" :show-photos="showPhotos" :show-names="showNames" @update:family-view="onFamilyViewUpdate"
           @update:branch="onBranchUpdate" @update:show-photos="onShowPhotosUpdate"
-          @update:show-names="onShowNamesUpdate" @open-tree-settings="showTreeSettingsModal = true" />
+          @update:show-names="onShowNamesUpdate" @open-tree-settings="showTreeSettingsModal = true"
+          @view-self-profile="openSelfProfile" />
       </div>
     </aside>
     <!-- Tree Area -->
@@ -184,7 +185,8 @@
           :youngest-birth-year="familyInsights?.youngest_member_birth_year ?? 'N/A'" :family-view="familyView"
           :branch="branch" :show-photos="showPhotos" :show-names="showNames" @update:family-view="onFamilyViewUpdate"
           @update:branch="onBranchUpdate" @update:show-photos="onShowPhotosUpdate"
-          @update:show-names="onShowNamesUpdate" @open-tree-settings="showTreeSettingsModal = true" />
+          @update:show-names="onShowNamesUpdate" @open-tree-settings="showTreeSettingsModal = true"
+          @view-self-profile="openSelfProfile" />
       </n-drawer-content>
     </n-drawer>
 
@@ -698,6 +700,14 @@ const handleViewProfile = (memberId: number) => {
   // Find the member in the flat list and open their profile
   const found = allFlatMembers.value.find((m) => m.id === memberId)
   if (found) openMemberProfile(found as FamilyMemberInterface)
+}
+
+const openSelfProfile = () => {
+  const selfMember = treePayload.value?.self
+  if (!selfMember) return
+  showBottomSheet.value = false
+  profileModalMember.value = { ...selfMember, _isSelf: true }
+  showProfileModal.value = true
 }
 
 const handleViewInTree = (member: FamilyMemberInterface) => {

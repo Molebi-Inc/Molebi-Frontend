@@ -52,15 +52,21 @@ export const useUpdateFamilyMemberMutation = () => {
   return useMutation<
     ApiResponse<FamilyMemberFormValues>,
     AxiosError<ValidationErrorResponse>,
-    { id: number; data: Partial<FamilyMemberFormValues> }
+    { id: number; data: Partial<FamilyMemberFormValues> | FormData }
   >({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<FamilyMemberFormValues> }) => {
+    mutationFn: async ({ id, data }: { id: number; data: Partial<FamilyMemberFormValues> | FormData }) => {
+      const isMultipart = data instanceof FormData
+      const payload = isMultipart ? data : { ...data, _method: 'PUT' }
+      if (isMultipart) {
+        data.append('_method', 'PUT')
+      }
       const response = await axiosInstance.post<ApiResponse<FamilyMemberFormValues>>(
         `/api/user/family-members/${id}`,
-        { ...data, _method: 'PUT' },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${authConfig.getToken()}`,
+            ...(isMultipart ? { 'Content-Type': 'multipart/form-data' } : {}),
           },
         },
       )
