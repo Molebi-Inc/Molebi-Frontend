@@ -1,8 +1,11 @@
 import type { NotificationSettings } from './settings.types'
 
 export interface SignupFormValues {
+  first_name: string
+  family_name: string
   email: string
-  phone: string
+  phone?: string
+  gender?: string | null
   code: string | null
   password: string
   password_confirmation: string
@@ -166,7 +169,6 @@ export type SocialAuthenticationProvider = 'google' | 'facebook' | 'apple'
 export interface SocialAuthenticationRedirectResponseData {
   redirect_url: string
 }
-
 
 export interface InvitationParamsInterface {
   expires: number

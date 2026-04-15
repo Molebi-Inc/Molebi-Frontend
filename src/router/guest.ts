@@ -1,11 +1,13 @@
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
-import OnboardingView from '@/views/auth/OnboardingView.vue'
 import GuestLayout from '@/layouts/GuestLayout.vue'
+import WelcomeView from '@/views/auth/WelcomeView.vue'
+import OnboardingView from '@/views/auth/OnboardingView.vue'
+import OnboardingViewWeb from '@/views/auth/OnboardingViewWeb.vue'
 import SocialAuthenticationView from '@/views/auth/SocialAuthenticationView.vue'
 
 export const guestRoutes = {
   path: '/',
-  redirect: { name: 'Guests.LandingView', params: { module: 'welcome' } },
+  redirect: { name: 'Guests.WelcomeView' },
   name: 'Guests.Layout',
   component: GuestLayout,
   meta: {
@@ -13,9 +15,28 @@ export const guestRoutes = {
   },
   children: [
     {
+      path: '/app',
+      name: 'Guests.WelcomeView',
+      // redirect: { name: 'Guests.OnboardingViewWeb' },
+      component: WelcomeView,
+      meta: {
+        layout: 'guest',
+        requiresGuest: true,
+      },
+    },
+    {
       path: ':module(welcome|connection|vault)',
       name: 'Guests.LandingView',
       component: () => import('@/views/auth/LandingView.vue'),
+      meta: {
+        layout: 'guest',
+        requiresGuest: true,
+      },
+    },
+    {
+      path: '/onboarding/signup/web',
+      name: 'Guests.OnboardingViewWeb',
+      component: OnboardingViewWeb, //() => import('@/views/auth/OnboardingViewWeb.vue'),
       meta: {
         layout: 'guest',
         requiresGuest: true,
@@ -39,8 +60,8 @@ export const guestRoutes = {
       meta: {
         layout: 'guest',
         hasLayoutLogo: ['verify-email', 'personal-info'],
-        hasLayoutLeaf: ['verify-email', 'personal-info'],
-        requiresAuth: true,
+        // hasLayoutLeaf: ['verify-email', 'personal-info'],
+        // requiresAuth: true,
       },
     },
     {

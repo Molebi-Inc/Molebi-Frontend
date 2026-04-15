@@ -1,10 +1,11 @@
+import HomeView2 from '@/views/home/HomeView2.vue'
 import HomeCardView from '@/views/home/partials/HomeCardView.vue'
 
 export const homeRoutes = [
   {
     path: '/home',
     name: 'App.HomeLayout',
-    component: () => import('@/layouts/AppLayout.vue'),
+    component: () => import('@/layouts/AppLayoutV2.vue'),
     meta: {
       layout: 'app',
       tour: 'dashboard',
@@ -16,7 +17,7 @@ export const homeRoutes = [
       {
         path: '',
         name: 'App.HomeView',
-        component: () => import('@/views/home/HomeView.vue'),
+        component: HomeView2,
         meta: {
           pageTitle: 'Hello ',
         },
@@ -24,7 +25,7 @@ export const homeRoutes = [
       {
         path: ':cardType(tradition|announcement)',
         name: 'App.HomeCardView',
-        component: () => HomeCardView,
+        component: HomeCardView,
         meta: {
           pageTitle: 'Home',
           fullScreen: 'mobile',

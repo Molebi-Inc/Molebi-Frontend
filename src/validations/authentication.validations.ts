@@ -12,17 +12,25 @@ import type { PasswordMode } from '@/types/authentication.types'
 
 export const signupValidation = () => {
   const form = ref<SignupFormValues>({
+    first_name: '',
+    family_name: '',
     email: '',
+    gender: null,
     phone: '',
     code: null,
     password: '',
     password_confirmation: '',
   })
 
+  const fieldErrors = ref<Record<string, boolean>>({})
+
   const signupSchema = z.object({
+    first_name: z.string().min(1, { message: 'First name is required.' }),
+    family_name: z.string().min(1, { message: 'Family name is required.' }),
     email: z.string().email({ message: 'Invalid email address.' }),
     phone: z.string().min(1, { message: 'Phone number is required.' }),
     code: z.string().min(1, { message: 'Country code is required.' }),
+    gender: z.string().min(1, { message: 'Gender is required.' }),
     password: z.string().min(1, { message: 'Password is required.' }),
     password_confirmation: z
       .string()
@@ -33,81 +41,99 @@ export const signupValidation = () => {
       }),
   })
 
+  const makeValidator =
+    <T>(field: string, parse: (value: T) => void, fallback: string) =>
+    async (_rule: FormItemRule, value: T) => {
+      try {
+        parse(value)
+        fieldErrors.value[field] = false
+        return Promise.resolve()
+      } catch (err: unknown) {
+        fieldErrors.value[field] = true
+        const messageText = err instanceof z.ZodError ? err.issues?.[0]?.message : fallback
+        return Promise.reject(messageText)
+      }
+    }
+
   const rules = {
+    first_name: {
+      required: true,
+      trigger: 'input',
+      validator: makeValidator(
+        'first_name',
+        (v: string) => signupSchema.pick({ first_name: true }).parse({ first_name: v }),
+        'First name is required.',
+      ),
+    },
+    family_name: {
+      required: true,
+      trigger: 'input',
+      validator: makeValidator(
+        'family_name',
+        (v: string) => signupSchema.pick({ family_name: true }).parse({ family_name: v }),
+        'Family name is required.',
+      ),
+    },
     email: {
       required: true,
       trigger: 'input',
-      validator: async (_rule: FormItemRule, value: string) => {
-        try {
-          signupSchema.pick({ email: true }).parse({ email: value })
-          return Promise.resolve()
-        } catch (err: unknown) {
-          const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid email address.'
-          return Promise.reject(messageText)
-        }
-      },
+      validator: makeValidator(
+        'email',
+        (v: string) => signupSchema.pick({ email: true }).parse({ email: v }),
+        'Invalid email address.',
+      ),
     },
     phone: {
-      required: true,
+      required: false,
       trigger: 'input',
-      validator: async (_rule: FormItemRule, value: string) => {
-        try {
-          signupSchema.pick({ phone: true }).parse({ phone: value })
-          return Promise.resolve()
-        } catch (err: unknown) {
-          const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid phone number.'
-          return Promise.reject(messageText)
-        }
-      },
+      validator: makeValidator(
+        'phone',
+        (v: string) => signupSchema.pick({ phone: true }).parse({ phone: v }),
+        'Invalid phone number.',
+      ),
+    },
+    gender: {
+      required: false,
+      trigger: 'input',
+      validator: makeValidator(
+        'gender',
+        (v: string) => signupSchema.pick({ gender: true }).parse({ gender: v }),
+        'Invalid gender.',
+      ),
     },
     code: {
       required: true,
       trigger: 'input',
-      validator: async (_rule: FormItemRule, value: string) => {
-        try {
-          signupSchema.pick({ code: true }).parse({ code: value })
-          return Promise.resolve()
-        } catch (err: unknown) {
-          const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid country code.'
-          return Promise.reject(messageText)
-        }
-      },
+      validator: makeValidator(
+        'code',
+        (v: string) => signupSchema.pick({ code: true }).parse({ code: v }),
+        'Invalid country code.',
+      ),
     },
     password: {
       required: true,
       trigger: 'input',
-      validator: async (_rule: FormItemRule, value: string) => {
-        try {
-          signupSchema.pick({ password: true }).parse({ password: value })
-          return Promise.resolve()
-        } catch (err: unknown) {
-          const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid password.'
-          return Promise.reject(messageText)
-        }
-      },
+      validator: makeValidator(
+        'password',
+        (v: string) => signupSchema.pick({ password: true }).parse({ password: v }),
+        'Invalid password.',
+      ),
     },
     password_confirmation: {
       required: true,
       trigger: 'input',
-      validator: async (_rule: FormItemRule, value: string) => {
-        try {
-          signupSchema.pick({ password_confirmation: true }).parse({ password_confirmation: value })
-          return Promise.resolve()
-        } catch (err: unknown) {
-          const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Invalid password confirmation.'
-          return Promise.reject(messageText)
-        }
-      },
+      validator: makeValidator(
+        'password_confirmation',
+        (v: string) =>
+          signupSchema.pick({ password_confirmation: true }).parse({ password_confirmation: v }),
+        'Invalid password confirmation.',
+      ),
     },
   }
   return {
     form,
     rules,
+    fieldErrors,
   }
 }
 
@@ -490,7 +516,7 @@ export const otpValidation = () => {
   const otpSchema = z.object({
     otp: z
       .array(z.string().min(1, { message: 'Each field is required.' }))
-      .length(4, { message: 'OTP must be 4 digits.' }),
+      .length(6, { message: 'OTP must be 6 digits.' }),
   })
 
   const rules = {

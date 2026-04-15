@@ -1,11 +1,11 @@
-import StorageView from '@/views/storage/StorageView.vue'
-import StorageLayout from '@/layouts/StorageLayout.vue'
-
 export const storageRoutes = [
   {
     path: '/storages',
-    name: 'App.StorageAppLayout',
-    component: () => import('@/layouts/AppLayout.vue'),
+    name: 'App.StorageLayout',
+    component: () => import('@/layouts/AppLayoutV2.vue'),
+    // Always land on the leaf route so <router-view> gets MemoriesView. Navigating by parent
+    // name alone can leave the nested default child unmatched in some cases (blank page).
+    redirect: { name: 'App.StorageFolderView' },
     meta: {
       layout: 'app',
       requiresAuth: true,
@@ -14,19 +14,19 @@ export const storageRoutes = [
     children: [
       {
         path: '',
-        name: 'App.StorageLayout',
-        redirect: { name: 'App.StorageFolderView' },
-        component: StorageLayout,
-        children: [
-          {
-            path: 'folders/:id?',
-            name: 'App.StorageFolderView',
-            component: () => import('@/views/vault/VaultView.vue'),
-            meta: {
-              pageTitle: 'Storage',
-            },
-          },
-        ],
+        name: 'App.StorageFolderView',
+        component: () => import('@/views/storage/MemoriesView.vue'),
+        meta: {
+          pageTitle: 'Memories',
+        },
+      },
+      {
+        path: 'folders/:id',
+        name: 'App.StorageFolderDetailsView',
+        component: () => import('@/views/storage/MemoriesView.vue'),
+        meta: {
+          pageTitle: 'Album Details',
+        },
       },
     ],
   },

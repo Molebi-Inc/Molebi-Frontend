@@ -1,31 +1,22 @@
 <template>
-  <div class="w-full bg-white md:bg-transparent">
+  <div class="w-full bg-brand-green md:bg-transparent">
     <div :class="['w-full', { 'md:flex justify-center items-center': !component?.has_full_page }]">
-      <div
-      v-if="!isLinkExpired"
-        :class="[
-          {
-            'md:border border-secondary-200 md:bg-white ': ['signup', 'personal-info'].includes(
-              String($route.params.module || ''),
-            ),
-          },
-          {
-            'px-6 py-8 md:p-12 md:w-[522px] h-full md:rounded-3xl': !component?.has_full_page,
-            'w-full': component?.has_full_page,
-          },
-        ]"
-      >
-        <BackButton
-          v-if="component?.has_back_button"
-          icon="vuesax.linear.arrow-left"
-          class="mb-4! md:mb-6!"
-        />
-        <div
-          :class="[
-            'flex flex-col gap-[45px] h-full',
-            { 'w-full': component?.has_full_page, 'md:px-4': !component?.has_full_page },
-          ]"
-        >
+      <div v-if="!isLinkExpired" :class="[
+        {
+          'md:border border-secondary-200 md:bg-white ': ['signup', 'personal-info'].includes(
+            String($route.params.module || ''),
+          ),
+        },
+        {
+          'px-6 py-8 md:p-12 md:w-[620px] h-full md:rounded-3xl': !component?.has_full_page,
+          'w-full': component?.has_full_page,
+        },
+      ]">
+        <BackButton v-if="component?.has_back_button" icon="vuesax.linear.arrow-left" class="mb-4! md:mb-6!" />
+        <div :class="[
+          'flex flex-col gap-[45px] h-full',
+          { 'w-full': component?.has_full_page, 'md:px-4': !component?.has_full_page },
+        ]">
           <div v-if="!component?.has_full_page">
             <h1 class="text-neutral-900 font-semibold text-2xl mb-2 md:text-center">
               {{ component?.title }}
@@ -34,11 +25,8 @@
               {{ component?.description }}
             </p>
           </div>
-          <component
-            :is="component?.component"
-            :key="String($route.params.module ?? '')"
-            :invitation-params="invitationParams"
-          />
+          <component :is="component?.component" :key="String($route.params.module ?? '')"
+            v-bind="component?.component_props" :invitation-params="invitationParams" />
         </div>
       </div>
       <LinkExpiredView v-else />
@@ -98,14 +86,18 @@ onMounted(() => {
 const component = computed(() => {
   return {
     signup: {
-      title: 'Lets get you started',
-      description: 'Create an account today with Molebi',
+      title: 'Create your Molebi account',
+      description: 'Start building your private family space',
       has_back_button: true,
       component: SignupForm,
+      component_props: {
+        version: 'v2',
+        constrained: true,
+      },
     },
     'verify-email': {
       title: 'Verify Your Email',
-      description: `We sent a 4 digit code to ${maskEmail(authenticationStore.signupForm?.email)}`,
+      description: `We sent a 6 digit code to ${maskEmail(authenticationStore.signupForm?.email)}`,
       has_back_button: true,
       component: OtpForm,
     },

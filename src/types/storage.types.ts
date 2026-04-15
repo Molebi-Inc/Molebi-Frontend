@@ -30,6 +30,7 @@ export interface StorageFolderInterface {
   media: AttachmentInterface[]
   created_at: string
   updated_at: string
+  shares: any[]
 }
 
 export interface StorageStoreInterface {
@@ -37,6 +38,8 @@ export interface StorageStoreInterface {
   selectedFolder: StorageFolderInterface | null
   folderMedia: AttachmentInterface[]
   folderMediaLoading: boolean
+  allMedia: AttachmentInterface[]
+  allMediaLoading: boolean
   folders: StorageFolderInterface[]
   foldersLoading: boolean
 }

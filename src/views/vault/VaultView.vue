@@ -1,5 +1,10 @@
 <template>
-  <div class="relative h-full">
+  <VaultHomeV2
+    v-if="showVaultV2Home"
+    @add-to-vault="handleModalAction"
+    @folder-menu="handleSelectOption"
+  />
+  <div v-else class="relative h-full">
     <div>
       <div class="flex justify-between items-center mb-6">
         <div>
@@ -80,30 +85,31 @@
         @batch-delete="handleDeleteMedia"
       />
     </div>
-    <MlbModal
-      v-model:show="showVaultModal"
-      :bottom-sheet="!!modalComponent?.hasBottomSheet"
-      :bottom-sheet-height="400"
-    >
-      <template #header>
-        <div>
-          <BackButton
-            icon="vuesax.linear.arrow-left"
-            :previous-route="false"
-            @update:go-back="handleBackButtonClick"
-          />
-          <h1 class="text-2xl font-bold text-center mt-6">{{ modalComponent?.title }}</h1>
-        </div>
-      </template>
-      <component
-        :is="modalComponent?.component"
-        v-bind="modalComponent?.props"
-        @update:folder="handleUpdateFolder"
-        @submit="postSubmitActions()"
-        @pin-submitted="handlePinSubmitted"
-      />
-    </MlbModal>
   </div>
+
+  <MlbModal
+    v-model:show="showVaultModal"
+    :bottom-sheet="!!modalComponent?.hasBottomSheet"
+    :bottom-sheet-height="400"
+  >
+    <template #header>
+      <div>
+        <BackButton
+          icon="vuesax.linear.arrow-left"
+          :previous-route="false"
+          @update:go-back="handleBackButtonClick"
+        />
+        <h1 class="text-2xl font-bold text-center mt-6">{{ modalComponent?.title }}</h1>
+      </div>
+    </template>
+    <component
+      :is="modalComponent?.component"
+      v-bind="modalComponent?.props"
+      @update:folder="handleUpdateFolder"
+      @submit="postSubmitActions()"
+      @pin-submitted="handlePinSubmitted"
+    />
+  </MlbModal>
 </template>
 
 <script setup lang="ts">
@@ -133,6 +139,7 @@ import CreateFolderForm from '@/components/vault/CreateFolderForm.vue'
 import { useDeleteFolderMediaMutation } from '@/services/storage.services'
 import type { FolderInterface, AttachmentInterface } from '@/types/vault.types'
 import FamilyTraditionMediaForm from '@/components/home/FamilyTraditionMediaForm.vue'
+import VaultHomeV2 from '@/components/vault/v2/VaultHomeV2.vue'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -152,6 +159,10 @@ const {
 } = useArchive()
 const { loading: vaultLoading, handleChangePin, fetchVaultFolder } = useVault()
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
+
+const showVaultV2Home = computed(
+  () => currentFlow.value === 'vault' && !$route.params.id,
+)
 
 const folders = computed<FolderInterface[] | StorageFolderInterface[]>(() =>
   currentFlow.value === 'vault' ? vaultStore.folders : storageStore.folders,
@@ -240,7 +251,10 @@ const archiveFolder = computed(() => {
 
 const modalComponent = computed(() => {
   switch (true) {
-    case routeNames.includes(String($route.name)) && !$route.params.id && !$route.query.action:
+    case (routeNames.includes(String($route.name)) ||
+      (currentFlow.value === 'vault' && $route.name === 'App.VaultView')) &&
+      !$route.params.id &&
+      !$route.query.action:
       const archiveExist = archiveFolder.value
       return {
         component: CreateFolderForm,
@@ -440,9 +454,15 @@ watch(
 )
 
 watch(
-  [() => routeNames.includes(String($route.name)), () => $route.params.id],
-  async ([routeName, id]) => {
-    if (routeName && !id) {
+  [() => String($route.name), () => $route.params.id, currentFlow],
+  async ([name, id, flow]) => {
+    const vaultFolderList =
+      flow === 'vault' &&
+      !id &&
+      ['App.VaultView', 'App.VaultFolderView'].includes(name)
+    const storageFolderList =
+      flow === 'storage' && routeNames.includes(name) && !id
+    if (vaultFolderList || storageFolderList) {
       await fetchArchiveFolders()
     }
   },

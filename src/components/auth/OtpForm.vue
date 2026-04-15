@@ -1,30 +1,14 @@
 <template>
-  <n-form
-    ref="formRef"
-    :label-width="80"
-    :model="form"
-    :rules="rules"
-    class="h-full flex md:block flex-col justify-between items-center"
-  >
+  <n-form ref="formRef" :label-width="80" :model="form" :rules="rules"
+    class="h-full flex md:block flex-col justify-between items-center">
     <div class="flex flex-col justify-center items-center">
-      <n-form-item
-        label="Enter OTP Here"
-        label-placement="top"
+      <n-form-item label="Enter OTP Here" label-placement="top"
         label-style="display: flex; justify-content: center; color: #737373;"
         feedback-style="display: flex; justify-content: center; color: #737373; margin-bottom: 10px;"
-        :show-require-mark="false"
-        path="otp"
-      >
+        :show-require-mark="false" path="otp">
         <div class="mt-5">
-          <MlbInputOtp
-            v-model="form.otp"
-            name="otp"
-            :length="4"
-            :gap="24"
-            size="large"
-            :mask="false"
-            custom-class="otp-input-wrapper border-gray-300 focus:border-primary-500"
-          />
+          <MlbInputOtp v-model="form.otp" name="otp" :length="6" :gap="32" size="large" :mask="false"
+            custom-class="otp-input-wrapper border-gray-300 focus:border-primary-500" />
         </div>
       </n-form-item>
       <div class="flex justify-center items-center mb-5">
@@ -32,27 +16,16 @@
           Did not get any mail,
           <span v-if="countdown > 0">
             resend OTP in
-            <span class="text-primary-500 font-medium text-xs line-height-18"
-              >({{ countdown > 60 ? Math.floor(countdown / 60) + 'mins' : countdown + 's' }})</span
-            >
+            <span class="text-primary-500 font-medium text-xs line-height-18">({{ countdown > 60 ? Math.floor(countdown
+              / 60) + 'mins' : countdown + 's' }})</span>
           </span>
-          <MlbButton
-            v-else
-            text
-            label="resend OTP"
-            class="text-primary-500! font-medium text-xs line-height-18 underline!"
-            @click="onResendOTP"
-          />
+          <MlbButton v-else text label="resend OTP"
+            class="text-primary-500! font-medium text-xs line-height-18 underline!" @click="onResendOTP" />
         </p>
       </div>
     </div>
-    <MlbButton
-      type="submit"
-      label="Verify Account"
-      block
-      class="rounded-2xl! bg-primary-700! h-13! text-white!"
-      @click="onFormSubmit"
-    />
+    <MlbButton type="submit" label="Verify Account" block class="rounded-2xl! bg-primary! h-13! text-white!"
+      @click="onFormSubmit" />
   </n-form>
 </template>
 
@@ -65,7 +38,6 @@ import MlbInputOtp from '@/components/ui/MlbInputOtp.vue'
 import { useMessage, NForm, NFormItem } from 'naive-ui'
 import { useAuthConfig } from '@/config/auth.config'
 import { otpValidation } from '@/validations/authentication.validations'
-import { AlertService } from '@/services/alert.service'
 import { handleApiError } from '@/helpers/error.helpers'
 import {
   useVerifyEmailMutation,
@@ -143,28 +115,7 @@ const onFormSubmit = () => {
         otp_code: form.value.otp.join(''),
       })
       authConfig.setToken(response.data.token)
-
-      await AlertService.alert({
-        imageUrl: 'images/success.png',
-        imageAlt: 'Success',
-        imageClass: 'w-24 h-24 object-contain',
-        subject: 'You have successfully <br /> created your account',
-        message:
-          'Welcome to Molebi, you have successfully created your account, now you can continue onboarding to enjoy our offerings.',
-        confirmButtonText: 'Continue Onboarding',
-        customClass: {
-          confirmButton: 'rounded-2xl! bg-primary-700! h-13! text-white!',
-        },
-        buttonConfig: {
-          confirm: {
-            text: 'Continue Onboarding',
-            action: () => {
-              $router.push({ name: 'Guests.OnboardingView', params: { module: 'seed-phase' } })
-            },
-            closeOnClick: true,
-          },
-        },
-      })
+      $router.push({ name: 'App.HomeView', query: { welcome: '1' } })
     } catch (error) {
       handleApiError(error, message)
     } finally {
@@ -225,5 +176,18 @@ onUnmounted(() => {
 
 :deep(.otp-input-wrapper .n-input-wrapper:focus) {
   background-color: #f1f1f1 !important;
+}
+
+:deep(.otp-input-wrapper .n-input) {
+  height: 48px !important;
+  width: 48px !important;
+}
+
+/* Large screens: slightly larger OTP boxes for better readability. */
+@media (min-width: 1024px) {
+  :deep(.otp-input-wrapper .n-input) {
+    height: 60px !important;
+    width: 60px !important;
+  }
 }
 </style>

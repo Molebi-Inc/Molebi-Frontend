@@ -14,6 +14,8 @@ export interface FamilyMemberFormValues {
   is_former: boolean
   is_deceased: boolean
   date_of_birth: string | null
+  biography?: string | null
+  relation_name?: RelationType
 }
 
 export type RelationType =
@@ -70,16 +72,38 @@ export interface FamilyTreeDetails {
   description: string | null
 }
 
+export interface TaggedMediaInterface {
+  id: number
+  storage_folder_id: number
+  title: string
+  description: string
+  media_type: string
+  event_date: string
+  file_name: string
+  mime_type: string
+  file_size: number
+  formatted_size: string
+  url: string
+  metadata: unknown
+}
+
 export interface FamilyMemberInterface {
-  family_name: string
-  first_name: string
-  full_name: string
-  gender: GenderType
   id?: number
-  is_registered: boolean
+  first_name: string
   middle_name: string | null
+  family_name: string
+  full_name: string
+  family_tree_id?: number | null
+  email?: string | null
+  gender: GenderType
+  is_registered: boolean
+  is_same_family_name?: boolean
   nickname: string | null
+  biography?: string | null
+  date_of_birth?: string | null
+  age?: number | null
   profile_picture_url: string | null
+  tagged_media: TaggedMediaInterface[]
   relationship_metadata: {
     relation_type: string
     related_through: number | null
@@ -190,4 +214,80 @@ export interface NodeMemberInterface {
     is_adoptive: boolean
     is_former: boolean
   }
+}
+
+export type TimelineType =
+  | 'birth'
+  | 'burial'
+  | 'marriage'
+  | 'divorce'
+  | 'education'
+  | 'award'
+  | 'church'
+  | 'retirement'
+  | 'skill'
+  | 'occupation'
+  | 'burial'
+  | 'achievement'
+  | 'other'
+
+export interface TimelineInterface {
+  year: number
+  entries: TimelineEntryInterface[]
+}
+
+export interface TimelineEntryInterface {
+  id: number
+  family_member_id: number
+  type: TimelineType
+  title: string
+  description: string
+  event_date: string
+  place: string
+  created_at: string
+  updated_at: string
+}
+
+export interface TimelineFormValues {
+  type: TimelineType
+  title: string
+  description: string
+  event_date: string
+  place: string
+}
+
+export interface FamilyInsightInterface {
+  oldest_member_birth_year: number | string | null
+  youngest_member_birth_year: number | string | null
+  total_members: number
+}
+
+export type FamilyTreeSectionType = 'close_family' | 'extended_family'
+export type ViewBranchType = 'my_direct_family' | 'fathers_side' | 'mothers_side'
+export type DisplayType = 'show_pictures' | 'show_names'
+export type WhoCanEditScope = 'admin' | 'anyone_invited'
+export type TreePreference = 'show_relationship_title' | 'show_full_name'
+export interface TreeSettingsInterface {
+  user_id: 1
+  family_tree_id: 1
+  family_tree_section: FamilyTreeSectionType
+  view_branch: ViewBranchType
+  display: DisplayType[]
+}
+
+export interface TreeSettingsFormValues {
+  family_tree_section: FamilyTreeSectionType
+  view_branch: ViewBranchType
+  display: DisplayType[]
+}
+export interface TreePrivacySettingsInterface {
+  user_id: number
+  family_tree_id: number
+  who_can_edit_profile: WhoCanEditScope[]
+  tree_preference: TreePreference[]
+}
+
+export interface TreePrivacySettingsFormValues {
+  who_can_edit_profile: WhoCanEditScope[]
+  tree_preference: TreePreference[]
 }

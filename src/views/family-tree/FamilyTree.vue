@@ -337,6 +337,7 @@ const transformFamilyTreeToPayload = (
       is_registered: member.is_registered || false,
       middle_name: member.middle_name || null,
       nickname: member.nickname || null,
+      tagged_media: member.tagged_media || [],
       relationship_metadata: {
         relation_type: member.relationship_metadata?.relation_type || '',
         related_through: member.relationship_metadata?.related_through || null,

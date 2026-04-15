@@ -20,6 +20,19 @@ export interface AttachmentInterface {
   url: string
   thumbnail: string | null
   date: string | null
+  /**
+   * Optional memory-level metadata.
+   * Some endpoints return these alongside the attachment.
+   */
+  title?: string | null
+  description?: string | null
+  // location?: string | null
+  event_date?: string | null
+  likes_count?: number
+  is_liked?: boolean
+  metadata?: {
+    location?: string | null
+  }
 }
 
 export interface FolderInterface {

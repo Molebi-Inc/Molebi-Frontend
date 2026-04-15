@@ -5,10 +5,13 @@
 
   --color-black: #494949;
   --color-brand-background: #fcfcf9;
+  /* Solid brand green color (use gradient via dedicated background vars if needed) */
+  /* --color-brand-green: #f1fbf4; */
 
   --color-placeholder: #9c9bab;
 
   /* === Colors === */
+  --color-primary: #0f7234;
   --color-primary-50: #f2f9f2;
   --color-primary-100: #b8eedd;
   --color-primary-200: #8be2c7;
@@ -22,7 +25,7 @@
 
   /* === Secondary Colors === */
   --color-secondary-50: #fff5ed;
-  --color-secondary-100: #f9e6bc;
+  --color-secondary-100: #ffead9;
   --color-secondary-200: #f5d58f;
   --color-secondary-300: #f1c561;
   --color-secondary-400: #db6f23;
@@ -58,6 +61,7 @@
 
   --color-gray-100: #f1f1f1;
   --color-gray-500: #a1a1a1;
+  --color-gray-600: #737373;
   --color-gray-700: #5c5c5c;
 
   /* === Font sizes === */
@@ -77,21 +81,25 @@
   }
 
   h1 {
-    font-family: 'Gentium Plus', serif;
+    font-family: 'General Sans', serif;
     font-size: var(--text-h1);
     font-weight: 800;
   }
 
   h2 {
-    font-family: 'Gentium Plus', serif;
+    font-family: 'General Sans', serif;
     font-size: var(--text-h2);
     font-weight: 600;
   }
 
   h3 {
-    font-family: 'Gentium Plus', serif;
+    font-family: 'General Sans', serif;
     font-size: var(--text-h3);
     font-weight: 500;
+  }
+
+  .bg-brand-green {
+    background: linear-gradient(180deg, #f1fbf4 41.55%, #fafafa 138.77%);
   }
 
   .mlb-input {

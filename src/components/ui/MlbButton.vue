@@ -29,7 +29,10 @@ withDefaults(defineProps<Props>(), {
     :tertiary="secondary"
     :text="text"
     :loading="loading"
-    :class="[primary ? 'bg-primary-700! text-white! hover:bg-primary-800' : '']"
+    :class="[
+      'cursor-pointer disabled:cursor-not-allowed disabled:opacity-50',
+      primary ? 'bg-primary! text-white! hover:bg-primary-900' : '',
+    ]"
   >
     <slot name="icon" />
     <span v-if="label">{{ label }}</span>
