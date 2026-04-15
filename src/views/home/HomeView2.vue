@@ -4,7 +4,7 @@
         <div class="hidden md:flex gap-6 max-w-[1200px] mx-auto px-10 py-8">
             <!-- Left sidebar: user card + tree illustration -->
             <aside class="w-[300px] flex-shrink-0 space-y-6">
-                <UserStatsCard :user="user" :family-members-count="familyMembersCount" :memories-count="0"
+                <UserStatsCard :user="user" :family-members-count="familyMembersCount" :memories-count="memoriesCount"
                     @add-members="goToFamilyTree" @add-memories="goToStorage" />
                 <div class="flex justify-center">
                     <!-- <img src="@/assets/svg/tree-3.svg" alt="Family tree illustration"
@@ -20,7 +20,7 @@
                     @explore-culture="$router.push({ name: 'App.HeritageView' })" />
                 <FamilyTreeChecklist :user-name="userName" @add-relative="goToFamilyTree" />
                 <FamilyUpdates :items="announcements" :loading="loadingAnnouncements" @create="handleCreateAnnouncement"
-                    @view-all="handleCreateAnnouncement" @edit-item="handleEditAnnouncement"
+                    @view-all="showAllUpdatesModal = true" @edit-item="handleEditAnnouncement"
                     @delete-item="handleDeleteAnnouncement" />
             </div>
         </div>
@@ -37,7 +37,7 @@
             <FamilyTreeActions @add-relative="goToFamilyTree" @add-memory="goToStorage"
                 @explore-culture="$router.push({ name: 'App.HeritageView' })" />
             <FamilyUpdates :items="announcements" :loading="loadingAnnouncements" @create="handleCreateAnnouncement"
-                @view-all="handleCreateAnnouncement" @edit-item="handleEditAnnouncement"
+                @view-all="showAllUpdatesModal = true" @edit-item="handleEditAnnouncement"
                 @delete-item="handleDeleteAnnouncement" />
         </div>
     </main>
@@ -69,6 +69,10 @@
             @close="handleCloseForm" />
     </MlbModal>
 
+    <FamilyUpdatesModal v-model:show="showAllUpdatesModal" :items="announcements" :loading="loadingAnnouncements"
+        @create="handleCreateAnnouncementFromModal" @edit-item="handleEditAnnouncementFromModal"
+        @delete-item="handleDeleteAnnouncement" />
+
     <WelcomeModal v-model:show="showWelcomeModal" />
 </template>
 <script setup lang="ts">
@@ -79,6 +83,7 @@ import { useProfileStore } from '@/stores/profile.store'
 import { useGeneralStore } from '@/stores/general.store'
 import { useAnnouncementStore } from '@/stores/announcement.store'
 import { useHome } from '@/composables/useHome'
+import { useGetAllMediaQuery } from '@/services/storage.services'
 import type { Announcement } from '@/types/announcement.types'
 
 // Content components
@@ -87,6 +92,7 @@ import UserStatsCard from '@/components/home/v2/UserStatsCard.vue'
 import FamilyTreeChecklist from '@/components/home/v2/FamilyTreeChecklist.vue'
 import FamilyTreeActions from '@/components/home/v2/FamilyTreeActions.vue'
 import FamilyUpdates from '@/components/home/v2/FamilyUpdates.vue'
+import FamilyUpdatesModal from '@/components/home/v2/FamilyUpdatesModal.vue'
 import WelcomeModal from '@/components/home/v2/WelcomeModal.vue'
 import HomeBottomLeftTree from '@/components/home/v2/HomeBottomLeftTree.vue'
 import MlbModal from '@/components/ui/MlbModal.vue'
@@ -98,16 +104,19 @@ const $route = useRoute()
 
 const showWelcomeModal = ref(false)
 const showHomeFormModal = ref(false)
+const showAllUpdatesModal = ref(false)
 const isLargeScreen = useMediaQuery('(min-width: 768px)')
 
 const profileStore = useProfileStore()
 const generalStore = useGeneralStore()
 const announcementStore = useAnnouncementStore()
 const { fetchAnnouncements, fetchFamilyMembers, deleteAnnouncement } = useHome()
+const allMediaQuery = useGetAllMediaQuery(true, 1000)
 
 const user = computed(() => profileStore.userDetails)
 const userName = computed(() => user.value?.first_name || 'there')
 const familyMembersCount = computed(() => generalStore.familyMembers.length)
+const memoriesCount = computed(() => allMediaQuery.data.value?.data?.length ?? 0)
 const announcements = computed(() => announcementStore.announcements)
 const loadingAnnouncements = computed(() => announcementStore.loading)
 
@@ -140,8 +149,6 @@ const goToFamilyTree = () => $router.push({ name: 'App.FamilyTreeView' })
 
 const goToStorage = () => $router.push({ name: 'App.StorageFolderView' })
 
-const goToVault = () => $router.push({ name: 'App.VaultView' })
-
 // ── Announcement handlers ────────────────────────────────────────────────────
 
 const handleEditAnnouncement = (item: Announcement) => {
@@ -156,6 +163,16 @@ const handleCreateAnnouncement = () => {
     const query = { ...$route.query, ftype: 'announcement' }
     delete (query as Record<string, unknown>).fid
     $router.push({ name: 'App.HomeView', query })
+}
+
+const handleCreateAnnouncementFromModal = () => {
+    showAllUpdatesModal.value = false
+    handleCreateAnnouncement()
+}
+
+const handleEditAnnouncementFromModal = (item: Announcement) => {
+    showAllUpdatesModal.value = false
+    handleEditAnnouncement(item)
 }
 
 const handleCloseForm = () => {

@@ -17,22 +17,25 @@
 
         <!-- Avatar + name + meta -->
         <div class="flex flex-col items-center gap-2 pb-2">
-          <div class="relative">
+          <div class="relative" :style="{ width: avatarSize + 'px', height: avatarSize + 'px' }">
             <!-- Blob ring -->
-            <div class="absolute inset-0 rounded-full" :style="{
-              padding: '3px',
-              background: isDeceased ? '#9ca3af' : 'radial-gradient(circle at 30% 30%, #fde68a, #f97316 70%)',
-              borderRadius: '50%',
-              transform: 'scale(1.12)',
-            }" />
-            <div class="relative w-20 h-20 rounded-full overflow-hidden z-10" :style="{
+            <div class="absolute inset-0 rounded-full" :style="blobRingStyle" />
+            <div class="relative rounded-full overflow-hidden z-10" :style="{
+              width: avatarSize + 'px',
+              height: avatarSize + 'px',
               border: isSelf ? '3px solid #16a34a' : '2.5px solid transparent',
+              backgroundColor: 'white',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'end',
+              justifyContent: 'center',
+              boxSizing: 'border-box',
             }">
-              <img :src="avatarSrc" :alt="resolvedMember.full_name ?? resolvedMember.first_name"
-                class="w-full h-full object-cover" @error="fallbackUsed = true" />
+              <img :src="avatarSrc" :alt="resolvedMember.full_name ?? resolvedMember.first_name" class="object-cover"
+                @error="onAvatarError" />
             </div>
             <div v-if="isDeceased" class="absolute inset-0 rounded-full z-20 pointer-events-none"
-              style="background:rgba(0,0,0,0.22)" />
+              style="background: rgba(0,0,0,0.25)" />
           </div>
 
           <h2 class="text-xl font-bold text-neutral-900 text-center leading-tight">
@@ -119,6 +122,9 @@ import MlbModal from '@/components/ui/MlbModal.vue'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
 import { getUserAvatar } from '@/helpers/general.helpers'
 import { useGetFamilyMemberQuery } from '@/services/family-tree.service'
+import maleMemberSvg from '@/assets/svg/member/male.svg?url'
+import femaleMemberSvg from '@/assets/svg/member/female.svg?url'
+import nodeBlobUrl from '@/assets/images/node-blob.png?url'
 import MemberTimelineSection from './MemberTimelineSection.vue'
 import MemberBiographySection from './MemberBiographySection.vue'
 import MemberTaggedMediaSection from './MemberTaggedMediaSection.vue'
@@ -147,7 +153,10 @@ const emit = defineEmits<{
 }>()
 
 const isMobile = useMediaQuery('(max-width: 767px)')
-const fallbackUsed = ref(false)
+const profilePictureFailed = ref(false)
+const genderPlaceholderFailed = ref(false)
+const avatarSize = 80
+const BLOB_RING_SCALE = 1.35
 
 const memberIdStr = computed(() => (props.member.id != null ? String(props.member.id) : ''))
 
@@ -175,7 +184,8 @@ const memoriesLoading = computed(() => familyMemberQuery.isLoading.value)
 watch(
   () => props.member.id,
   () => {
-    fallbackUsed.value = false
+    profilePictureFailed.value = false
+    genderPlaceholderFailed.value = false
   },
 )
 
@@ -187,14 +197,44 @@ const memberWithBio = computed<ExtendedMember>(() => ({
   biography: localBio.value !== null ? localBio.value : (resolvedMember.value as any).biography,
 }))
 
-const avatarSrc = computed(() =>
-  fallbackUsed.value
-    ? getUserAvatar(resolvedMember.value.first_name, resolvedMember.value.family_name)
-    : (resolvedMember.value.profile_picture_url ||
-      getUserAvatar(resolvedMember.value.first_name, resolvedMember.value.family_name)),
-)
+const avatarSrc = computed(() => {
+  const m = resolvedMember.value
+  const profile = m.profile_picture_url
+  if (profile != null && String(profile).trim() !== '' && !profilePictureFailed.value) {
+    return profile
+  }
+  if (!genderPlaceholderFailed.value) {
+    if (m.gender === 'male') return maleMemberSvg
+    if (m.gender === 'female') return femaleMemberSvg
+  }
+  return getUserAvatar(m.first_name, m.family_name)
+})
+
+const onAvatarError = () => {
+  const m = resolvedMember.value
+  const profile = m.profile_picture_url
+  const hasProfile =
+    profile != null && String(profile).trim() !== '' && !profilePictureFailed.value
+  if (hasProfile) {
+    profilePictureFailed.value = true
+    return
+  }
+  if ((m.gender === 'male' || m.gender === 'female') && !genderPlaceholderFailed.value) {
+    genderPlaceholderFailed.value = true
+  }
+}
 
 const isDeceased = computed(() => !!(resolvedMember.value as any).is_deceased)
+const blobRingStyle = computed(() => ({
+  padding: '3px',
+  borderRadius: '50%',
+  transform: `scale(${BLOB_RING_SCALE})`,
+  transformOrigin: 'center center',
+  backgroundImage: `url(${nodeBlobUrl})`,
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'center',
+  backgroundSize: 'contain',
+}))
 
 const relationLabel = computed(() => {
   if (props.isSelf || resolvedMember.value._isSelf) return 'You'

@@ -362,6 +362,10 @@ const handleSubmit = async () => {
       Object.entries(payload).forEach(([k, v]) => {
         if (v !== null && v !== undefined) {
           if (k === 'profile_picture') return
+          if (typeof v === 'boolean') {
+            fd.append(k, v ? '1' : '0')
+            return
+          }
           fd.append(k, String(v))
         }
       })
