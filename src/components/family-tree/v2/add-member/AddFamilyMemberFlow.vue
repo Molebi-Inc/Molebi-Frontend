@@ -9,9 +9,10 @@
         </template>
         <div class="-mx-6 -my-4">
           <StepContent :step="step" :selected-member-type="selectedMemberType" :created-member="createdMember"
-            :is-inviting="isInviting" @select="handleSelect" @back="step = 'select'" @success="handleSuccess"
-            @add-another="handleAddAnother" @view-profile="handleViewProfile" @view-tree="handleViewTree"
-            @invite="handleInvite" />
+            :is-inviting="isInviting" :context-mappings="contextMappings" :context-member="contextMember ?? null"
+            :context-override="contextOverride" @select="handleSelect" @back="step = 'select'"
+            @success="handleSuccess" @add-another="handleAddAnother" @view-profile="handleViewProfile"
+            @view-tree="handleViewTree" @invite="handleInvite" />
         </div>
       </MlbModal>
     </div>
@@ -26,9 +27,10 @@
           </div>
           <div class="flex-1 overflow-hidden flex flex-col">
             <StepContent :step="step" :selected-member-type="selectedMemberType" :created-member="createdMember"
-              :is-inviting="isInviting" @select="handleSelect" @back="step = 'select'" @success="handleSuccess"
-              @add-another="handleAddAnother" @view-profile="handleViewProfile" @view-tree="handleViewTree"
-              @invite="handleInvite" />
+              :is-inviting="isInviting" :context-mappings="contextMappings" :context-member="contextMember ?? null"
+              :context-override="contextOverride" @select="handleSelect" @back="step = 'select'"
+              @success="handleSuccess" @add-another="handleAddAnother" @view-profile="handleViewProfile"
+              @view-tree="handleViewTree" @invite="handleInvite" />
           </div>
         </n-drawer-content>
       </n-drawer>
@@ -46,7 +48,11 @@ import { useRegistrationLinkMutation } from '@/services/authentication.services'
 import { useGetFamilyInsightsQuery } from '@/services/family-tree.service'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useShareComposable } from '@/composables/useShare'
-import type { MemberTypeConfig } from './member-type.config'
+import type { MemberTypeConfig, MemberTypeKey } from './member-type.config'
+import type { ContextualResult } from './context-relation.config'
+import { resolveContextMappings, resolveRelatedThrough } from './context-relation.config'
+import { useFamilyTreeStore } from '@/stores/family-tree.store'
+import type { FamilyMemberInterface } from '@/types/family-tree.types'
 import MemberTypeSelector from './MemberTypeSelector.vue'
 import DynamicMemberForm from './DynamicMemberForm.vue'
 import MemberFormSuccess from './MemberFormSuccess.vue'
@@ -63,6 +69,8 @@ interface CreatedMember {
 
 interface Props {
   show: boolean
+  /** When set the flow opens scoped to this member's context. */
+  contextMember?: FamilyMemberInterface | null
 }
 
 const props = defineProps<Props>()
@@ -78,11 +86,42 @@ const message = useMessage()
 const registrationLinkMutation = useRegistrationLinkMutation()
 const familyInsightsQuery = useGetFamilyInsightsQuery({ enabled: false })
 const { shareLink } = useShareComposable()
+const familyTreeStore = useFamilyTreeStore()
 
 const step = ref<Step>('select')
 const selectedMemberType = ref<MemberTypeConfig | null>(null)
 const createdMember = ref<CreatedMember | null>(null)
 const isInviting = ref(false)
+
+/** true when context is set AND the target is not Self */
+const hasContext = computed(
+  () => !!props.contextMember && !('_isSelf' in props.contextMember && (props.contextMember as any)._isSelf),
+)
+
+const flatTree = computed(() =>
+  (familyTreeStore.flatFamilyTree as FamilyMemberInterface[]).filter(
+    (m) => m.relationship_metadata?.relation_type,
+  ),
+)
+
+/** Mappings keyed by MemberTypeKey for the current context member. null = use default flow. */
+const contextMappings = computed<Partial<Record<MemberTypeKey, ContextualResult>> | null>(() => {
+  if (!hasContext.value || !props.contextMember) return null
+  const rt = props.contextMember.relationship_metadata?.relation_type
+  if (!rt) return null
+  return resolveContextMappings(rt, flatTree.value)
+})
+
+/** After user picks a type in context mode, compute the API override. */
+const contextOverride = computed<{ relation_type: string; related_through: number | null } | null>(() => {
+  if (!hasContext.value || !props.contextMember || !selectedMemberType.value || !contextMappings.value) return null
+  const entry = contextMappings.value[selectedMemberType.value.key as MemberTypeKey]
+  if (!entry || entry.disabled) return null
+  return {
+    relation_type: entry.relation_type,
+    related_through: resolveRelatedThrough(entry.related_through, props.contextMember, flatTree.value),
+  }
+})
 
 const internalShow = computed({
   get: () => props.show,
@@ -180,10 +219,6 @@ const handleInvite = async () => {
 
 // ─── Inner step-router component ─────────────────────────────────────────────
 
-/**
- * StepContent is a small renderless helper that routes to the right step component.
- * Defined inline to keep the file self-contained.
- */
 const StepContent = defineComponent({
   name: 'StepContent',
   props: {
@@ -191,16 +226,28 @@ const StepContent = defineComponent({
     selectedMemberType: { type: Object as () => MemberTypeConfig | null, default: null },
     createdMember: { type: Object as () => CreatedMember | null, default: null },
     isInviting: { type: Boolean, default: false },
+    contextMappings: { type: Object as () => Partial<Record<MemberTypeKey, ContextualResult>> | null, default: null },
+    contextMember: { type: Object as () => FamilyMemberInterface | null, default: null },
+    contextOverride: {
+      type: Object as () => { relation_type: string; related_through: number | null } | null,
+      default: null,
+    },
   },
   emits: ['select', 'back', 'success', 'add-another', 'view-profile', 'view-tree', 'invite'],
   setup(stepProps, { emit: stepEmit }) {
     return () => {
       if (stepProps.step === 'select') {
-        return h(MemberTypeSelector, { onSelect: (t: MemberTypeConfig) => stepEmit('select', t) })
+        return h(MemberTypeSelector, {
+          contextMappings: stepProps.contextMappings,
+          contextMember: stepProps.contextMember,
+          onSelect: (t: MemberTypeConfig) => stepEmit('select', t),
+        })
       }
       if (stepProps.step === 'form' && stepProps.selectedMemberType) {
         return h(DynamicMemberForm, {
           memberType: stepProps.selectedMemberType,
+          contextOverride: stepProps.contextOverride,
+          contextMember: stepProps.contextMember,
           onBack: () => stepEmit('back'),
           onSuccess: (m: CreatedMember) => stepEmit('success', m),
         })

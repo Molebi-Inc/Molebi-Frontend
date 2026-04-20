@@ -395,14 +395,24 @@ function isKeyVisible(key: string): boolean {
   return false
 }
 
+const PATERNAL_RELATION_TYPES = new Set(['paternal_grandfather', 'paternal_grandmother'])
+const MATERNAL_RELATION_TYPES = new Set(['maternal_grandfather', 'maternal_grandmother'])
+
 function isMemberVisible(key: string, m: FamilyMemberInterface, fatherId?: number, motherId?: number): boolean {
   if (props.branch === 'direct') return true
   // Parents always show on both branch views (father and mother remain visible)
   if (!BRANCH_FILTERED_KEYS.has(key)) return true
   // Coerce to number: API might return IDs as strings despite TypeScript typing
   const rt = Number(m.relationship_metadata?.related_through)
-  if (props.branch === 'father') return fatherId !== undefined && rt === Number(fatherId)
-  if (props.branch === 'mother') return motherId !== undefined && rt === Number(motherId)
+  const relType = m.relationship_metadata?.relation_type
+  if (props.branch === 'father') {
+    if (PATERNAL_RELATION_TYPES.has(relType)) return true
+    return fatherId !== undefined && rt === Number(fatherId)
+  }
+  if (props.branch === 'mother') {
+    if (MATERNAL_RELATION_TYPES.has(relType)) return true
+    return motherId !== undefined && rt === Number(motherId)
+  }
   return true
 }
 
@@ -421,11 +431,20 @@ const visibleGenerations = computed<GenerationRow[]>(() => {
   const fatherId = father?.id
   const motherId = mother?.id
 
-  // Use Number() coercion: API may return related_through as string even if typed as number
-  const onFatherSide = (m: FamilyMemberInterface) =>
-    fatherId !== undefined && Number(m.relationship_metadata?.related_through) === Number(fatherId)
-  const onMotherSide = (m: FamilyMemberInterface) =>
-    motherId !== undefined && Number(m.relationship_metadata?.related_through) === Number(motherId)
+  // relation_types that are always paternal/maternal regardless of related_through
+  const PATERNAL_TYPES = new Set(['paternal_grandfather', 'paternal_grandmother'])
+  const MATERNAL_TYPES = new Set(['maternal_grandfather', 'maternal_grandmother'])
+
+  // Use Number() coercion: API may return related_through as string even if typed as number.
+  // Also match by relation_type for grandparents that have related_through: null.
+  const onFatherSide = (m: FamilyMemberInterface) => {
+    if (PATERNAL_TYPES.has(m.relationship_metadata?.relation_type)) return true
+    return fatherId !== undefined && Number(m.relationship_metadata?.related_through) === Number(fatherId)
+  }
+  const onMotherSide = (m: FamilyMemberInterface) => {
+    if (MATERNAL_TYPES.has(m.relationship_metadata?.relation_type)) return true
+    return motherId !== undefined && Number(m.relationship_metadata?.related_through) === Number(motherId)
+  }
 
   const seen = new Set<string>()
   seen.add(nodeKey(p.self))  // pre-register self
@@ -764,16 +783,26 @@ function buildSvgPaths() {
     fanFromKey(gpPts, keyPt, auPts)
   }
 
-  if (fatherId !== undefined && fatherKey) {
-    const paternalGPs = visibleGPs.filter(gp => Number(gp.relationship_metadata?.related_through) === fatherId)
-    const paternalAUs = visibleAU.filter(au => Number(au.relationship_metadata?.related_through) === fatherId)
-    // Father is the key node; all grandparents converge at father's avatar top; aunts/uncles fan from there
+  const PATERNAL_GP_TYPES = new Set(['paternal_grandfather', 'paternal_grandmother'])
+  const MATERNAL_GP_TYPES = new Set(['maternal_grandfather', 'maternal_grandmother'])
+
+  const isPaternalGP = (gp: FamilyMemberInterface) =>
+    PATERNAL_GP_TYPES.has(gp.relationship_metadata?.relation_type) ||
+    (fatherId !== undefined && Number(gp.relationship_metadata?.related_through) === fatherId)
+
+  const isMaternalGP = (gp: FamilyMemberInterface) =>
+    MATERNAL_GP_TYPES.has(gp.relationship_metadata?.relation_type) ||
+    (motherId !== undefined && Number(gp.relationship_metadata?.related_through) === motherId)
+
+  if (fatherKey) {
+    const paternalGPs = visibleGPs.filter(isPaternalGP)
+    const paternalAUs = visibleAU.filter(au => fatherId !== undefined && Number(au.relationship_metadata?.related_through) === fatherId)
     connectGpGroup(paternalGPs.map(nodeKey), fatherKey, paternalAUs.map(nodeKey))
   }
 
-  if (motherId !== undefined && motherKey) {
-    const maternalGPs = visibleGPs.filter(gp => Number(gp.relationship_metadata?.related_through) === motherId)
-    const maternalAUs = visibleAU.filter(au => Number(au.relationship_metadata?.related_through) === motherId)
+  if (motherKey) {
+    const maternalGPs = visibleGPs.filter(isMaternalGP)
+    const maternalAUs = visibleAU.filter(au => motherId !== undefined && Number(au.relationship_metadata?.related_through) === motherId)
     connectGpGroup(maternalGPs.map(nodeKey), motherKey, maternalAUs.map(nodeKey))
   }
 
