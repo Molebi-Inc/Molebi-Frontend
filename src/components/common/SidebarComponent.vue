@@ -1,29 +1,21 @@
 <template>
-  <section
-    :class="[
-      'w-64 bg-white border-r border-gray-200 transition-all duration-300 relative h-full overflow-y-auto py-12',
-      sidebarCollapsed && '-ml-64',
-    ]"
-  >
+  <section :class="[
+    'w-64 bg-white border-r border-gray-200 transition-all duration-300 relative h-full overflow-y-auto py-12',
+    sidebarCollapsed && '-ml-64',
+  ]">
     <header class="h-12 flex items-center justify-center mb-6">
       <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
     </header>
     <nav class="p-4 space-y-2">
-      <router-link
-        v-for="item in sidebarItems.filter((item) => item.main)"
-        :key="item.id"
-        :to="item.route"
-        :id="item.elId"
-        v-slot="{ isActive }"
-      >
-        <div
-          :class="[
-            'px-4 py-3 rounded-lg cursor-pointer transition-colors',
-            isActive
-              ? 'bg-primary-50 text-primary-800 font-medium rounded-full'
-              : 'text-gray-600 hover:bg-gray-50',
-          ]"
-        >
+      <router-link v-for="item in sidebarItems.filter((item) => item.main)" :key="item.id" :to="item.route"
+        :id="item.elId" v-slot="{ isActive }">
+        <div :class="[
+          'px-4 py-3 rounded-lg transition-colors',
+          isActive
+            ? 'bg-primary-50 text-primary-800 font-medium rounded-full'
+            : 'text-gray-600 hover:bg-gray-50',
+          item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+        ]">
           <div class="flex items-center gap-3">
             <MlbIcon :name="item.icon" size="24" color="fill-primary-500!" />
             <span>{{ item.label }}</span>
@@ -31,20 +23,15 @@
         </div>
       </router-link>
       <hr class="my-4 border-gray-200" />
-      <router-link
-        v-for="item in sidebarItems.filter((item) => !item.main)"
-        :key="item.id"
-        :to="item.route"
-        v-slot="{ isActive }"
-      >
-        <div
-          :class="[
-            'px-4 py-3 rounded-lg cursor-pointer transition-colors',
-            isActive
-              ? 'bg-primary-50 text-primary-800 font-medium rounded-full'
-              : 'text-gray-600 hover:bg-gray-50',
-          ]"
-        >
+      <router-link v-for="item in sidebarItems.filter((item) => !item.main)" :key="item.id" :to="item.route"
+        v-slot="{ isActive }">
+        <div :class="[
+          'px-4 py-3 rounded-lg transition-colors',
+          isActive
+            ? 'bg-primary-50 text-primary-800 font-medium rounded-full'
+            : 'text-gray-600 hover:bg-gray-50',
+          item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+        ]">
           <div class="flex items-center gap-3">
             <MlbIcon :name="item.icon" class="w-6 h-6 fill-primary-500!" />
             <span>{{ item.label }}</span>
@@ -121,6 +108,7 @@ const sidebarItems: SidebarItem[] = [
     icon: 'time-capsule',
     route: { name: 'App.TimeCapsules.View' },
     main: true,
+    disabled: true,
   },
   {
     id: 'vault',
@@ -128,6 +116,7 @@ const sidebarItems: SidebarItem[] = [
     icon: 'vault',
     route: { name: 'App.VaultView' },
     main: true,
+    disabled: true,
   },
   {
     id: 'heritage',
@@ -135,6 +124,7 @@ const sidebarItems: SidebarItem[] = [
     icon: 'vuesax.outline.bank',
     route: { name: 'App.HeritageView' },
     main: true,
+    disabled: true,
   },
   {
     id: 'settings',

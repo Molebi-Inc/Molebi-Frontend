@@ -56,8 +56,8 @@
 
         <!-- Explore your culture -->
         <button
-          class="flex flex-col items-center gap-2 rounded-2xl p-4 text-left bg-[#FFE6A6] hover:bg-amber-100 transition-colors border border-amber-100 cursor-pointer col-span-2 md:col-span-1"
-          @click="handleAction('culture')">
+          class="flex flex-col items-center gap-2 rounded-2xl p-4 text-left bg-[#FFE6A6] hover:bg-amber-100 transition-colors border border-amber-100 opacity-50 cursor-not-allowed col-span-2 md:col-span-1"
+          label="Coming soon" :disabled="true" @click="handleAction('culture')">
           <div class="w-full h-24 rounded-xl bg-white flex items-center justify-center overflow-hidden mb-1">
             <img src="@/assets/images/culture.png" alt="Explore culture"
               class="w-full h-full object-cover rounded-xl" />

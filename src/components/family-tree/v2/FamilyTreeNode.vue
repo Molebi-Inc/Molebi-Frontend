@@ -43,7 +43,7 @@
       </p>
 
       <!-- Add button -->
-      <!-- <button v-if="showAdd"
+      <button v-if="showAdd"
         class="flex items-center justify-center rounded-full bg-white border border-neutral-200 shadow-sm hover:bg-primary-50 hover:border-primary-400 transition-colors z-10"
         :style="{ width: addBtnSize + 'px', height: addBtnSize + 'px' }"
         :title="`Add relative to ${addButtonContextName}`" @click.stop="$emit('add', member)">
@@ -51,7 +51,7 @@
           xmlns="http://www.w3.org/2000/svg">
           <path d="M7 1V13M1 7H13" stroke="#16a34a" stroke-width="2" stroke-linecap="round" />
         </svg>
-      </button> -->
+      </button>
     </div>
   </div>
 </template>
@@ -244,5 +244,5 @@ const blobRingStyle = computed(() => ({
 
 const nameFontSize = computed(() => Math.round(props.size * 0.175))
 const roleFontSize = computed(() => Math.round(props.size * 0.15))
-// const addBtnSize = computed(() => Math.round(props.size * 0.38))
+const addBtnSize = computed(() => Math.round(props.size * 0.38))
 </script>

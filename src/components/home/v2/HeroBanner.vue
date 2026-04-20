@@ -15,6 +15,7 @@ interface Banner {
   textColor: string
   image: { src: string; alt: string }
   event: BannerEvent
+  disabled?: boolean
 }
 
 const banners: Banner[] = [
@@ -37,6 +38,7 @@ const banners: Banner[] = [
     textColor: "primary-900",
     image: { src: heroBannerTimeCapsule, alt: "Time capsule" },
     event: "time-capsule",
+    disabled: true,
   },
   {
     title: "Know more about your traditions and culture",
@@ -46,6 +48,7 @@ const banners: Banner[] = [
     textColor: "white",
     image: { src: heroBannerCulture, alt: "Culture" },
     event: "explore-culture",
+    disabled: true,
   },
 ]
 
@@ -95,8 +98,11 @@ onUnmounted(() => {
             {{ currentBanner.subtitle }}
           </p>
           <button
-            class="self-start mt-2 text-white text-[7px] md:text-sm md:font-semibold px-5 py-1 md:py-2.5 rounded-xl transition-colors shadow-sm cursor-pointer whitespace-nowrap h-[19px] md:h-auto"
-            :class="!isEvenBannerIndex ? 'bg-primary-700 hover:bg-primary-800' : 'bg-secondary-400 hover:bg-secondary-500'"
+            class="self-start mt-2 text-white text-[7px] md:text-sm md:font-semibold px-5 py-1 md:py-2.5 rounded-xl transition-colors shadow-sm whitespace-nowrap h-[19px] md:h-auto"
+            :class="[
+              !isEvenBannerIndex ? 'bg-primary-700 hover:bg-primary-800' : 'bg-secondary-400 hover:bg-secondary-500',
+              currentBanner.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            ]" :label="currentBanner.disabled ? 'Coming soon' : currentBanner.cta" :disabled="currentBanner.disabled"
             @click="emit(currentBanner.event)">
             {{ currentBanner.cta }}
           </button>

@@ -12,7 +12,7 @@
         </svg>
       </button>
       <h2 class="text-base font-semibold text-neutral-900 flex-1 text-center pr-8">
-        Add {{ memberType.label }} to {{ userFirstName }}
+        Add {{ memberType.label }} to {{ formTargetName }}
       </h2>
     </div>
 
@@ -73,9 +73,9 @@
           class="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm text-neutral-800 outline-none focus:border-primary-400 transition-colors placeholder-neutral-400" />
       </div>
 
-      <!-- after-last-name slot -->
+      <!-- after-last-name slot (hidden when contextOverride pre-determines the relationship) -->
       <component :is="extraFieldsComponent"
-        v-if="memberType.extraFieldsSlot === 'after-last-name' && extraFieldsComponent" v-model="form" />
+        v-if="memberType.extraFieldsSlot === 'after-last-name' && extraFieldsComponent && !contextOverride" v-model="form" />
 
       <!-- Date of Birth -->
       <div>
@@ -94,7 +94,8 @@
       </div>
 
       <!-- after-dob slot -->
-      <component :is="extraFieldsComponent" v-if="memberType.extraFieldsSlot === 'after-dob' && extraFieldsComponent"
+      <component :is="extraFieldsComponent"
+        v-if="memberType.extraFieldsSlot === 'after-dob' && extraFieldsComponent && !contextOverride"
         v-model="form" />
 
       <!-- Status -->
@@ -119,7 +120,8 @@
       </div>
 
       <!-- after-status slot -->
-      <component :is="extraFieldsComponent" v-if="memberType.extraFieldsSlot === 'after-status' && extraFieldsComponent"
+      <component :is="extraFieldsComponent"
+        v-if="memberType.extraFieldsSlot === 'after-status' && extraFieldsComponent && !contextOverride"
         v-model="form" />
 
       <!-- Email Address -->
@@ -194,6 +196,10 @@ const EXTRA_FIELDS_COMPONENTS: Record<NonNullable<ExtraFieldsVariant>, Component
 
 interface Props {
   memberType: MemberTypeConfig
+  /** When set, overrides the derived relation_type + related_through and hides extra fields. */
+  contextOverride?: { relation_type: string; related_through: number | null } | null
+  /** The member we're adding a relative to (shown in the form header). */
+  contextMember?: import('@/types/family-tree.types').FamilyMemberInterface | null
 }
 
 interface CreatedMember {
@@ -219,11 +225,17 @@ const form = ref<V2MemberFormData>(defaultFormData())
 const photoPreview = ref<string | null>(null)
 
 const userFirstName = computed(
-  () =>
-    profileStore.userDetails?.first_name ||
-    // profileStore.userDetails?.full_name ||
-    'you',
+  () => profileStore.userDetails?.first_name || 'you',
 )
+
+/** Name shown in the form header: context member's first name, or self's first name. */
+const formTargetName = computed(() => {
+  if (props.contextMember) {
+    const m = props.contextMember
+    return (m.first_name || m.full_name || '').trim() || 'them'
+  }
+  return userFirstName.value
+})
 
 const isPartner = computed(() => props.memberType.extraFields === 'partner')
 
@@ -288,7 +300,37 @@ const buildApiPayload = (): FamilyMemberFormValues => {
   const f = form.value
   const type = props.memberType
 
-  // Resolve relation_type
+  // Resolve family_name (last name)
+  const family_name = isPartner.value
+    ? f.married_name || f.maiden_name || ''
+    : f.family_name
+
+  // Resolve gender
+  const gender =
+    type.defaultGender ??
+    (isPartner.value ? (f.gender as 'male' | 'female') : 'prefer_not_to_say')
+
+  // When a context override is provided, use it directly — no need to derive from extra fields.
+  if (props.contextOverride) {
+    return {
+      first_name: f.first_name.trim(),
+      middle_name: f.middle_name.trim(),
+      family_name,
+      is_same_family_name: f.is_same_family_name,
+      nickname: f.maiden_name || '',
+      relation_type: props.contextOverride.relation_type,
+      profile_picture: f.profile_picture,
+      gender,
+      related_through: props.contextOverride.related_through,
+      parent_id: f.parent_id,
+      is_adoptive: f.is_adoptive,
+      is_former: f.is_former,
+      is_deceased: f.is_deceased,
+      date_of_birth: f.date_of_birth,
+    }
+  }
+
+  // Default (self) flow: derive relation_type and related_through from form + config.
   const relationTypeMap: Record<string, string> = {
     mother: 'mother',
     father: 'father',
@@ -300,12 +342,6 @@ const buildApiPayload = (): FamilyMemberFormValues => {
   }
   const relation_type = relationTypeMap[type.relationConfigKey] ?? type.relationConfigKey
 
-  // Resolve family_name (last name)
-  const family_name = isPartner.value
-    ? f.married_name || f.maiden_name || ''
-    : f.family_name
-
-  // Resolve related_through
   let related_through: number | null = null
   if (type.extraFields === 'sibling') {
     if (
@@ -315,7 +351,6 @@ const buildApiPayload = (): FamilyMemberFormValues => {
       related_through = f.sibling_parent_id
     }
   } else if (type.extraFields === 'step-sibling') {
-    // related_through = the shared parent (biological parent in common)
     if (f.sibling_parent_id) {
       related_through = f.sibling_parent_id
     }
@@ -325,17 +360,12 @@ const buildApiPayload = (): FamilyMemberFormValues => {
     }
   }
 
-  // Resolve gender
-  const gender =
-    type.defaultGender ??
-    (isPartner.value ? (f.gender as 'male' | 'female') : 'prefer_not_to_say')
-
   return {
     first_name: f.first_name.trim(),
     middle_name: f.middle_name.trim(),
     family_name,
     is_same_family_name: f.is_same_family_name,
-    nickname: f.maiden_name || '',  // store maiden name in nickname for partner
+    nickname: f.maiden_name || '',
     relation_type,
     profile_picture: f.profile_picture,
     gender,
