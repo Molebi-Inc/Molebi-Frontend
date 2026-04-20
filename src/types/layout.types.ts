@@ -5,6 +5,7 @@ export type SidebarItem = {
   icon: string
   route: { name: string; params?: { module: string; page?: string } }
   main?: boolean
+  disabled?: boolean
 }
 
 export type TourList = {

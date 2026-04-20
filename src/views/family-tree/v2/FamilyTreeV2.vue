@@ -89,7 +89,7 @@
         <!-- Add Family Member button -->
         <button
           class="ml-4 flex items-center gap-2 bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm px-5 py-3 rounded-2xl transition-colors shadow-sm"
-          @click="handleAddMember">
+          @click="openAddMemberModal">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
             <path
               d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
@@ -162,7 +162,7 @@
       <!-- Mobile FAB: Add Family Member -->
       <button
         class="md:hidden absolute right-5 bottom-6 z-20 w-14 h-14 bg-primary-700 hover:bg-primary-800 rounded-full shadow-lg flex items-center justify-center text-white transition-colors"
-        @click="handleAddMember">
+        @click="openAddMemberModal">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7">
           <path fill-rule="evenodd"
             d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
@@ -191,8 +191,9 @@
     </n-drawer>
 
     <!-- Add Family Member Flow (modal on desktop, bottom sheet on mobile) -->
-    <AddFamilyMemberFlow v-model:show="showAddMemberModal" @member-added="refreshTree"
-      @view-tree="showAddMemberModal = false" @view-profile="handleViewProfile" />
+    <AddFamilyMemberFlow v-model:show="showAddMemberModal" :context-member="addMemberContextMember"
+      @member-added="refreshTree" @update:show="onAddMemberModalClose" @view-tree="showAddMemberModal = false"
+      @view-profile="handleViewProfile" />
 
     <!-- Node Action Modal (opened on node click) -->
     <NodeActionModal v-if="nodeActionMember" :show="showNodeActionModal" :member="nodeActionMember"
@@ -271,6 +272,7 @@ const familyTreeStore = useFamilyTreeStore()
 const showBottomSheet = ref(false)
 const showTreeSettingsModal = ref(false)
 const showAddMemberModal = ref(false)
+const addMemberContextMember = ref<FamilyMemberInterface | null>(null)
 const showProfileModal = ref(false)
 const profileModalMember = ref<(FamilyMemberInterface & { _isSelf?: boolean }) | null>(null)
 const showEditMemberModal = ref(false)
@@ -660,8 +662,18 @@ watch(
 )
 
 // Handlers
-const handleAddMember = () => {
+const handleAddMember = (member?: FamilyMemberInterface) => {
+  addMemberContextMember.value = member ?? null
   showAddMemberModal.value = true
+}
+
+const openAddMemberModal = () => {
+  handleAddMember()
+}
+
+const onAddMemberModalClose = (val: boolean) => {
+  showAddMemberModal.value = val
+  if (!val) addMemberContextMember.value = null
 }
 
 const refreshTree = async () => {
