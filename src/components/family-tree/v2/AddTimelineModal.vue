@@ -9,10 +9,7 @@
         <button
           class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors"
           @click="$emit('update:show', false)">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-            <path
-              d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 11.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L8.94 10 5.22 6.28a.75.75 0 0 1 1.06-1.06z" />
-          </svg>
+          &#x2715;
         </button>
       </div>
       <p class="text-center text-sm text-neutral-500 mt-1">Select which timeline to add to {{ memberFirstName }}</p>
@@ -20,8 +17,7 @@
 
     <div class="flex flex-col gap-2 -mx-1">
       <div v-for="type in visibleTypes" :key="type.value"
-        class="flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-colors"
-        :class="isDisabled(type.value)
+        class="flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-colors" :class="isDisabled(type.value)
           ? 'border-neutral-100 bg-neutral-50 cursor-not-allowed opacity-50'
           : 'border-neutral-200 hover:border-primary-300 hover:bg-primary-50/50 cursor-pointer'"
         @click="!isDisabled(type.value) && (type.value === 'all' ? showAll = true : selectType(type.value))">
