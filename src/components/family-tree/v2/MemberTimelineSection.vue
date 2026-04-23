@@ -82,7 +82,7 @@
 
   <!-- Add / Edit timeline modal -->
   <AddTimelineModal :show="showModal" :member-id="Number(memberId)" :member-first-name="memberFirstName"
-    :edit-entry="entryToEdit" @update:show="showModal = $event" @saved="onSaved" />
+    :edit-entry="entryToEdit" :existing-types="allEntries.map(e => e.type)" @update:show="showModal = $event" @saved="onSaved" />
 </template>
 
 <script setup lang="ts">

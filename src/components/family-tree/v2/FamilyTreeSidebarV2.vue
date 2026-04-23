@@ -28,6 +28,18 @@
             <span class="text-sm text-neutral-500">Youngest Birth Year</span>
             <span class="font-bold text-neutral-900 text-sm">{{ youngestBirthYear ?? '—' }}</span>
           </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-neutral-500">Number of males</span>
+            <span class="font-bold text-neutral-900 text-sm">{{ maleMembers ?? '—' }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-neutral-500">Number of females</span>
+            <span class="font-bold text-neutral-900 text-sm">{{ femaleMembers ?? '—' }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-neutral-500">Number of unknown gender</span>
+            <span class="font-bold text-neutral-900 text-sm">{{ unknownMembers ?? 0 }}</span>
+          </div>
         </div>
       </SidebarSection>
 
@@ -110,11 +122,37 @@
       </SidebarSection>
     </div>
   </div>
+
+  <!-- Help Modal -->
+  <MlbModal :show="showHelp" :max-width="560" class="rounded-3xl!" @update:show="showHelp = false">
+    <template #header>
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-neutral-900">Help</h3>
+        <button
+          class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors"
+          @click="showHelp = false">
+          x
+        </button>
+      </div>
+    </template>
+    <div class="flex flex-col gap-4">
+      <div v-for="item in helpItems" :key="item.title"
+        class="flex gap-4 p-4 rounded-2xl border border-neutral-100 bg-white">
+        <img src="@/assets/svg/tree.svg" :alt="item.title"
+          class="w-24 h-24 rounded-xl object-cover shrink-0 bg-primary-50" />
+        <div>
+          <h4 class="text-base font-bold text-[#0F7234] mb-1">{{ item.title }}</h4>
+          <p v-for="(line, i) in item.lines" :key="i" class="text-sm text-[#0F7234] leading-relaxed" v-html="line" />
+        </div>
+      </div>
+    </div>
+  </MlbModal>
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import SidebarSection from './SidebarSection.vue'
+import MlbModal from '@/components/ui/MlbModal.vue'
 
 type FamilyView = 'close' | 'extended'
 type Branch = 'direct' | 'father' | 'mother'
@@ -124,6 +162,9 @@ interface Props {
   userName: string
   viewingLabel?: string
   totalMembers: number | string
+  maleMembers: number | string
+  femaleMembers: number | string
+  unknownMembers: number | string
   oldestBirthYear: number | string
   youngestBirthYear: number | string
   familyView: FamilyView
@@ -193,6 +234,47 @@ const displayOptions = computed(() => [
   },
 ])
 
+const showHelp = ref(false)
+
+const helpItems = [
+  {
+    title: 'Add a Family Member',
+    lines: [
+      "Click the small '+' on a family member on the tree",
+      'Choose the relationship (Father, Sister, etc.)',
+      'Enter their details',
+      'Tap Save',
+    ],
+  },
+  {
+    title: 'Invite a Family Member',
+    lines: [
+      "Open a family member's profile",
+      'Tap Invite',
+      'Send the invite link via WhatsApp or Email',
+      "They'll join after accepting and being approved.",
+    ],
+  },
+  {
+    title: 'Edit a Family Member',
+    lines: [
+      'Tap on the person in the tree',
+      'Open their profile',
+      'Tap Edit',
+      'Update the information',
+      'Tap Save',
+    ],
+  },
+  {
+    title: 'Family Views',
+    lines: [
+      '<strong>Close Family:</strong> Parents, siblings, partner, children',
+      '<strong>Extended Family:</strong> Grandparents, Uncles, aunties, cousins',
+      'Tip: Switch views to focus on what matters most.',
+    ],
+  },
+]
+
 const settingsItems = [
   {
     label: 'Tree Settings',
@@ -200,7 +282,7 @@ const settingsItems = [
   },
   {
     label: 'Help',
-    onClick: () => { },
+    onClick: () => { showHelp.value = true },
   },
 ]
 </script>
