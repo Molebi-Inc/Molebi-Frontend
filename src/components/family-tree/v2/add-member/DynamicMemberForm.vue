@@ -75,7 +75,8 @@
 
       <!-- after-last-name slot (hidden when contextOverride pre-determines the relationship) -->
       <component :is="extraFieldsComponent"
-        v-if="memberType.extraFieldsSlot === 'after-last-name' && extraFieldsComponent && !contextOverride" v-model="form" />
+        v-if="memberType.extraFieldsSlot === 'after-last-name' && extraFieldsComponent && !contextOverride"
+        v-model="form" />
 
       <!-- Date of Birth -->
       <div>
@@ -95,8 +96,7 @@
 
       <!-- after-dob slot -->
       <component :is="extraFieldsComponent"
-        v-if="memberType.extraFieldsSlot === 'after-dob' && extraFieldsComponent && !contextOverride"
-        v-model="form" />
+        v-if="memberType.extraFieldsSlot === 'after-dob' && extraFieldsComponent && !contextOverride" v-model="form" />
 
       <!-- Status -->
       <div>
@@ -127,18 +127,16 @@
       <!-- Email Address -->
       <div>
         <label class="block text-sm font-medium text-neutral-600 mb-2">Email Address</label>
-        <input v-model="form.email" type="email" placeholder="Enter invitation email"
+        <input v-model="form.email" type="email" placeholder="Enter invitation email" :disabled="form.is_deceased"
           class="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm text-neutral-800 outline-none focus:border-primary-400 transition-colors placeholder-neutral-400" />
       </div>
 
       <!-- Invite checkbox -->
       <label class="flex items-center gap-3 cursor-pointer">
-        <span class="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 transition-colors"
-          :class="[
-            form.send_invite ? 'bg-primary-600 border-primary-600' : 'border-neutral-300',
-            canToggleInvite ? '' : 'opacity-50 cursor-not-allowed',
-          ]"
-          @click="toggleInvite">
+        <span class="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 transition-colors" :class="[
+          form.send_invite ? 'bg-primary-600 border-primary-600' : 'border-neutral-300',
+          canToggleInvite ? '' : 'opacity-50 cursor-not-allowed',
+        ]" @click="toggleInvite">
           <svg v-if="form.send_invite" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white"
             class="w-3 h-3">
             <path fill-rule="evenodd"
@@ -273,7 +271,7 @@ const handlePhotoChange = (event: Event) => {
 }
 
 const isFormValid = computed(() => Boolean(form.value.first_name.trim()))
-const canToggleInvite = computed(() => Boolean(form.value.email?.trim()))
+const canToggleInvite = computed(() => Boolean(form.value.email?.trim()) && !Boolean(form.value.is_deceased))
 
 const getUploadFile = (value: unknown): File | null => {
   if (value instanceof File) return value

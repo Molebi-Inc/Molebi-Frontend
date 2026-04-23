@@ -1,5 +1,12 @@
 <template>
   <div class="flex flex-col items-center px-6 py-8">
+    <div class="w-full flex justify-end mb-2">
+      <button class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors" @click="$emit('close')">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+          <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 11.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L8.94 10 5.22 6.28a.75.75 0 0 1 1.06-1.06z" />
+        </svg>
+      </button>
+    </div>
     <!-- Avatar with check badge -->
     <div class="relative mb-6">
       <div class="w-20 h-20 rounded-full bg-neutral-100 flex items-center justify-center overflow-hidden">
@@ -91,6 +98,7 @@ defineEmits<{
   (e: 'view-profile'): void
   (e: 'view-tree'): void
   (e: 'invite'): void
+  (e: 'close'): void
 }>()
 
 const pronounLabel = computed(() => {

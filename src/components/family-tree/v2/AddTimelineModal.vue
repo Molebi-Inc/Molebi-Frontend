@@ -1,13 +1,15 @@
 <template>
   <!-- Type selector step -->
-  <MlbModal v-if="step === 'select'" :show="show" :max-width="480" :bottom-sheet="isMobile"
-    :bottom-sheet-height="600" class="rounded-3xl!" @update:show="$emit('update:show', false)">
+  <MlbModal v-if="step === 'select'" :show="show" :max-width="480" :bottom-sheet="isMobile" :bottom-sheet-height="600"
+    class="rounded-3xl!" @update:show="$emit('update:show', false)">
     <template #header>
       <div class="flex items-center justify-between">
-        <button class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors"
+        <button
+          class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors"
           @click="$emit('update:show', false)">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 11.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L8.94 10 5.22 6.28a.75.75 0 0 1 1.06-1.06z" />
+            <path
+              d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 11.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L8.94 10 5.22 6.28a.75.75 0 0 1 1.06-1.06z" />
           </svg>
         </button>
         <h3 class="text-base font-semibold text-neutral-900">Add Timeline</h3>
@@ -17,11 +19,17 @@
     </template>
 
     <div class="flex flex-col gap-2 -mx-1">
-      <div v-for="type in TIMELINE_TYPES" :key="type.value"
-        class="flex items-center justify-between px-4 py-3.5 rounded-2xl border border-neutral-200 hover:border-primary-300 hover:bg-primary-50/50 transition-colors cursor-pointer"
-        @click="selectType(type.value)">
+      <div v-for="type in visibleTypes" :key="type.value"
+        class="flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-colors"
+        :class="isDisabled(type.value)
+          ? 'border-neutral-100 bg-neutral-50 cursor-not-allowed opacity-50'
+          : 'border-neutral-200 hover:border-primary-300 hover:bg-primary-50/50 cursor-pointer'"
+        @click="!isDisabled(type.value) && (type.value === 'all' ? showAll = true : selectType(type.value))">
         <span class="text-sm font-medium text-neutral-800">{{ type.label }}</span>
-        <button class="text-sm font-semibold text-primary-700 hover:text-primary-800 transition-colors">Add</button>
+        <span class="text-sm font-semibold transition-colors"
+          :class="isDisabled(type.value) ? 'text-neutral-400' : 'text-primary-700 hover:text-primary-800'">
+          {{ isDisabled(type.value) ? 'Added' : type.value === 'all' ? 'View all' : 'Add' }}
+        </span>
       </div>
     </div>
   </MlbModal>
@@ -31,20 +39,28 @@
     :bottom-sheet-height="520" class="rounded-3xl!" @update:show="$emit('update:show', false)">
     <template #header>
       <div class="flex items-center justify-between">
-        <button class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors"
+        <button
+          class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors"
           @click="isEditing ? $emit('update:show', false) : (step = 'select')">
-          <svg v-if="isEditing" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 11.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L8.94 10 5.22 6.28a.75.75 0 0 1 1.06-1.06z" />
+          <svg v-if="isEditing" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+            class="w-4 h-4">
+            <path
+              d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 11.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L8.94 10 5.22 6.28a.75.75 0 0 1 1.06-1.06z" />
           </svg>
           <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-            <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd" />
+            <path fill-rule="evenodd"
+              d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z"
+              clip-rule="evenodd" />
           </svg>
         </button>
         <h3 class="text-base font-semibold text-neutral-900">{{ selectedTypeLabel }}</h3>
-        <button class="w-7 h-7 flex items-center justify-center text-primary-700 hover:text-primary-800 transition-colors"
+        <button
+          class="w-7 h-7 flex items-center justify-center text-primary-700 hover:text-primary-800 transition-colors"
           :class="{ 'opacity-40 pointer-events-none': saving }" @click="submit">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+            <path fill-rule="evenodd"
+              d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+              clip-rule="evenodd" />
           </svg>
         </button>
       </div>
@@ -85,6 +101,7 @@ const props = defineProps<{
   show: boolean
   memberId: number
   memberFirstName: string
+  existingTypes?: string[]
   /** When set, opens directly to the form in edit mode */
   editEntry?: TimelineEntryInterface | null
 }>()
@@ -104,25 +121,35 @@ const saving = ref(false)
 
 const isEditing = computed(() => !!props.editEntry)
 
+const ONCE_ONLY_TYPES = ['birth']
+const isDisabled = (value: string) => ONCE_ONLY_TYPES.includes(value) && (props.existingTypes ?? []).includes(value)
+
+const showAll = ref(false)
+const visibleTypes = computed(() =>
+  showAll.value
+    ? TIMELINE_TYPES.filter((t) => t.value !== 'all')
+    : TIMELINE_TYPES.filter((t) => t.section === 'main'),
+)
+
 const form = ref({
   event_date: '',
   place: '',
   description: '',
 })
 
-const TIMELINE_TYPES: { label: string; value: TimelineType }[] = [
-  { label: 'Birth', value: 'birth' },
-  { label: 'Marriage', value: 'marriage' },
-  { label: 'Divorce', value: 'divorce' },
-  { label: 'Education', value: 'education' },
-  { label: 'Award', value: 'award' },
-  { label: 'Church', value: 'church' },
-  { label: 'Retirement', value: 'retirement' },
-  { label: 'Skills', value: 'skill' },
-  { label: 'Occupation', value: 'occupation' },
-  { label: 'Burial', value: 'burial' },
-  { label: 'Achievements', value: 'achievement' },
-  { label: 'Other', value: 'other' },
+const TIMELINE_TYPES: { label: string; value: TimelineType, section: string }[] = [
+  { label: 'Birth', value: 'birth', section: 'main' },
+  { label: 'Marriage', value: 'marriage', section: 'main' },
+  { label: 'Divorce', value: 'divorce', section: 'full' },
+  { label: 'Education', value: 'education', section: 'main' },
+  { label: 'Award', value: 'award', section: 'full' },
+  { label: 'Church', value: 'church', section: 'full' },
+  { label: 'Retirement', value: 'retirement', section: 'full' },
+  { label: 'Skills', value: 'skill', section: 'full' },
+  { label: 'Occupation', value: 'occupation', section: 'full' },
+  { label: 'Burial', value: 'burial', section: 'full' },
+  { label: 'Achievements', value: 'achievement', section: 'main' },
+  { label: 'All Timeline', value: 'all', section: 'main' },
 ]
 
 const selectedTypeLabel = computed(
@@ -183,6 +210,7 @@ watch(
       selectedType.value = null
       form.value = { event_date: '', place: '', description: '' }
       step.value = 'select'
+      showAll.value = false
     }
   },
   { immediate: true },
