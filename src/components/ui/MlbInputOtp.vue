@@ -50,8 +50,8 @@ function onFinish(value: string[] | null) {
 <style scoped>
 /* Default sizing when callers don't apply their own wrapper class styles. */
 :deep(.otp-input:not(.otp-input-wrapper) .n-input.n-input--resizable.n-input--stateful) {
-  height: 48px !important;
-  width: 48px !important;
+  height: 36px !important;
+  width: 36px !important;
 }
 
 /* Large screens: slightly larger OTP boxes for better readability. */
@@ -60,5 +60,14 @@ function onFinish(value: string[] | null) {
     height: 60px !important;
     width: 60px !important;
   }
+}
+
+.otp-input :deep(.n-input .n-input-wrapper .n-input__input) {
+  display: flex;
+  align-items: center;
+}
+
+.otp-input :deep(.n-input .n-input-wrapper .n-input__input .n-input__input-el) {
+  font-size: 20px;
 }
 </style>

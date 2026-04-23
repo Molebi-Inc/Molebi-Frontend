@@ -48,7 +48,7 @@
 
   <!-- Photo metadata (wide modal on desktop) -->
   <MlbModal v-else-if="step === 'photo-meta'" :show="show" :bottom-sheet="isMobile" :bottom-sheet-height="540"
-    style="--modal-max-width: 860px" class="rounded-3xl!" @update:show="onClose">
+    :max-width="800" style="--modal-max-width: 860px" class="rounded-3xl!" @update:show="onClose">
     <template #header>
       <div class="flex items-center justify-between md:hidden">
         <button class="text-neutral-500 hover:text-neutral-800" @click="step = 'photo-preview'">

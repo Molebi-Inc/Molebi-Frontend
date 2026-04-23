@@ -229,7 +229,7 @@ export type TimelineType =
   | 'occupation'
   | 'burial'
   | 'achievement'
-  | 'other'
+  | 'all'
 
 export interface TimelineInterface {
   year: number
@@ -260,6 +260,9 @@ export interface FamilyInsightInterface {
   oldest_member_birth_year: number | string | null
   youngest_member_birth_year: number | string | null
   total_members: number
+  male_members_count: number
+  female_members_count: number
+  prefer_not_to_say_count: number
 }
 
 export type FamilyTreeSectionType = 'close_family' | 'extended_family'

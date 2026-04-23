@@ -30,7 +30,13 @@
 
     <!-- Expanded content -->
     <div v-if="open" class="px-5 pb-5">
-      <p v-if="hasBio" class="text-base text-neutral-700 leading-relaxed">{{ biography }}</p>
+      <template v-if="hasBio">
+        <p class="text-base text-neutral-700 leading-relaxed" :class="{ 'line-clamp-4': !bioExpanded }">{{ biography }}</p>
+        <button v-if="isTruncated" class="mt-2 text-sm font-medium text-primary-700 hover:text-primary-800 transition-colors cursor-pointer"
+          @click="bioExpanded = !bioExpanded">
+          {{ bioExpanded ? 'See less' : 'See more' }}
+        </button>
+      </template>
       <p v-else class="text-sm text-neutral-400 text-center py-2">No biography yet.</p>
     </div>
   </div>
@@ -96,6 +102,9 @@ const draftBio = ref('')
 
 const biography = computed(() => (props.member as any).biography as string | null | undefined)
 const hasBio = computed(() => !!biography.value?.trim())
+
+const bioExpanded = ref(false)
+const isTruncated = computed(() => (biography.value?.length ?? 0) > 200)
 
 const updateMutation = useUpdateFamilyMemberMutation()
 

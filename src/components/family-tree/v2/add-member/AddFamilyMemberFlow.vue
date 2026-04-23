@@ -12,7 +12,7 @@
             :is-inviting="isInviting" :context-mappings="contextMappings" :context-member="contextMember ?? null"
             :context-override="contextOverride" @select="handleSelect" @back="step = 'select'"
             @success="handleSuccess" @add-another="handleAddAnother" @view-profile="handleViewProfile"
-            @view-tree="handleViewTree" @invite="handleInvite" />
+            @view-tree="handleViewTree" @invite="handleInvite" @close="internalShow = false" />
         </div>
       </MlbModal>
     </div>
@@ -233,7 +233,7 @@ const StepContent = defineComponent({
       default: null,
     },
   },
-  emits: ['select', 'back', 'success', 'add-another', 'view-profile', 'view-tree', 'invite'],
+  emits: ['select', 'back', 'success', 'add-another', 'view-profile', 'view-tree', 'invite', 'close'],
   setup(stepProps, { emit: stepEmit }) {
     return () => {
       if (stepProps.step === 'select') {
@@ -261,6 +261,7 @@ const StepContent = defineComponent({
           onViewProfile: () => stepEmit('view-profile'),
           onViewTree: () => stepEmit('view-tree'),
           onInvite: () => stepEmit('invite'),
+          onClose: () => stepEmit('close'),
         })
       }
       return null

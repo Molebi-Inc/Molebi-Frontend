@@ -7,6 +7,8 @@
         <FamilyTreeSidebarV2 :user-avatar-url="userAvatarUrl" :user-name="userName" :viewing-label="viewingLabel"
           :total-members="familyInsights?.total_members"
           :oldest-birth-year="familyInsights?.oldest_member_birth_year ?? 'N/A'"
+          :male-members="familyInsights?.male_members_count" :female-members="familyInsights?.female_members_count"
+          :unknown-members="familyInsights?.prefer_not_to_say_count"
           :youngest-birth-year="familyInsights?.youngest_member_birth_year ?? 'N/A'" :family-view="familyView"
           :branch="branch" :show-photos="showPhotos" :show-names="showNames" @update:family-view="onFamilyViewUpdate"
           @update:branch="onBranchUpdate" @update:show-photos="onShowPhotosUpdate"
@@ -182,6 +184,8 @@
         <FamilyTreeSidebarV2 :user-avatar-url="userAvatarUrl" :user-name="userName" :viewing-label="viewingLabel"
           :total-members="familyInsights?.total_members"
           :oldest-birth-year="familyInsights?.oldest_member_birth_year ?? 'N/A'"
+          :male-members="familyInsights?.male_members_count" :female-members="familyInsights?.female_members_count"
+          :unknown-members="familyInsights?.prefer_not_to_say_count"
           :youngest-birth-year="familyInsights?.youngest_member_birth_year ?? 'N/A'" :family-view="familyView"
           :branch="branch" :show-photos="showPhotos" :show-names="showNames" @update:family-view="onFamilyViewUpdate"
           @update:branch="onBranchUpdate" @update:show-photos="onShowPhotosUpdate"
@@ -363,6 +367,9 @@ const familyInsights = ref<FamilyInsightInterface>({
   oldest_member_birth_year: 'N/A',
   youngest_member_birth_year: 'N/A',
   total_members: 0,
+  male_members_count: 0,
+  female_members_count: 0,
+  prefer_not_to_say_count: 0
 })
 
 // Tree data
@@ -680,7 +687,7 @@ const refreshTree = async () => {
   try {
     const [treeRes, insightsRes] = await Promise.all([
       familyTreesQuery.refetch(),
-      familyInsightsQuery.refetch(),
+      familyInsightsQuery.refetch()
     ])
     if (treeRes.data?.data) {
       familyTreeData.value = treeRes.data.data
