@@ -4,6 +4,8 @@
     class="rounded-3xl!" @update:show="$emit('update:show', false)">
     <template #header>
       <div class="flex items-center justify-between">
+        <div class="w-7" />
+        <h3 class="text-base font-semibold text-neutral-900">Add Timeline</h3>
         <button
           class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors"
           @click="$emit('update:show', false)">
@@ -12,8 +14,6 @@
               d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 1-1.06 1.06L10 11.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L8.94 10 5.22 6.28a.75.75 0 0 1 1.06-1.06z" />
           </svg>
         </button>
-        <h3 class="text-base font-semibold text-neutral-900">Add Timeline</h3>
-        <div class="w-7" />
       </div>
       <p class="text-center text-sm text-neutral-500 mt-1">Select which timeline to add to {{ memberFirstName }}</p>
     </template>
