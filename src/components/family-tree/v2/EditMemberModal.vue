@@ -130,6 +130,15 @@
         </div>
       </div>
 
+      <!-- Relation Type -->
+      <div>
+        <label class="block text-sm font-medium text-neutral-600 mb-2">Relation Type</label>
+        <select v-model="form.relation_type"
+          class="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm text-neutral-800 outline-none focus:border-primary-400 transition-colors">
+          <option v-for="opt in relationTypeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+
       <div class="pt-2 flex justify-center">
         <button
           class="w-100 px-6 h-11 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -168,6 +177,7 @@ interface EditForm {
   gender: GenderType
   date_of_birth: string | null
   is_deceased: boolean
+  relation_type: RelationType | ''
 }
 
 const props = defineProps<{
@@ -197,6 +207,7 @@ const form = ref<EditForm>({
   gender: 'prefer_not_to_say',
   date_of_birth: null,
   is_deceased: false,
+  relation_type: '',
 })
 
 // Pre-fill when modal opens or member changes
@@ -213,6 +224,7 @@ watch(
       gender: m.gender ?? 'prefer_not_to_say',
       date_of_birth: (m as any).date_of_birth ?? null,
       is_deceased: !!(m as any).is_deceased,
+      relation_type: (m.relationship_metadata?.relation_type as RelationType) ?? '',
     }
     currentPhotoUrl.value = m.profile_picture_url ?? null
     photoFile.value = null
@@ -232,6 +244,35 @@ const statusOptions = [
   { label: 'Deceased', value: true },
 ]
 
+const relationTypeOptions: Array<{ label: string; value: RelationType | '' }> = [
+  { label: '— Select relation —', value: '' },
+  { label: 'Father', value: 'father' },
+  { label: 'Mother', value: 'mother' },
+  { label: 'Sibling', value: 'sibling' },
+  { label: 'Half Sibling', value: 'half_sibling' },
+  { label: 'Step Sibling', value: 'step_sibling' },
+  { label: 'Spouse', value: 'spouse' },
+  { label: 'Child', value: 'child' },
+  { label: 'Stepfather', value: 'stepfather' },
+  { label: 'Stepmother', value: 'stepmother' },
+  { label: 'Aunt', value: 'aunt' },
+  { label: 'Uncle', value: 'uncle' },
+  { label: 'Cousin', value: 'cousin' },
+  { label: 'Niece', value: 'niece' },
+  { label: 'Nephew', value: 'nephew' },
+  { label: 'Grandmother', value: 'grandmother' },
+  { label: 'Grandfather', value: 'grandfather' },
+  { label: 'Maternal Grandmother', value: 'maternal_grandmother' },
+  { label: 'Maternal Grandfather', value: 'maternal_grandfather' },
+  { label: 'Paternal Grandmother', value: 'paternal_grandmother' },
+  { label: 'Paternal Grandfather', value: 'paternal_grandfather' },
+  { label: 'Grandchildren', value: 'grandchildren' },
+  { label: 'Father-in-Law', value: 'father_in_law' },
+  { label: 'Mother-in-Law', value: 'mother_in_law' },
+  { label: 'Brother-in-Law', value: 'brother_in_law' },
+  { label: 'Sister-in-Law', value: 'sister_in_law' },
+]
+
 const handlePhotoChange = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0] ?? null
   photoFile.value = file
@@ -242,16 +283,13 @@ const save = async () => {
   if (!props.member.id) return
   isSaving.value = true
   try {
-    const relationType = props.member.relationship_metadata?.relation_type ?? ''
-
     const data = {
       first_name: form.value.first_name.trim(),
       // middle_name: form.value.middle_name.trim() ?? null,
       family_name: form.value.family_name.trim(),
       is_same_family_name: false,
       // nickname: form.value.nickname.trim() ?? null,
-      // relation_type: relationType,
-      relation_name: relationType as RelationType,
+      relation_name: form.value.relation_type as RelationType,
       gender: form.value.gender,
       related_through: props.member.relationship_metadata?.related_through ?? null,
       parent_id: props.member.relationship_metadata?.parent_id ?? null,
