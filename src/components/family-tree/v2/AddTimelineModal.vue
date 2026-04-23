@@ -7,7 +7,7 @@
         <div class="w-7" />
         <h3 class="text-base font-semibold text-neutral-900">Add Timeline</h3>
         <button
-          class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors"
+          class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer"
           @click="$emit('update:show', false)">
           &#x2715;
         </button>
