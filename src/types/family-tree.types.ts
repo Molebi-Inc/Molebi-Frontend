@@ -251,9 +251,9 @@ export interface TimelineEntryInterface {
 export interface TimelineFormValues {
   type: TimelineType
   title: string
-  description: string
+  description: string | null
   event_date: string
-  place: string
+  place: string | null
 }
 
 export interface FamilyInsightInterface {
