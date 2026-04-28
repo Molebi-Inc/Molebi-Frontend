@@ -65,6 +65,7 @@ interface CreatedMember {
   name: string
   gender: string
   relationKey: string
+  isDeceased: boolean
 }
 
 interface Props {
@@ -77,7 +78,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
   (e: 'member-added'): void
-  (e: 'view-tree'): void
+  (e: 'view-tree', memberId: number): void
   (e: 'view-profile', memberId: number): void
 }>()
 
@@ -178,8 +179,10 @@ const handleViewProfile = () => {
 }
 
 const handleViewTree = () => {
+  if (createdMember.value?.id) {
+    emit('view-tree', createdMember.value.id)
+  }
   emit('update:show', false)
-  emit('view-tree')
 }
 
 const handleInvite = async () => {
@@ -256,6 +259,7 @@ const StepContent = defineComponent({
         return h(MemberFormSuccess, {
           memberName: stepProps.createdMember.name,
           memberGender: stepProps.createdMember.gender,
+          isDeceased: stepProps.createdMember.isDeceased,
           isInviting: stepProps.isInviting,
           onAddAnother: () => stepEmit('add-another'),
           onViewProfile: () => stepEmit('view-profile'),

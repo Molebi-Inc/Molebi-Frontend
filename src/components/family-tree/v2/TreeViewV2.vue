@@ -142,6 +142,12 @@
       </div>
     </div>
 
+  <!-- Static helper hint (not part of zoom/pan layer) -->
+  <div
+    class="absolute left-1/2 -translate-x-1/2 bottom-6 z-10 pointer-events-none rounded-full bg-white/90 text-neutral-600 text-xs sm:text-sm px-4 py-2 shadow-sm whitespace-nowrap">
+    Tap nodes &nbsp;&bull;&nbsp; Pinch to zoom &nbsp;&bull;&nbsp; Drag to explore
+  </div>
+
     <!-- Zoom controls – absolute to the outer container, unaffected by zoom or pan -->
     <div class="absolute bottom-5 right-5 z-20 flex flex-col items-center gap-1.5 pointer-events-auto">
       <button
