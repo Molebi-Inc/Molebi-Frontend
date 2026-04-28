@@ -118,7 +118,7 @@ type ComponentConfig = {
   has_back_button?: boolean
 }
 
-type ModuleKey = 'welcome' | 'connection' | 'vault'
+type ModuleKey = 'welcome' | 'vault'// | 'connection'
 
 // Import all images dynamically using import.meta.glob
 const imageModules = import.meta.glob(['/src/assets/svg/*.svg', '/src/assets/images/*.png', '/src/assets/gifs/*.gif'], {
@@ -139,18 +139,18 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'connection' } },
     secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
   },
-  connection: {
-    step: 2,
-    image_url: '/src/assets/gifs/safe_space.gif',
-    title: 'Safer than Social Media for Families',
-    has_back_button: true,
-    description:
-      'Molebi is a private family-only social app for families, invite-only circles, and WhatsApp alternatives that respect all family members.',
-    primary_button_label: 'Next',
-    secondary_button_label: 'Skip',
-    primary_button_route: { name: 'Guests.LandingView', params: { module: 'vault' } },
-    secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
-  },
+  // connection: {
+  //   step: 2,
+  //   image_url: '/src/assets/gifs/safe_space.gif',
+  //   title: 'Safer than Social Media for Families',
+  //   has_back_button: true,
+  //   description:
+  //     'Molebi is a private family-only social app for families, invite-only circles, and WhatsApp alternatives that respect all family members.',
+  //   primary_button_label: 'Next',
+  //   secondary_button_label: 'Skip',
+  //   primary_button_route: { name: 'Guests.LandingView', params: { module: 'vault' } },
+  //   secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
+  // },
   vault: {
     step: 3,
     image_url: '/src/assets/gifs/private_media.gif',
@@ -165,7 +165,7 @@ const componentConfigs: Record<ModuleKey, ComponentConfig> = {
   },
 }
 
-const moduleOrder: ModuleKey[] = ['welcome', 'connection', 'vault']
+const moduleOrder: ModuleKey[] = ['welcome', 'vault']//'connection',
 
 const resolvedConfigs = computed<ComponentConfig[]>(() =>
   moduleOrder

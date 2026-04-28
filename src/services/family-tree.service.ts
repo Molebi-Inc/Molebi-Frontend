@@ -54,7 +54,13 @@ export const useUpdateFamilyMemberMutation = () => {
     AxiosError<ValidationErrorResponse>,
     { id: number; data: Partial<FamilyMemberFormValues> | FormData }
   >({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<FamilyMemberFormValues> | FormData }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number
+      data: Partial<FamilyMemberFormValues> | FormData
+    }) => {
       const isMultipart = data instanceof FormData
       const payload = isMultipart ? data : { ...data, _method: 'PUT' }
       if (isMultipart) {
@@ -290,6 +296,34 @@ export const useGetFamilyInsightsQuery = (options?: { enabled?: boolean }) => {
       )
       return response.data
     },
+  })
+}
+
+export const useGetFamilyTreeByMemberIdQuery = (
+  memberId: MaybeRef<string | number>,
+  options?: { enabled?: MaybeRef<boolean> },
+) => {
+  const memberIdValue = computed(() => toValue(memberId))
+  const queryEnabled = computed(
+    () =>
+      (options?.enabled !== undefined ? toValue(options.enabled) : true) &&
+      memberIdValue.value != null &&
+      memberIdValue.value !== '',
+  )
+  return useQuery<ApiResponse<FamilyTreeInterface>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['family-tree-by-member-id', memberIdValue],
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<FamilyTreeInterface>>(
+        `/api/user/family-trees/member/${memberIdValue.value}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+          },
+        },
+      )
+      return response.data
+    },
+    enabled: queryEnabled,
   })
 }
 

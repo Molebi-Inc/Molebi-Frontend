@@ -54,7 +54,7 @@
 
       <!-- Partner: Maiden name + Married name instead of Last Name -->
       <template v-if="isPartner">
-        <div>
+        <div v-if="!isPaternalGrandfatherForm">
           <label class="block text-sm font-medium text-neutral-600 mb-2">Maiden Name</label>
           <input v-model="form.maiden_name" type="text" placeholder="Enter maiden name"
             class="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm text-neutral-800 outline-none focus:border-primary-400 transition-colors placeholder-neutral-400" />
@@ -170,7 +170,7 @@
 import { ref, computed, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useProfileStore } from '@/stores/profile.store'
-import { useAddFamilyMemberMutation } from '@/services/family-tree.service'
+import { useAddFamilyMemberMutation, useCreateTimelineMutation } from '@/services/family-tree.service'
 import { handleApiError } from '@/helpers/error.helpers'
 import type { FamilyMemberFormValues } from '@/types/family-tree.types'
 import type { ExtraFieldsVariant, MemberTypeConfig, V2MemberFormData } from './member-type.config'
@@ -205,6 +205,7 @@ interface CreatedMember {
   name: string
   gender: string
   relationKey: string
+  isDeceased: boolean
 }
 
 const props = defineProps<Props>()
@@ -216,6 +217,10 @@ const emit = defineEmits<{
 const message = useMessage()
 const profileStore = useProfileStore()
 const addMemberMutation = useAddFamilyMemberMutation()
+const createdMemberIdForTimeline = ref<number | null>(null)
+const createTimelineMutation = useCreateTimelineMutation(
+  computed(() => createdMemberIdForTimeline.value ?? 0),
+)
 
 const isSubmitting = computed(() => addMemberMutation.isPending.value)
 
@@ -236,6 +241,9 @@ const formTargetName = computed(() => {
 })
 
 const isPartner = computed(() => props.memberType.extraFields === 'partner')
+const isPaternalGrandfatherForm = computed(
+  () => props.contextOverride?.relation_type === 'paternal_grandfather',
+)
 
 /** Resolves the correct component for the current member type's extra fields. */
 const extraFieldsComponent = computed(() =>
@@ -272,6 +280,13 @@ const handlePhotoChange = (event: Event) => {
 
 const isFormValid = computed(() => Boolean(form.value.first_name.trim()))
 const canToggleInvite = computed(() => Boolean(form.value.email?.trim()) && !Boolean(form.value.is_deceased))
+const RELATED_THROUGH_PARENT_RELATION_TYPES = new Set([
+  'niece',
+  'nephew',
+  'cousin',
+  'step_sibling',
+  'half_sibling',
+])
 
 const getUploadFile = (value: unknown): File | null => {
   if (value instanceof File) return value
@@ -308,8 +323,15 @@ const buildApiPayload = (): FamilyMemberFormValues => {
     type.defaultGender ??
     (isPartner.value ? (f.gender as 'male' | 'female') : 'prefer_not_to_say')
 
+  const resolveParentId = (relationType: string, relatedThrough: number | null) =>
+    RELATED_THROUGH_PARENT_RELATION_TYPES.has(relationType) ? relatedThrough : f.parent_id
+
   // When a context override is provided, use it directly — no need to derive from extra fields.
   if (props.contextOverride) {
+    const parent_id = resolveParentId(
+      props.contextOverride.relation_type,
+      props.contextOverride.related_through,
+    )
     return {
       first_name: f.first_name.trim(),
       middle_name: f.middle_name.trim(),
@@ -320,7 +342,7 @@ const buildApiPayload = (): FamilyMemberFormValues => {
       profile_picture: f.profile_picture,
       gender,
       related_through: props.contextOverride.related_through,
-      parent_id: f.parent_id,
+      parent_id,
       is_adoptive: f.is_adoptive,
       is_former: f.is_former,
       is_deceased: f.is_deceased,
@@ -358,6 +380,8 @@ const buildApiPayload = (): FamilyMemberFormValues => {
     }
   }
 
+  const parent_id = resolveParentId(relation_type, related_through)
+
   return {
     first_name: f.first_name.trim(),
     middle_name: f.middle_name.trim(),
@@ -368,7 +392,7 @@ const buildApiPayload = (): FamilyMemberFormValues => {
     profile_picture: f.profile_picture,
     gender,
     related_through,
-    parent_id: f.parent_id,
+    parent_id,
     is_adoptive: f.is_adoptive,
     is_former: f.is_former,
     is_deceased: f.is_deceased,
@@ -408,6 +432,22 @@ const handleSubmit = async () => {
     const response = await addMemberMutation.mutateAsync(apiData)
 
     const createdId = (response.data as any)?.id ?? null
+
+    if (createdId && form.value.date_of_birth) {
+      try {
+        createdMemberIdForTimeline.value = createdId
+        await createTimelineMutation.mutateAsync({
+          type: 'birth',
+          title: 'Birth',
+          description: null,
+          place: null,
+          event_date: form.value.date_of_birth,
+        })
+      } catch {
+        // Do not block member creation success when timeline creation fails.
+      }
+    }
+
     const fullName =
       `${form.value.first_name} ${isPartner.value ? form.value.married_name : form.value.family_name}`.trim()
 
@@ -416,6 +456,7 @@ const handleSubmit = async () => {
       name: fullName,
       gender: form.value.gender,
       relationKey: props.memberType.relationConfigKey,
+      isDeceased: form.value.is_deceased,
     })
   } catch (error) {
     handleApiError(error, message)

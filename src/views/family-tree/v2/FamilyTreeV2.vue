@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full h-screen flex overflow-hidden tree-bg">
+  <div class="relative w-full h-full flex overflow-hidden tree-bg">
 
     <!-- Desktop: Left Sidebar -->
     <aside class="hidden md:flex flex-col w-[380px] shrink-0 p-4 z-10 overflow-y-auto">
@@ -153,6 +153,16 @@
 
       <!-- Tree Visualization -->
       <div class="flex-1 relative overflow-hidden">
+        <button v-if="isViewingMemberTree"
+          class="absolute top-4 left-4 z-20 inline-flex items-center gap-2 bg-white/95 hover:bg-white text-neutral-700 border border-neutral-200 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-colors"
+          @click="backToSelfTree">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+            <path fill-rule="evenodd"
+              d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z"
+              clip-rule="evenodd" />
+          </svg>
+          Back to my tree
+        </button>
         <TreeViewV2 ref="treeViewRef" :payload="treePayload" :is-loading="isLoading" :show-photos="showPhotos"
           :show-names="showNames" :show-full-name="modalShowFullName"
           :show-relationship-title="modalShowRelationshipTitle"
@@ -196,7 +206,7 @@
 
     <!-- Add Family Member Flow (modal on desktop, bottom sheet on mobile) -->
     <AddFamilyMemberFlow v-model:show="showAddMemberModal" :context-member="addMemberContextMember"
-      @member-added="refreshTree" @update:show="onAddMemberModalClose" @view-tree="showAddMemberModal = false"
+      @member-added="refreshTree" @update:show="onAddMemberModalClose" @view-tree="handleCreatedMemberViewTree"
       @view-profile="handleViewProfile" />
 
     <!-- Node Action Modal (opened on node click) -->
@@ -252,6 +262,7 @@ import {
 } from '@/composables/useTreeSettings'
 import {
   useGetFamilyTreesQuery,
+  useGetFamilyTreeByMemberIdQuery,
   useGetFamilyInsightsQuery,
   useGetTreeSettingsQuery,
   useGetTreePrivacySettingsQuery,
@@ -289,6 +300,7 @@ const searchBarContainerRefMobile = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
 const showSavedMembersDropdown = ref(false)
 const isLoading = ref(false)
+const focusedTreeMemberId = ref<number | null>(null)
 
 /** Stored in localStorage — ids + names for quick picks (see persist helper below). */
 type SavedMemberSnapshot = {
@@ -387,6 +399,12 @@ const familyTreesQuery = useGetFamilyTreesQuery({
   enabled: true,
   relativeMemberId: relativeMemberId,
 })
+const familyTreeByMemberQuery = useGetFamilyTreeByMemberIdQuery(
+  computed(() => String(focusedTreeMemberId.value ?? '')),
+  { enabled: computed(() => focusedTreeMemberId.value != null) },
+)
+
+const isViewingMemberTree = computed(() => focusedTreeMemberId.value != null)
 
 /** Tree / privacy settings routes use the signed-in user's `family_tree.id` from profile. */
 const familyTreeSettingsId = computed(() => profileStore.userDetails?.family_tree?.id ?? null)
@@ -643,7 +661,7 @@ const buildPayload = (data: FamilyTreeInterface): Payload | null => {
 
 // Watchers
 watch(
-  () => familyTreesQuery.data.value,
+  () => (isViewingMemberTree.value ? familyTreeByMemberQuery.data.value : familyTreesQuery.data.value),
   (data) => {
     if (data?.data) {
       familyTreeData.value = data.data
@@ -655,7 +673,7 @@ watch(
 )
 
 watch(
-  () => familyTreesQuery.isFetching.value,
+  () => (isViewingMemberTree.value ? familyTreeByMemberQuery.isFetching.value : familyTreesQuery.isFetching.value),
   (loading) => {
     isLoading.value = loading
   },
@@ -686,7 +704,7 @@ const onAddMemberModalClose = (val: boolean) => {
 const refreshTree = async () => {
   try {
     const [treeRes, insightsRes] = await Promise.all([
-      familyTreesQuery.refetch(),
+      isViewingMemberTree.value ? familyTreeByMemberQuery.refetch() : familyTreesQuery.refetch(),
       familyInsightsQuery.refetch()
     ])
     if (treeRes.data?.data) {
@@ -712,7 +730,12 @@ const handleNodeViewProfile = (member: FamilyMemberInterface & { _isSelf?: boole
 }
 
 const handleNodeViewBranch = (member: FamilyMemberInterface) => {
-  treeViewRef.value?.highlightMember(member)
+  if (!member.id) return
+  focusedTreeMemberId.value = Number(member.id)
+}
+
+const backToSelfTree = () => {
+  focusedTreeMemberId.value = null
 }
 
 const handleViewProfile = (memberId: number) => {
@@ -730,7 +753,14 @@ const openSelfProfile = () => {
 }
 
 const handleViewInTree = (member: FamilyMemberInterface) => {
-  treeViewRef.value?.highlightMember(member)
+  if (!member.id) return
+  focusedTreeMemberId.value = Number(member.id)
+}
+
+const handleCreatedMemberViewTree = (memberId: number) => {
+  showAddMemberModal.value = false
+  addMemberContextMember.value = null
+  focusedTreeMemberId.value = memberId
 }
 
 const handleEditMember = (member: FamilyMemberInterface) => {

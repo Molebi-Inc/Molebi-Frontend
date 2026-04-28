@@ -11,7 +11,8 @@
           linear-gradient(to bottom, rgba(255, 245, 225, 0.55), rgba(255, 245, 225, 0) 70%);
       " />
 
-    <div class="relative z-10 flex flex-col min-h-screen">
+    <!-- <div class="relative z-10 flex flex-col min-h-screen"> -->
+    <div class="relative z-10 flex flex-col h-screen">
       <!-- Desktop navigation -->
       <HomeTopBar class="hidden md:flex" />
       <HomeNavbar class="hidden md:flex" />

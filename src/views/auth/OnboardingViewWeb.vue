@@ -88,7 +88,8 @@
 
     <!-- Right: Signup form -->
     <div class="flex flex-col col-span-3 px-[38px] py-8 justify-center min-h-0">
-      <div class="md:rounded-3xl signup-form md:bg-white flex flex-col min-h-0 max-h-full overflow-hidden px-6 py-8 md:p-12">
+      <div
+        class="md:rounded-3xl signup-form md:bg-white flex flex-col min-h-0 max-h-full overflow-hidden px-6 py-8 md:p-12">
         <div class="shrink-0">
           <BackButton icon="vuesax.linear.arrow-left" class="mb-4! md:mb-6!" @click="$router.back()" />
         </div>
@@ -177,20 +178,20 @@ const componentConfigs: ComponentConfig[] = [
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'connection' } },
     secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
   },
+  // {
+  //   step: 2,
+  //   image_url: '/src/assets/gifs/safe_space.gif',
+  //   title: 'Safer than Social Media for Families',
+  //   has_back_button: true,
+  //   description:
+  //     'Molebi is a private family-only social app for families, invite-only circles, and WhatsApp alternatives that respect all family members.',
+  //   primary_button_label: 'Next',
+  //   secondary_button_label: 'Skip',
+  //   primary_button_route: { name: 'Guests.LandingView', params: { module: 'vault' } },
+  //   secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
+  // },
   {
     step: 2,
-    image_url: '/src/assets/gifs/safe_space.gif',
-    title: 'Safer than Social Media for Families',
-    has_back_button: true,
-    description:
-      'Molebi is a private family-only social app for families, invite-only circles, and WhatsApp alternatives that respect all family members.',
-    primary_button_label: 'Next',
-    secondary_button_label: 'Skip',
-    primary_button_route: { name: 'Guests.LandingView', params: { module: 'vault' } },
-    secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
-  },
-  {
-    step: 3,
     image_url: '/src/assets/gifs/private_media.gif',
     title: 'Private albums, videos, and cultural heritage',
     has_back_button: true,

@@ -64,8 +64,8 @@
       </button>
 
       <button
-        class="w-full border border-primary-300 text-primary-700 font-semibold text-sm py-4 rounded-2xl transition-colors hover:bg-primary-50 flex items-center justify-center gap-2"
-        :disabled="isInviting"
+        class="w-full border border-primary-300 text-primary-700 font-semibold text-sm py-4 rounded-2xl transition-colors hover:bg-primary-50 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="isInviting || isDeceased"
         @click="$emit('invite')"
       >
         <svg v-if="isInviting" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-4 h-4 animate-spin">
@@ -86,11 +86,13 @@ interface Props {
   memberGender: string
   avatarUrl?: string | null
   isInviting?: boolean
+  isDeceased?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   avatarUrl: null,
   isInviting: false,
+  isDeceased: false,
 })
 
 defineEmits<{
