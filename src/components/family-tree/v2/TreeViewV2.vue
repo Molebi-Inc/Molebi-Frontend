@@ -4,9 +4,8 @@
 
     <!-- Pan container: clips overflow, captures drag events -->
     <div class="absolute inset-0 overflow-hidden select-none touch-none"
-      :class="isPanning ? 'cursor-grabbing' : 'cursor-grab'"
-      @mousedown="startPan" @mousemove="doPan" @mouseup="endPan" @mouseleave="endPan"
-      @touchstart="startPanTouch" @touchmove="doPanTouch" @touchend="endPanTouch">
+      :class="isPanning ? 'cursor-grabbing' : 'cursor-grab'" @mousedown="startPan" @mousemove="doPan" @mouseup="endPan"
+      @mouseleave="endPan" @touchstart="startPanTouch" @touchmove="doPanTouch" @touchend="endPanTouch">
 
       <!-- Loading -->
       <div v-if="isLoading" class="h-full flex items-center justify-center pointer-events-none">
@@ -42,15 +41,16 @@
                Parent gen: elevated = father/mother, standard = aunts/uncles
                Self gen:   elevated = siblings,      standard = self/spouse -->
           <template v-if="!isTierEmpty(gen.standard)">
-            <div class="relative w-full pb-2" style="z-index: 1">
-              <!-- Generation label pill: absolutely centred between the two tiers -->
-              <div class="absolute left-4 z-10 pointer-events-none" :style="{ top: labelTop + 'px' }">
-                <span
-                  class="bg-white/70 text-primary-700 text-xs font-medium px-3 py-1 rounded-full border border-primary-100 shadow-sm whitespace-nowrap">
-                  Generation {{ gen.genNumber }}
-                </span>
-              </div>
+            <!-- Keep generation tag in normal flow to prevent node overlap on dense rows -->
+            <div class="w-full flex items-center gap-3 px-4 mb-4" style="z-index: 1">
+              <span
+                class="shrink-0 bg-white/70 text-primary-700 text-xs font-medium px-3 py-1 rounded-full border border-primary-100 shadow-sm whitespace-nowrap">
+                Generation {{ gen.genNumber }}
+              </span>
+              <div class="flex-1 h-px bg-neutral-300/50" />
+            </div>
 
+            <div class="w-full pb-2" style="z-index: 1">
               <div class="flex items-start w-max mx-auto">
                 <!-- LEFT: standard.left (pushed down) + elevated.left -->
                 <div class="flex items-start gap-8 px-6 py-1" :style="{ minWidth: leftMinWidth + 'px' }">
@@ -143,11 +143,11 @@
       </div>
     </div>
 
-  <!-- Static helper hint (not part of zoom/pan layer) -->
-  <div
-    class="absolute left-1/2 -translate-x-1/2 bottom-6 z-10 pointer-events-none rounded-full bg-white/90 text-neutral-600 text-xs sm:text-sm px-4 py-2 shadow-sm whitespace-nowrap">
-    Tap nodes &nbsp;&bull;&nbsp; Pinch to zoom &nbsp;&bull;&nbsp; Drag to explore
-  </div>
+    <!-- Static helper hint (not part of zoom/pan layer) -->
+    <div
+      class="absolute left-1/2 -translate-x-1/2 bottom-6 z-10 pointer-events-none rounded-full bg-white/90 text-neutral-600 text-xs sm:text-sm px-4 py-2 shadow-sm whitespace-nowrap">
+      Tap nodes &nbsp;&bull;&nbsp; Pinch to zoom &nbsp;&bull;&nbsp; Drag to explore
+    </div>
 
     <!-- Zoom controls – absolute to the outer container, unaffected by zoom or pan -->
     <div class="absolute bottom-5 right-5 z-20 flex flex-col items-center gap-1.5 pointer-events-auto">
@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue'
+import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import type { Payload, FamilyMemberInterface } from '@/types/family-tree.types'
 import FamilyTreeNode from '@/components/family-tree/v2/FamilyTreeNode.vue'
 
@@ -394,9 +394,6 @@ const tierOffset = computed(() => {
   const bleedPx = Math.ceil((size * (BLOB_RING_SCALE - 1)) / 2) + 2
   return size + bleedPx
 })
-
-/** Top position of the generation label pill — vertically centred between the two tiers. */
-const labelTop = computed(() => Math.round(tierOffset.value / 2) - 12)
 
 /** Shared FamilyTreeNode display props bound via v-bind to avoid repetition. */
 const sharedNodeProps = computed(() => ({
@@ -658,6 +655,7 @@ interface SvgPath {
 }
 
 const svgPaths = ref<SvgPath[]>([])
+let rebuildTimer: ReturnType<typeof setTimeout> | null = null
 
 const BLOB_RING_SCALE_SVG = 1.35
 
@@ -838,7 +836,32 @@ function buildSvgPaths() {
   svgPaths.value = paths
 }
 
+/**
+ * Mobile route/sidebar transitions can delay final layout, so rebuild paths a few
+ * times after mount/state changes to ensure node measurements are ready.
+ */
+function scheduleSvgRebuild() {
+  nextTick(() => buildSvgPaths())
+  requestAnimationFrame(() => buildSvgPaths())
+  if (rebuildTimer) clearTimeout(rebuildTimer)
+  rebuildTimer = setTimeout(() => buildSvgPaths(), 220)
+}
+
+const onViewportChange = () => scheduleSvgRebuild()
+
 // Rebuild paths whenever tree data changes or zoom changes (zoom affects getBoundingClientRect)
-watch(visibleGenerations, () => nextTick(buildSvgPaths))
-watch(zoom, () => nextTick(buildSvgPaths))
+watch(visibleGenerations, scheduleSvgRebuild)
+watch(zoom, scheduleSvgRebuild)
+
+onMounted(() => {
+  scheduleSvgRebuild()
+  window.addEventListener('resize', onViewportChange, { passive: true })
+  window.addEventListener('orientationchange', onViewportChange, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onViewportChange)
+  window.removeEventListener('orientationchange', onViewportChange)
+  if (rebuildTimer) clearTimeout(rebuildTimer)
+})
 </script>
