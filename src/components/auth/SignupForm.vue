@@ -1,7 +1,11 @@
 <template>
-  <div>
+  <div :class="[isCompactConstrainedMobile ? 'h-full min-h-0 flex flex-col' : '']">
     <n-form ref="formRef" :label-width="80" :model="form" :rules="rules">
-      <div :class="['flex flex-col gap-4 mb-11', { 'grid grid-cols-2 gap-4': constrained && isLargeScreen }]">
+      <div :class="[
+        'flex flex-col gap-3',
+        isCompactConstrainedMobile ? 'mb-4' : 'mb-11',
+        { 'grid grid-cols-2 gap-4': constrained && isLargeScreen },
+      ]">
         <n-form-item label="First Name" path="first_name" :show-feedback="!!fieldErrors['first_name']">
           <MlbInput v-model="form.first_name" id="first_name" name="first_name" type="text"
             placeholder="Enter First Name" :custom-class="inputCustomClass" />
@@ -44,7 +48,7 @@
             type="password" show-password-on="mousedown" placeholder="Confirm password"
             :custom-class="inputCustomClass" />
         </n-form-item>
-        <div v-if="form.password" class="mb-3">
+        <div v-if="form.password" :class="[isCompactConstrainedMobile ? 'mb-1' : 'mb-3']">
           <div v-for="item in isPasswordValid" :key="item.label" class="flex items-center">
             <MlbIcon :name="item.icon" :size="12" :color="item.condition(form.password) ? 'green' : 'red'" />
             <span :class="[
@@ -57,7 +61,7 @@
       <MlbButton type="submit" :label="loading ? 'Signing up...' : 'Continue'" :loading="loading" :disabled="loading"
         block class="rounded-2xl! bg-primary! h-13! text-white!" @click="onFormSubmit" />
     </n-form>
-    <div class="mt-5">
+    <div :class="[isCompactConstrainedMobile ? 'mt-3' : 'mt-5']">
       <div class="w-full rounded-2xl border border-green-200 bg-green-50 px-4 py-3 flex items-start gap-3">
         <div class="shrink-0 mt-[2px]">
           <MlbIcon name="vuesax.outline.shield-tick" :size="22" color="#036603" />
@@ -68,7 +72,10 @@
         </p>
       </div>
     </div>
-    <div class="text-center mt-3 mb-12">
+    <div :class="[
+      'text-center mt-3',
+      isCompactConstrainedMobile ? 'mb-3' : 'mb-6 md:mb-12',
+    ]">
       <p class="text-neutral-600 font-normal fs-14 lh-18">
         Already have an account?
         <MlbButton text label="Login" class="text-grey-900! underline!"
@@ -76,9 +83,9 @@
       </p>
     </div>
     <div>
-      <div class="relative flex py-5 items-center">
+      <div :class="['relative flex items-center', isCompactConstrainedMobile ? 'py-3' : 'py-5']">
         <div class="grow border-t border-gray-400"></div>
-        <span class="shrink mx-4 text-gray-400">or continue with</span>
+        <span :class="['shrink text-gray-400', isCompactConstrainedMobile ? 'mx-2 text-xs' : 'mx-4']">or continue with</span>
         <div class="grow border-t border-gray-400"></div>
       </div>
       <div class="flex gap-2 justify-center">
@@ -140,8 +147,12 @@ const { genderOptions } = useMemberForm('self')
 const formRef = ref<FormInst | null>(null)
 const socialAuthLoader = ref<boolean>(false)
 const isMobile = useMediaQuery('(max-width: 767px)')
+const isCompactHeight = useMediaQuery('(max-height: 760px)')
 
 const isV2 = computed(() => props.version === 'v2')
+const isCompactConstrainedMobile = computed(
+  () => Boolean(props.constrained) && isMobile.value && isCompactHeight.value,
+)
 const inputCustomClass = computed(() => {
   const base = 'border-gray-300 focus:border-primary-500'
   return isV2.value && isMobile.value ? `${base} bg-brand-green` : base

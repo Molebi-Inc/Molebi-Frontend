@@ -1,6 +1,9 @@
 <template>
-  <div class="w-full bg-brand-green md:bg-transparent">
-    <div :class="['w-full', { 'md:flex justify-center items-center': !component?.has_full_page }]">
+  <div class="w-full bg-brand-green md:bg-transparent h-dvh min-h-dvh overflow-hidden">
+    <div :class="[
+      'w-full h-full min-h-0',
+      { 'md:flex justify-center items-center': !component?.has_full_page },
+    ]">
       <div v-if="!isLinkExpired" :class="[
         {
           'md:border border-secondary-200 md:bg-white ': ['signup', 'personal-info'].includes(
@@ -8,13 +11,13 @@
           ),
         },
         {
-          'px-6 py-8 md:p-12 md:w-[620px] h-full md:rounded-3xl': !component?.has_full_page,
-          'w-full': component?.has_full_page,
+          'px-4 pt-4 pb-4 md:px-6 md:pt-8 md:pb-6 md:p-12 md:w-[620px] h-full min-h-0 md:rounded-3xl overflow-y-auto': !component?.has_full_page,
+          'w-full h-full min-h-0 overflow-y-auto': component?.has_full_page,
         },
       ]">
-        <BackButton v-if="component?.has_back_button" icon="vuesax.linear.arrow-left" class="mb-4! md:mb-6!" />
+        <BackButton v-if="component?.has_back_button" icon="arrow-left" :icon-size="16" class="mb-4! md:mb-6!" />
         <div :class="[
-          'flex flex-col gap-[45px] h-full',
+          'flex flex-col gap-4 md:gap-[45px] h-full min-h-0',
           { 'w-full': component?.has_full_page, 'md:px-4': !component?.has_full_page },
         ]">
           <div v-if="!component?.has_full_page">

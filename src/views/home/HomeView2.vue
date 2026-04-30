@@ -27,8 +27,8 @@
 
         <!-- Mobile: single-column layout -->
         <div class="md:hidden px-4 pt-5 pb-24 space-y-4">
-            <p class="text-sm text-neutral-600 px-4">
-                Welcome back 👋 <strong class="text-neutral-900">{{ userName }}</strong>
+            <p class="text-sm text-gray-800 px-4">
+                Welcome back 👋 <strong class="text-gray-800 text-base ms-1">{{ userName }}</strong>
             </p>
             <HeroBanner @try-now="$router.push({ name: 'App.StorageFolderView' })"
                 @time-capsule="$router.push({ name: 'App.TimeCapsules.View' })"
@@ -43,7 +43,7 @@
     </main>
 
     <MlbModal v-model:show="showHomeFormModal" class="rounded-3xl!" :bottom-sheet="!isLargeScreen"
-        :bottom-sheet-height="462" @close="handleCloseForm">
+        :bottom-sheet-height="462" @update:show="onHomeFormModalShowUpdate" @close="handleCloseForm">
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
@@ -180,5 +180,11 @@ const handleCloseForm = () => {
     if (query.ftype) delete query.ftype
     if (query.fid) delete query.fid
     $router.replace({ name: 'App.HomeView', query })
+}
+
+const onHomeFormModalShowUpdate = (show: boolean) => {
+    if (!show && $route.query.ftype) {
+        handleCloseForm()
+    }
 }
 </script>
