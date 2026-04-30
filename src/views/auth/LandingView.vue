@@ -1,23 +1,21 @@
 <template>
-  <div class="bg-brand-green h-screen">
+  <div class="bg-brand-green h-dvh min-h-dvh overflow-hidden flex flex-col">
     <div class="flex items-center justify-between px-6 py-4">
-      <!-- logo here -->
-      <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
-      <!-- back button here -->
-      <BackButton icon="vuesax.linear.arrow-left" />
+      <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[142px] h-[40px]" />
+      <BackButton icon="arrow-left" :icon-size="16" />
     </div>
     <div :class="[
-      isScrollable
-        ? 'min-h-screen overflow-y-auto flex flex-col'
+      shouldScrollMobile
+        ? 'flex-1 min-h-0 overflow-y-auto flex flex-col'
         : isDesktop
-          ? 'h-screen overflow-hidden md:grid grid-cols-7'
-          : 'h-screen overflow-hidden flex flex-col',
+          ? 'flex-1 min-h-0 overflow-hidden md:grid grid-cols-7'
+          : 'flex-1 min-h-0 overflow-hidden flex flex-col',
     ]">
       <div :class="[
         'border-r border-secondary-200 ',
         isDesktop
           ? 'col-span-4 md:px-[72px] md:py-[40px] flex flex-col overflow-hidden'
-          : 'px-6 pt-6 pb-3 flex flex-col',
+          : 'px-6 py-3 flex flex-col',
       ]">
         <header v-if="isDesktop" class="shrink-0">
           <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
@@ -31,8 +29,8 @@
             'w-full overflow-hidden mx-auto',
             isDesktop
               ? 'h-full max-w-[344px] max-h-[344px] md:max-w-[540px] md:max-h-[540px]'
-              : isScrollable
-                ? 'max-w-[280px] h-[240px]'
+              : shouldScrollMobile
+                ? 'max-w-[280px] h-[220px]'
                 : 'max-w-[320px] h-[280px]',
           ]" @mouseenter="pauseCarousel" @mouseleave="resumeCarousel" @focusin="pauseCarousel"
             @focusout="resumeCarousel" @touchstart.passive="pauseCarousel" @touchend.passive="resumeCarousel">
@@ -50,7 +48,7 @@
         'flex flex-col',
         isDesktop
           ? 'col-span-3 md:px-[120px] px-6 overflow-hidden py-4 md:py-8 justify-center'
-          : 'px-6 pt-3 pb-6 justify-start flex-1',
+          : 'px-6 pt-3 pb-2 justify-start',
       ]">
         <div class="flex justify-start mb-4 md:mb-8 shrink-0">
           <BackButton v-if="activeConfig?.has_back_button && isDesktop" icon="vuesax.linear.arrow-left" />
@@ -63,7 +61,7 @@
         </div>
         <h1 :class="[
           'font-semibold mb-2 text-black shrink-0 text-left',
-          isDesktop ? 'text-2xl' : isScrollable ? 'text-xl' : 'text-xl',
+          isDesktop ? 'text-2xl' : shouldScrollMobile ? 'text-lg' : 'text-xl',
         ]">
           {{ activeConfig?.title }}
         </h1>
@@ -76,11 +74,6 @@
         ]">
           <MlbButton label="Next" block class="bg-primary-700! text-white! rounded-2xl! h-13!"
             @click="$router.push({ name: 'Guests.OnboardingSignup', params: { module: 'signup' } })" />
-          <!-- <MlbButton :label="activeConfig?.primary_button_label" block class="bg-primary-700! text-white! rounded-2xl! h-13!"
-          @click="activeConfig && $router.push(activeConfig.primary_button_route)" /> -->
-          <!-- <MlbButton block :label="activeConfig?.secondary_button_label"
-          class="bg-primary-50! text-primary-900! rounded-2xl! h-13! border-primary-700!"
-          @click="activeConfig && $router.push(activeConfig.secondary_button_route)" /> -->
         </div>
         <div :class="['text-black shrink-0', isDesktop ? 'text-caption' : 'text-xs mt-4']">
           By continuing, you agree to Molebi's
@@ -100,11 +93,14 @@ import BackButton from '@/components/common/BackButton.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
 
 const $route = useRoute()
-// iPhone 8 is 375px - screens 375px and below should scroll
-const isScrollable = useMediaQuery('(max-width: 375px)')
-// Desktop is 768px and above - uses grid layout
-const isDesktop = useMediaQuery('(min-width: 768px)')
 const $router = useRouter()
+
+const isDesktop = useMediaQuery('(min-width: 768px)')
+const isScrollable = useMediaQuery('(max-width: 345px)')
+const isCompactHeight = useMediaQuery('(max-height: 700px)')
+const shouldScrollMobile = computed(
+  () => !isDesktop.value && (isScrollable.value || isCompactHeight.value),
+)
 
 type ComponentConfig = {
   step: number
@@ -120,7 +116,6 @@ type ComponentConfig = {
 
 type ModuleKey = 'welcome' | 'vault'// | 'connection'
 
-// Import all images dynamically using import.meta.glob
 const imageModules = import.meta.glob(['/src/assets/svg/*.svg', '/src/assets/images/*.png', '/src/assets/gifs/*.gif'], {
   eager: true,
   query: '?url',

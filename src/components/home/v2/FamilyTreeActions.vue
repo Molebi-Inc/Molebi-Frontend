@@ -8,7 +8,7 @@ const emit = defineEmits<{
 const actions = [
   {
     label: 'Add relative',
-    icon: 'vuesax.linear.people',
+    icon: 'vuesax.solid.family',
     event: 'add-relative' as const,
   },
   {
@@ -26,7 +26,7 @@ const actions = [
 
 <template>
   <div class="bg-secondary-100 rounded-2xl p-4">
-    <h3 class="text-base font-bold text-neutral-900 mb-3">Family tree actions</h3>
+    <h3 class="text-xl font-semibold text-gray-900 mb-3">Family tree actions</h3>
     <div class="flex items-center gap-3">
       <button v-for="action in actions" :key="action.label"
         class="flex-1 flex flex-col items-center gap-2 bg-white rounded-xl p-3 shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"

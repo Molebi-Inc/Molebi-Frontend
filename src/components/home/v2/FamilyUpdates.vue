@@ -27,9 +27,7 @@ const hasMore = computed(() => props.items.length > PREVIEW_COUNT)
   <div class="bg-white rounded-2xl p-5 shadow-sm">
     <!-- Section header -->
     <div class="flex items-center justify-between gap-3 mb-3">
-      <h2 class="text-xl font-bold text-neutral-900">
-        <span class="hidden md:inline">Family Updates</span>
-        <span class="md:hidden">Family Update</span>
+      <h2 class="text-2xl font-semibold text-gray-900">Family Updates
       </h2>
 
       <!-- Desktop: view-all link (always visible) -->

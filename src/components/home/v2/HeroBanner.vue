@@ -84,40 +84,39 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative rounded-2xl">
-    <Transition name="banner-fade" mode="out-in">
-      <div :key="currentIndex"
-        class="relative flex items-stretch w-full min-h-[170px] sm:min-h-[190px] md:min-h-[210px] rounded-[32px] overflow-hidden px-5 sm:px-8 md:px-12 py-4"
-        :style="{ backgroundImage: `url(${currentBackgroundImage})`, backgroundSize: '100% 100%' }">
-        <!-- Left: text content -->
-        <div class="flex-1 py-8 md:py-10 flex flex-col justify-center gap-3 z-10 max-w-[600px]">
-          <h2 :class="`text-${currentBanner.textColor} font-semibold text-[11px] md:text-2xl leading-snug`">
-            {{ currentBanner.title }}
-          </h2>
-          <p :class="`text-${currentBanner.textColor} text-[7px] md:text-base leading-relaxed max-w-[520px]`">
-            {{ currentBanner.subtitle }}
-          </p>
-          <button
-            class="self-start mt-2 text-white text-[7px] md:text-sm md:font-semibold px-5 py-1 md:py-2.5 rounded-xl transition-colors shadow-sm whitespace-nowrap h-[19px] md:h-auto"
-            :class="[
-              !isEvenBannerIndex ? 'bg-primary-700 hover:bg-primary-800' : 'bg-secondary-400 hover:bg-secondary-500',
-              currentBanner.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-            ]" :label="currentBanner.disabled ? 'Coming soon' : currentBanner.cta" :disabled="currentBanner.disabled"
-            @click="emit(currentBanner.event)">
-            {{ currentBanner.cta }}
-          </button>
-        </div>
+  <Transition name="banner-fade" mode="out-in">
+    <div :key="currentIndex"
+      class="relative flex items-stretch w-full min-h-[170px] sm:min-h-[190px] md:min-h-[210px] rounded-[32px] overflow-hidden px-5 sm:px-8 md:px-12 pb-2 md:py-4"
+      :style="{ backgroundImage: `url(${currentBackgroundImage})`, backgroundSize: '100% 100%' }">
+      <!-- Left: text content -->
+      <div class="flex-1 py-8 md:py-10 flex flex-col justify-center gap-1 z-10 max-w-[600px]">
+        <h2 :class="`text-${currentBanner.textColor} font-semibold text-xs md:text-xl leading-snug`">
+          {{ currentBanner.title }}
+        </h2>
+        <p :class="`text-${currentBanner.textColor} text-[8px] md:text-xs max-w-[520px]`" style="line-height: 1.4;">
+          {{ currentBanner.subtitle }}
+        </p>
 
-        <!-- Right: photo -->
-        <div class="shrink-0 w-[130px] sm:w-[260px] md:w-[360px]">
-          <img
-            class="object-cover absolute top-0 -right-px w-[160px] h-[124px] sm:w-[220px] sm:h-[160px] md:w-[300px] md:h-[210px] rounded-[16px] sm:rounded-[20px] md:rounded-[24px]"
-            style="transform: rotate(8deg); transform-origin: top right;" :src="currentBanner.image.src"
-            :alt="currentBanner.image.alt" />
-        </div>
+        <button
+          class="self-start mt-2 text-white text-[10px] sm:text-sm md:text-sm md:font-semibold px-5 py-1.5 md:py-2.5 rounded-xl transition-colors shadow-sm whitespace-nowrap min-h-[28px] md:min-h-auto"
+          :class="[
+            !isEvenBannerIndex ? 'bg-primary-700 hover:bg-primary-800' : 'bg-secondary-400 hover:bg-secondary-500',
+            currentBanner.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          ]" :label="currentBanner.disabled ? 'Coming soon' : currentBanner.cta" :disabled="currentBanner.disabled"
+          @click="emit(currentBanner.event)">
+          {{ currentBanner.cta }}
+        </button>
       </div>
-    </Transition>
-  </div>
+
+      <!-- Right: photo -->
+      <div class="shrink-0 w-[130px] sm:w-[260px] md:w-[250px]">
+        <img
+          class="object-cover absolute top-0 -right-4px md:-right-4px w-[160px] h-[124px] sm:w-[220px] sm:h-[160px] md:w-[300px] md:h-[210px] rounded-[16px] sm:rounded-[20px] md:rounded-[24px]"
+          style="transform: rotate(8deg); transform-origin: top right;" :src="currentBanner.image.src"
+          :alt="currentBanner.image.alt" />
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <style scoped>
