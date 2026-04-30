@@ -105,7 +105,7 @@ onUnmounted(() => {
 
 <style scoped>
 .scroll-text-viewport {
-    --slot-h: 72px;
+    --slot-h: 96px;
     height: calc(var(--slot-h) * 2);
     overflow: hidden;
     width: 100%;
@@ -120,13 +120,13 @@ onUnmounted(() => {
     height: var(--slot-h);
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     overflow: hidden;
     word-break: break-word;
     text-align: center;
     font-size: 16px;
-    line-height: 1.2;
+    line-height: 1.25;
     padding: 0.25rem 0.5rem;
     margin: 0;
     font-weight: 500;
@@ -177,7 +177,7 @@ onUnmounted(() => {
     }
 
     .scroll-text-viewport {
-        --slot-h: 100px;
+        --slot-h: 112px;
         max-width: 520px;
     }
 }
