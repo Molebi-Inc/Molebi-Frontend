@@ -3,7 +3,8 @@
   <div class="w-full h-full relative">
 
     <!-- Pan container: clips overflow, captures drag events -->
-    <div class="absolute inset-0 overflow-hidden select-none" :class="isPanning ? 'cursor-grabbing' : 'cursor-grab'"
+    <div class="absolute inset-0 overflow-hidden select-none touch-none"
+      :class="isPanning ? 'cursor-grabbing' : 'cursor-grab'"
       @mousedown="startPan" @mousemove="doPan" @mouseup="endPan" @mouseleave="endPan"
       @touchstart="startPanTouch" @touchmove="doPanTouch" @touchend="endPanTouch">
 
@@ -22,7 +23,7 @@
 
       <!-- Tree content: zoom + pan transform applied here -->
       <div v-else ref="treeContentRef"
-        :style="{ zoom: zoom, transform: `translate(${panX}px, ${panY}px)`, willChange: 'transform' }"
+        :style="{ transform: `translate(${panX}px, ${panY}px) scale(${zoom})`, transformOrigin: 'top left', willChange: 'transform' }"
         class="flex flex-col items-stretch py-10 gap-0 origin-top relative">
 
         <!-- ── SVG connector lines (positioned in the same coordinate space as nodes) ── -->
@@ -282,7 +283,13 @@ const isPanning = ref(false)
 /** Minimum px movement before a touch is treated as a pan (not a tap). */
 const PAN_THRESHOLD = 8
 let _touchMoved = false
+let _isPinching = false
+let _pinchStartDistance = 0
+let _pinchStartZoom = 1
 const _panStart = { x: 0, y: 0, panX: 0, panY: 0 }
+
+const clampZoom = (value: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value))
+const touchDistance = (a: Touch, b: Touch) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
 
 const startPan = (e: MouseEvent) => {
   if (e.button !== 0) return
@@ -302,9 +309,21 @@ const doPan = (e: MouseEvent) => {
 const endPan = () => { isPanning.value = false }
 
 const startPanTouch = (e: TouchEvent) => {
+  if (e.touches.length === 2) {
+    const first = e.touches.item(0)
+    const second = e.touches.item(1)
+    if (!first || !second) return
+    _isPinching = true
+    _touchMoved = true
+    isPanning.value = false
+    _pinchStartDistance = touchDistance(first, second)
+    _pinchStartZoom = zoom.value
+    return
+  }
   if (e.touches.length !== 1) return
   const touch = e.touches.item(0)
   if (!touch) return
+  _isPinching = false
   _touchMoved = false
   isPanning.value = false   // not panning yet — wait for movement past threshold
   _panStart.x = touch.clientX
@@ -314,6 +333,17 @@ const startPanTouch = (e: TouchEvent) => {
 }
 
 const doPanTouch = (e: TouchEvent) => {
+  if (e.touches.length === 2 && _isPinching) {
+    const first = e.touches.item(0)
+    const second = e.touches.item(1)
+    if (!first || !second) return
+    e.preventDefault()
+    const currentDistance = touchDistance(first, second)
+    if (_pinchStartDistance <= 0) return
+    const ratio = currentDistance / _pinchStartDistance
+    zoom.value = clampZoom(Number((_pinchStartZoom * ratio).toFixed(2)))
+    return
+  }
   if (e.touches.length !== 1) return
   const touch = e.touches.item(0)
   if (!touch) return
@@ -331,6 +361,7 @@ const doPanTouch = (e: TouchEvent) => {
 }
 
 const endPanTouch = () => {
+  _isPinching = false
   isPanning.value = false
   _touchMoved = false
 }
@@ -688,14 +719,6 @@ function buildSvgPaths() {
   /** S-curve from (x1,y1) to (x2,y2) with vertical tangents at both ends. */
   const connect = (x1: number, y1: number, x2: number, y2: number) => {
     paths.push({ d: sCurve(x1, y1, x2, y2), type: 'parent-child' })
-  }
-
-  /** S-curve connecting two node keys (parent-bottom → child-top). */
-  const connectNodes = (fromKey: string, toKey: string) => {
-    const from = nodePoints(fromKey)
-    const to = nodePoints(toKey)
-    if (!from || !to) return
-    connect(from.x, from.bottom, to.x, to.top)
   }
 
   // ── Converging fan helper ─────────────────────────────────────────────────

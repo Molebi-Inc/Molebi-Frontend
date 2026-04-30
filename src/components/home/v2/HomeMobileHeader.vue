@@ -3,7 +3,7 @@ defineEmits<{ (e: 'open-menu'): void }>()
 </script>
 
 <template>
-  <header class="border-b border-neutral-100 flex items-center justify-between px-4 py-3 sticky top-0 z-30">
+  <header class="border-b border-neutral-100 flex items-center justify-between px-4 py-3 sticky top-0 z-30 bg-[#f3f9f2]">
     <!-- 2×2 grid / apps icon -->
     <button class="text-neutral-600 p-1" @click="$emit('open-menu')">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">

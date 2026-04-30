@@ -1,5 +1,5 @@
 <template>
-    <div class="pt-8 px-6 h-screen overflow-hidden flex flex-col bg-brand-green">
+    <div class="pt-8 px-6 h-dvh min-h-dvh overflow-hidden overscroll-none touch-pan-x flex flex-col bg-brand-green">
         <header v-if="isDesktop" class="shrink-0">
             <img src="@/assets/svg/logo.svg" alt="Molebi" class="w-[172px] h-[56px]" />
         </header>

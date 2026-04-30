@@ -7,7 +7,7 @@
     @click="goBack()"
   >
     <template #icon>
-      <MlbIcon v-if="icon" :name="icon" />
+      <MlbIcon v-if="icon" :name="icon" :size="iconSize" />
     </template>
   </MlbButton>
 </template>
@@ -25,12 +25,14 @@ const props = withDefaults(
     label?: string
     routeName?: string
     previousRoute?: boolean
+    iconSize?: number
   }>(),
   {
     icon: '',
     label: 'Go back',
     routeName: '',
     previousRoute: true,
+    iconSize: 24,
   },
 )
 
