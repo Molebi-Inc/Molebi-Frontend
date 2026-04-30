@@ -43,7 +43,7 @@
     </main>
 
     <MlbModal v-model:show="showHomeFormModal" class="rounded-3xl!" :bottom-sheet="!isLargeScreen"
-        :bottom-sheet-height="462" @close="handleCloseForm">
+        :bottom-sheet-height="462" @update:show="onHomeFormModalShowUpdate" @close="handleCloseForm">
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
@@ -180,5 +180,11 @@ const handleCloseForm = () => {
     if (query.ftype) delete query.ftype
     if (query.fid) delete query.fid
     $router.replace({ name: 'App.HomeView', query })
+}
+
+const onHomeFormModalShowUpdate = (show: boolean) => {
+    if (!show && $route.query.ftype) {
+        handleCloseForm()
+    }
 }
 </script>
