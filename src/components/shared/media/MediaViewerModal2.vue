@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import MlbModal from '@/components/ui/MlbModal.vue';
-import { computed, ref, watch, onBeforeUnmount } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { AttachmentInterface } from '@/types/vault.types';
 import MlbIcon from '@/components/ui/MlbIcon.vue';
 import TransparentCommentInput from '@/components/shared/media/TransparentCommentInput.vue'
@@ -100,40 +100,6 @@ const openCommentsSheet = async () => {
   await commentsQuery.refetch()
 }
 
-const shouldLockPageScroll = computed(() => props.show || showCommentsSheet.value)
-let lockedScrollY = 0
-
-const lockPageScroll = () => {
-  if (typeof document === 'undefined') return
-  const body = document.body
-  if (body.dataset.modalScrollLocked === 'true') return
-
-  lockedScrollY = window.scrollY || window.pageYOffset || 0
-  body.dataset.modalScrollLocked = 'true'
-  body.style.position = 'fixed'
-  body.style.top = `-${lockedScrollY}px`
-  body.style.left = '0'
-  body.style.right = '0'
-  body.style.width = '100%'
-  body.style.overflow = 'hidden'
-}
-
-const unlockPageScroll = () => {
-  if (typeof document === 'undefined') return
-  const body = document.body
-  if (body.dataset.modalScrollLocked !== 'true') return
-
-  body.style.position = ''
-  body.style.top = ''
-  body.style.left = ''
-  body.style.right = ''
-  body.style.width = ''
-  body.style.overflow = ''
-  delete body.dataset.modalScrollLocked
-
-  window.scrollTo(0, lockedScrollY)
-}
-
 watch(
   () => props.show,
   (isOpen) => {
@@ -150,18 +116,6 @@ watch(
   },
 )
 
-watch(
-  shouldLockPageScroll,
-  (locked) => {
-    if (locked) lockPageScroll()
-    else unlockPageScroll()
-  },
-  { immediate: true },
-)
-
-onBeforeUnmount(() => {
-  unlockPageScroll()
-})
 const onClose = () => {
   emit('update:show', false)
 }
