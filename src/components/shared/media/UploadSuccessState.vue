@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center text-center py-8 px-4 gap-4">
+  <div class="flex flex-col items-center text-center px-4 gap-4">
     <!-- Checkmark circle -->
     <div class="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center">
       <div class="w-12 h-12 rounded-full bg-primary-700 flex items-center justify-center">
@@ -14,14 +14,9 @@
       <p class="text-xs text-neutral-500 mt-1 max-w-[240px] leading-relaxed">{{ description }}</p>
     </div>
 
-    <button
-      v-if="actionLabel"
-      class="px-6 py-2.5 rounded-full text-sm font-semibold transition-colors"
-      :class="actionVariant === 'outline'
-        ? 'border border-primary-700 text-primary-700 hover:bg-primary-50'
-        : 'bg-primary-700 text-white hover:bg-primary-800'"
-      @click="$emit('action')"
-    >
+    <button v-if="actionLabel" class="px-6 py-2.5 rounded-full text-sm font-semibold transition-colors" :class="actionVariant === 'outline'
+      ? 'border border-primary-700 text-primary-700 hover:bg-primary-50'
+      : 'bg-primary-700 text-white hover:bg-primary-800'" @click="$emit('action')">
       {{ actionLabel }}
     </button>
   </div>

@@ -184,7 +184,7 @@
 
   <!-- Success -->
   <MlbModal v-else-if="step === 'success'" :show="show" :bottom-sheet="isMobile" :bottom-sheet-height="300"
-    class="rounded-3xl!" @update:show="onClose">
+    :headerless="true" class="rounded-3xl!" @update:show="onClose">
     <UploadSuccessState :title="successType === 'audio' ? 'Audio Uploaded' : 'File Uploaded'" :description="successType === 'audio'
       ? 'You have successfully uploaded a new audio file to memory.'
       : 'You have successfully uploaded a new file to memory.'" action-label="Close" action-variant="outline"
