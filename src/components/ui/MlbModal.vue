@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs, useSlots } from 'vue'
+import { computed, useAttrs, useSlots, watch, onBeforeUnmount } from 'vue'
 import { NModal, NCard, NDrawer, NDrawerContent } from 'naive-ui'
 import type { CSSProperties } from 'vue'
 
@@ -75,6 +75,78 @@ const hasFooter = computed(() => Boolean(slots.footer))
 const localShow = computed({
   get: () => props.show ?? false,
   set: (value: boolean) => emit('update:show', value),
+})
+
+let ownsLock = false
+
+const lockRootScroll = () => {
+  if (typeof document === 'undefined') return
+  const html = document.documentElement
+  const body = document.body
+  if (ownsLock) return
+
+  const currentCount = Number.parseInt(body.dataset.mlbModalLockCount ?? '0', 10) || 0
+  if (currentCount === 0) {
+    const scrollY = window.scrollY || window.pageYOffset || 0
+    body.dataset.mlbModalScrollY = String(scrollY)
+    body.dataset.mlbModalScrollLocked = 'true'
+
+    html.style.overflow = 'hidden'
+    html.style.overscrollBehavior = 'none'
+    body.style.overflow = 'hidden'
+    body.style.overscrollBehavior = 'none'
+    body.style.position = 'fixed'
+    body.style.top = `-${scrollY}px`
+    body.style.left = '0'
+    body.style.right = '0'
+    body.style.width = '100%'
+  }
+
+  body.dataset.mlbModalLockCount = String(currentCount + 1)
+  ownsLock = true
+}
+
+const unlockRootScroll = () => {
+  if (typeof document === 'undefined') return
+  const html = document.documentElement
+  const body = document.body
+  if (!ownsLock) return
+
+  const currentCount = Number.parseInt(body.dataset.mlbModalLockCount ?? '0', 10) || 0
+  const nextCount = Math.max(0, currentCount - 1)
+  body.dataset.mlbModalLockCount = String(nextCount)
+  ownsLock = false
+
+  if (nextCount > 0) return
+
+  const lockedScrollY = Number.parseInt(body.dataset.mlbModalScrollY ?? '0', 10) || 0
+  html.style.overflow = ''
+  html.style.overscrollBehavior = ''
+  body.style.overflow = ''
+  body.style.overscrollBehavior = ''
+  body.style.position = ''
+  body.style.top = ''
+  body.style.left = ''
+  body.style.right = ''
+  body.style.width = ''
+  delete body.dataset.mlbModalScrollLocked
+  delete body.dataset.mlbModalScrollY
+  delete body.dataset.mlbModalLockCount
+
+  window.scrollTo(0, lockedScrollY)
+}
+
+watch(
+  () => localShow.value,
+  (isOpen) => {
+    if (isOpen) lockRootScroll()
+    else unlockRootScroll()
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  unlockRootScroll()
 })
 
 const cardStyle = computed(() => {
