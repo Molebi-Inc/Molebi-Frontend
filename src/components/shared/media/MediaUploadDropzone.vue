@@ -16,7 +16,8 @@
     <button type="button"
       class="px-5 py-2 bg-primary-700 text-white rounded-full text-sm font-medium hover:bg-primary-800 transition-colors"
       @click.stop="triggerInput">
-      Select from computer
+      <span class="md:hidden">Select from device</span>
+      <span class="hidden md:block">Select from computer</span>
     </button>
 
     <input ref="inputRef" type="file" :accept="accept" multiple class="hidden" @change="onFileChange" />

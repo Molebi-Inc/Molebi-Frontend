@@ -4,10 +4,10 @@
     disabled ? 'opacity-60' : '',
     wrapperClass,
   ]">
-    <button type="button" class="text-white/70 hover:text-white transition-colors shrink-0" :disabled="disabled"
+    <!-- <button type="button" class="text-white/70 hover:text-white transition-colors shrink-0" :disabled="disabled"
       :aria-label="emojiAriaLabel" @click="$emit('emoji')">
       <span class="text-base leading-none">{{ emoji }}</span>
-    </button>
+    </button> -->
 
     <input :value="modelValue" type="text" :placeholder="placeholder" :disabled="disabled"
       class="flex-1 bg-transparent outline-none text-gray-600 placeholder:text-gray-600 text-sm min-w-0"
@@ -50,7 +50,7 @@ const props = withDefaults(
     emojiAriaLabel: 'Open emoji picker',
     sendAriaLabel: 'Send',
     clearOnSend: true,
-    emoji: '😊',
+    // emoji: '😊',
   },
 )
 
