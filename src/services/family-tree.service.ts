@@ -197,6 +197,20 @@ export const useGetFamilyTreesQuery = (options?: {
   })
 }
 
+export const useDeleteFamilyMemberMutation = () => {
+  return useMutation<ApiResponse<void>, AxiosError<ValidationErrorResponse>, number>({
+    mutationFn: async (id: number) => {
+      const response = await axiosInstance.delete<ApiResponse<void>>(
+        `/api/user/family-members/${id}`,
+        {
+          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+        },
+      )
+      return response.data
+    },
+  })
+}
+
 export const useGetTimelinesQuery = (familyMemberId: MaybeRef<string | number>) => {
   const familyMemberIdValue = computed(() => toValue(familyMemberId))
   return useQuery<ApiResponse<TimelineInterface[]>, AxiosError<ValidationErrorResponse>>({

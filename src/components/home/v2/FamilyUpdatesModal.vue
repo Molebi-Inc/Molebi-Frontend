@@ -29,16 +29,18 @@ const isMobile = useMediaQuery('(max-width: 768px)')
     @update:show="emit('update:show', $event)">
     <template #header>
       <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-neutral-900">Family Updates</h3>
         <BackButton label="Close" :previous-route="false" @update:go-back="emit('update:show', false)" />
-        <h3 class="text-base font-semibold text-neutral-900">All Family Updates</h3>
-        <!-- <button
-          class="px-3 py-1.5 rounded-xl bg-primary-700 text-white text-xs font-semibold hover:bg-primary-800 transition-colors"
-          @click="emit('create')">
-          Add Update
-        </button> -->
       </div>
     </template>
 
+    <div class="mb-4">
+      <button
+        class="px-3 text-base rounded-xl bg-primary text-white font-semibold hover:bg-primary-800 transition-colors cursor-pointer w-full py-4"
+        @click="emit('create')">
+        + Add a New Family Update
+      </button>
+    </div>
     <div class="max-h-[65vh] overflow-y-auto pr-1">
       <div v-if="loading" class="flex justify-center py-10">
         <NSpin :show="true" />

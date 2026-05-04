@@ -216,8 +216,9 @@
 
     <!-- Member Profile Modal -->
     <MemberProfileModal v-if="profileModalMember" :show="showProfileModal" :member="profileModalMember"
-      :is-self="!!profileModalMember._isSelf" @update:show="showProfileModal = $event" @view-in-tree="handleViewInTree"
-      @edit="handleEditMember" @add-relative="handleAddMember" />
+      :is-self="!!profileModalMember._isSelf" :delete-loading="deleteFamilyMemberMutation.isPending.value"
+      @update:show="showProfileModal = $event" @view-in-tree="handleViewInTree" @edit="handleEditMember"
+      @add-relative="handleAddMember" @delete="handleDeleteMember" />
 
     <!-- Edit Member Modal -->
     <EditMemberModal v-if="editModalMember" :show="showEditMemberModal" :member="editModalMember"
@@ -264,6 +265,7 @@ import {
   useGetFamilyTreesQuery,
   useGetFamilyTreeByMemberIdQuery,
   useGetFamilyInsightsQuery,
+  useDeleteFamilyMemberMutation,
   useGetTreeSettingsQuery,
   useGetTreePrivacySettingsQuery,
   useUpdateTreeSettingsMutation,
@@ -416,6 +418,7 @@ const treePrivacyQuery = useGetTreePrivacySettingsQuery(familyTreeSettingsId, { 
 
 const updateTreeSettingsMutation = useUpdateTreeSettingsMutation(familyTreeSettingsId)
 const updateTreePrivacySettingsMutation = useUpdateTreePrivacySettingsMutation(familyTreeSettingsId)
+const deleteFamilyMemberMutation = useDeleteFamilyMemberMutation()
 
 const privacySettingsSaving = computed(() => updateTreePrivacySettingsMutation.isPending.value)
 
@@ -774,6 +777,18 @@ const handleEditSaved = (updated: FamilyMemberInterface) => {
     profileModalMember.value = { ...profileModalMember.value, ...updated }
   }
   refreshTree()
+}
+
+const handleDeleteMember = async (member: FamilyMemberInterface) => {
+  if (!member.id) return
+  try {
+    await deleteFamilyMemberMutation.mutateAsync(Number(member.id))
+    message.success('Family member deleted successfully')
+    showProfileModal.value = false
+    await refreshTree()
+  } catch (error) {
+    handleApiError(error, message)
+  }
 }
 
 const fetchFamilyInsights = async () => {
