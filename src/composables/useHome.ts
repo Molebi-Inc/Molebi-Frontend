@@ -135,8 +135,9 @@ export const useHome = () => {
       delete query.ftype
       $router.replace({ name: 'App.HomeView', query: query })
       AlertService.success({
-        subject: 'Announcement Sent', //edited.value ? 'Updated Announcement Sent' : 'Announcement Sent',
-        message: 'Members of this announcement will receive a notification.',
+        subject: 'Update Sent',
+        message:
+          'You have successfully shared an update with your family, members of your family can react and comment oun your update..',
         showIcon: true,
         imageUrl: 'images/success.png',
         closable: true,
