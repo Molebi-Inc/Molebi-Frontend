@@ -26,7 +26,7 @@
         </div>
 
         <!-- Mobile: single-column layout -->
-        <div class="md:hidden px-4 pt-5 pb-24 space-y-4">
+        <div class="md:hidden px-4 pt-5 pb-2 space-y-4">
             <p class="text-sm text-gray-800 px-4">
                 Welcome back 👋 <strong class="text-gray-800 text-base ms-1">{{ userName }}</strong>
             </p>

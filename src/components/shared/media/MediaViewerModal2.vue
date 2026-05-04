@@ -115,6 +115,7 @@ watch(
     commentsQuery.refetch()
   },
 )
+
 const onClose = () => {
   emit('update:show', false)
 }
@@ -225,7 +226,7 @@ const onShare = async () => {
           </div>
         </div>
       </template>
-      <div class="md:hidden py-4">
+      <div class="md:hidden py-4 px-1">
         <div class="h-80 mb-6">
           <div v-if="media && isImage(media)" class="h-full">
             <img :src="media.url" :alt="media.file_name" class="w-full h-full object-contain" />
@@ -390,7 +391,7 @@ const onShare = async () => {
         <div class="text-center font-semibold">Comments</div>
       </template>
 
-      <div class="max-h-[58vh] overflow-y-auto px-1">
+      <div class="comments-sheet-scroll max-h-[58vh] overflow-y-auto px-1">
         <div v-if="commentsQuery.isFetching.value" class="py-10 text-center text-sm text-neutral-400">
           Loading comments...
         </div>
@@ -417,3 +418,10 @@ const onShare = async () => {
     </MlbModal>
   </div>
 </template>
+
+<style scoped>
+.comments-sheet-scroll {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+</style>

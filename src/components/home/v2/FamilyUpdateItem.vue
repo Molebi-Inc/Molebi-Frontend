@@ -56,28 +56,15 @@ const handleMenuSelect = (key: string) => {
     <!-- Priority badge + three-dot menu -->
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-1.5">
-        <span
-          :class="['w-2 h-2 rounded-full flex-shrink-0', priorityConfig[item.priority]?.dot ?? 'bg-neutral-400']"
-        />
-        <span
-          :class="['text-xs font-semibold capitalize', priorityConfig[item.priority]?.text ?? 'text-neutral-500']"
-        >
+        <span :class="['w-2 h-2 rounded-full flex-shrink-0', priorityConfig[item.priority]?.dot ?? 'bg-neutral-400']" />
+        <span :class="['text-xs font-semibold capitalize', priorityConfig[item.priority]?.text ?? 'text-neutral-500']">
           {{ item.priority }}
         </span>
       </div>
-      <NDropdown
-        :show="showDropdown"
-        :options="menuOptions"
-        @select="handleMenuSelect"
-        @clickoutside="showDropdown = false"
-      >
+      <NDropdown :show="showDropdown" :options="menuOptions" @select="handleMenuSelect"
+        @clickoutside="showDropdown = false">
         <NButton text @click.stop="showDropdown = !showDropdown">
-          <MlbIcon
-            name="vuesax.linear.more"
-            :size="20"
-            color="#737373"
-            style="transform: rotate(90deg)"
-          />
+          <MlbIcon name="vuesax.linear.more" :size="20" color="#737373" style="transform: rotate(90deg)" />
         </NButton>
       </NDropdown>
     </div>
@@ -86,14 +73,14 @@ const handleMenuSelect = (key: string) => {
     <h3 class="text-base font-bold text-neutral-900 mb-0.5">{{ item.title }}</h3>
     <p class="text-xs text-neutral-400 mb-2">{{ formatDate(item.created_at) }}</p>
 
-    <!-- Content -->
+
     <p class="text-sm text-neutral-700 leading-relaxed line-clamp-2">{{ item.content }}</p>
 
-    <hr class="my-3 border-neutral-100" />
+    <!-- <hr class="my-3 border-neutral-100" /> -->
 
-    <!-- Engagement row -->
-    <div class="flex items-center justify-between gap-2">
-      <!-- Like + Comment -->
+
+    <!-- <div class="flex items-center justify-between gap-2">
+      
       <div class="flex items-center gap-4">
         <button
           class="flex items-center gap-1.5 text-sm text-neutral-500 hover:text-red-500 transition-colors"
@@ -133,7 +120,6 @@ const handleMenuSelect = (key: string) => {
         </button>
       </div>
 
-      <!-- Avatars + counts -->
       <div class="flex items-center gap-2 min-w-0">
         <MlbAvatar
           v-if="item.members.length"
@@ -150,6 +136,6 @@ const handleMenuSelect = (key: string) => {
           {{ item.view_count }} Views · {{ item.members.length }} Members
         </span>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
