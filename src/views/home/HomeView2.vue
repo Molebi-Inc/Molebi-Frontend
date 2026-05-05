@@ -46,24 +46,23 @@
         :bottom-sheet-height="462" @update:show="onHomeFormModalShowUpdate" @close="handleCloseForm">
         <template #header>
             <div class="flex items-center justify-between">
-                <div>
-                    <BackButton :label="isLargeScreen ? 'Go Back' : 'Cancel'"
-                        :icon="isLargeScreen ? 'vuesax.linear.arrow-left' : ''" class="mb-6" :previous-route="false"
-                        @update:go-back="handleCloseForm" />
-                </div>
+                <div></div>
                 <div class="text-center flex-1">
-                    <h1 class="text-base font-bold text-gray-900 hidden md:block">
+                    <h1 class="text-xl font-bold text-gray-900 hidden md:block">
                         {{ homeFormTitle }}
                     </h1>
                 </div>
-                <div></div>
+                <div>
+                    <BackButton :label="isLargeScreen ? '&times;' : 'Cancel'" class="mb-6" :previous-route="false"
+                        @update:go-back="handleCloseForm" />
+                </div>
             </div>
         </template>
 
         <!-- <h1 class="text-2xl font-bold text-gray-900 text-center mb-11 hidden md:block"> -->
-        <h1 class="text-2xl font-bold text-gray-900 text-center mb-11">
+        <!-- <h1 class="text-2xl font-bold text-gray-900 text-center mb-11">
             {{ homeFormTitle }}
-        </h1>
+        </h1> -->
 
         <AnnouncementForm v-if="$route.query.ftype === 'announcement'" :key="String($route.query.fid ?? 'new')"
             @close="handleCloseForm" />
