@@ -78,10 +78,11 @@ const handleMenuSelect = (key: string) => {
 
 <template>
   <nav class="bg-white border-b border-neutral-100 flex items-center px-30 py-3">
-    <div class="flex items-center gap-3 shrink-0">
-      <img src="@/assets/svg/logo.svg" alt="Mòlèbì" class="h-9 w-auto" />
-
-    </div>
+    <router-link :to="{ name: 'App.HomeView' }">
+      <div class="flex items-center gap-3 shrink-0">
+        <img src="@/assets/svg/logo.svg" alt="Mòlèbì" class="h-9 w-auto" />
+      </div>
+    </router-link>
 
     <div class="flex items-center gap-3 justify-evenly w-full">
       <!-- Hamburger → dropdown -->
