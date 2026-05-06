@@ -22,7 +22,7 @@ const profileStore = useProfileStore()
 const provider = $route.params.provider as SocialAuthenticationProvider
 const SocialAuthenticationMutation = useSocialAuthenticationRedirectMutation(provider)
 
-const user = computed(() => profileStore.user)
+// const user = computed(() => profileStore.user)
 
 const handleSocialAuthenticationRedirect = async () => {
   try {
@@ -31,10 +31,7 @@ const handleSocialAuthenticationRedirect = async () => {
     )
     authConfig.setToken(response.data.token)
     profileStore.setStoreProp('user', response.data.user)
-    if (user.value && user.value.community_name && user.value.family_tree.state_id) {
-      return $router.push({ name: 'App.HomeView' })
-    }
-    $router.push({ name: 'Guests.OnboardingView', params: { module: 'personal-info' } })
+    return $router.push({ name: 'App.HomeView' })
   } catch (error) {
     handleApiError(error, message)
   }
