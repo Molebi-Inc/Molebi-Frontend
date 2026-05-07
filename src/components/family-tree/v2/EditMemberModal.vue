@@ -130,8 +130,8 @@
         </div>
       </div>
 
-      <!-- Relation Type -->
-      <div>
+      <!-- Relation Type (hidden for self) -->
+      <div v-if="!isSelf">
         <label class="block text-sm font-medium text-neutral-600 mb-2">Relation Type</label>
         <select v-model="form.relation_type"
           class="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm text-neutral-800 outline-none focus:border-primary-400 transition-colors">
@@ -156,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import { useMessage } from 'naive-ui'
 import MlbModal from '@/components/ui/MlbModal.vue'
@@ -167,6 +167,7 @@ type EditableMember = FamilyMemberInterface & {
   is_deceased?: boolean | null
   date_of_birth?: string | null
   biography?: string | null
+  _isSelf?: boolean
 }
 
 interface EditForm {
@@ -193,6 +194,8 @@ const emit = defineEmits<{
 const isMobile = useMediaQuery('(max-width: 767px)')
 const message = useMessage()
 const updateMutation = useUpdateFamilyMemberMutation()
+
+const isSelf = computed(() => !!props.member?._isSelf)
 
 const isSaving = ref(false)
 const photoFile = ref<File | null>(null)
@@ -289,15 +292,19 @@ const save = async () => {
       family_name: form.value.family_name.trim(),
       is_same_family_name: false,
       // nickname: form.value.nickname.trim() ?? null,
-      relation_name: form.value.relation_type as RelationType,
       gender: form.value.gender,
-      related_through: props.member.relationship_metadata?.related_through ?? null,
-      parent_id: props.member.relationship_metadata?.parent_id ?? null,
-      is_adoptive: props.member.relationship_metadata?.is_adoptive ?? false,
-      is_former: props.member.relationship_metadata?.is_former ?? false,
       is_deceased: form.value.is_deceased,
       date_of_birth: form.value.date_of_birth,
       biography: (props.member as any).biography ?? null,
+      ...(isSelf.value
+        ? {}
+        : {
+          relation_name: form.value.relation_type as RelationType,
+          related_through: props.member.relationship_metadata?.related_through ?? null,
+          parent_id: props.member.relationship_metadata?.parent_id ?? null,
+          is_adoptive: props.member.relationship_metadata?.is_adoptive ?? false,
+          is_former: props.member.relationship_metadata?.is_former ?? false,
+        }),
       ...(photoFile.value ? { profile_picture: photoFile.value } : {}),
     }
 

@@ -1,7 +1,7 @@
 <template>
     <div class="family-tree-wrapper">
         <!-- The tree SVG/image as the base -->
-        <img :src="treeImageSrc" alt="Family Tree" class="family-tree-img" />
+        <img src="@/assets/svg/tree-4.svg" alt="Family Tree" class="family-tree-img" />
 
         <!-- Overlay each member onto their slot -->
         <div v-for="member in members" :key="member.id" class="member-slot"
@@ -24,9 +24,6 @@
 import { onMounted, ref } from 'vue'
 import { useGetFamilyTreesQuery } from '@/services/family-tree.service'
 import type { FamilyTreeMemberStructureInterface } from '@/types/family-tree.types'
-
-// ─── Replace with your actual tree image path ───────────────────────────────
-const treeImageSrc = ref('/src/assets/svg/tree-4.svg')
 
 const familyTreesQuery = useGetFamilyTreesQuery({
     enabled: true,
