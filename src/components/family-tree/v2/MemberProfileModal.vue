@@ -169,11 +169,14 @@
 <script setup lang="ts">
 import { ref, computed, watch, h } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
-import { NDropdown } from 'naive-ui'
+import { NDropdown, useMessage } from 'naive-ui'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
 import { getUserAvatar } from '@/helpers/general.helpers'
 import { useGetFamilyMemberQuery } from '@/services/family-tree.service'
+import { useRegistrationLinkMutation } from '@/services/authentication.services'
+import { useShareComposable } from '@/composables/useShare'
+import { handleApiError } from '@/helpers/error.helpers'
 import maleMemberSvg from '@/assets/svg/member/male.svg?url'
 import femaleMemberSvg from '@/assets/svg/member/female.svg?url'
 import nodeBlobUrl from '@/assets/images/node-blob.png?url'
@@ -212,14 +215,43 @@ const emit = defineEmits<{
 }>()
 
 const isMobile = useMediaQuery('(max-width: 767px)')
+const message = useMessage()
 const profilePictureFailed = ref(false)
 const genderPlaceholderFailed = ref(false)
 const avatarSize = 80
 const BLOB_RING_SCALE = 1.35
 const showDeleteConfirm = ref(false)
+const isInviting = ref(false)
 
-const actionOptions = computed(() => [
-  {
+const registrationLinkMutation = useRegistrationLinkMutation()
+const { shareLink } = useShareComposable()
+
+const actionOptions = computed(() => {
+  const options: Array<Record<string, unknown>> = []
+
+  if (canShareInvite.value) {
+    options.push({
+      key: 'share-invite',
+      disabled: isInviting.value,
+      label: () =>
+        h('div', { class: 'flex items-center gap-2' }, [
+          isInviting.value
+            ? h('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24', fill: 'none', class: 'w-5 h-5 animate-spin text-primary-700' }, [
+              h('circle', { cx: '12', cy: '12', r: '10', stroke: 'currentColor', 'stroke-width': '4', class: 'opacity-25' }),
+              h('path', { fill: 'currentColor', class: 'opacity-75', d: 'M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z' }),
+            ])
+            : h('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24', fill: 'none', class: 'w-5 h-5 text-primary-700' }, [
+              h('path', {
+                d: 'M19 17V19H7V17C7 17 7 13 13 13C19 13 19 17 19 17ZM16 8C16 7.40666 15.8241 6.82664 15.4944 6.33329C15.1648 5.83994 14.6962 5.45543 14.1481 5.22836C13.5999 5.0013 12.9967 4.94189 12.4147 5.05765C11.8328 5.1734 11.2982 5.45912 10.8787 5.87868C10.4591 6.29824 10.1734 6.83279 10.0576 7.41473C9.94189 7.99667 10.0013 8.59987 10.2284 9.14805C10.4554 9.69623 10.8399 10.1648 11.3333 10.4944C11.8266 10.8241 12.4067 11 13 11C13.7956 11 14.5587 10.6839 15.1213 10.1213C15.6839 9.55871 16 8.79565 16 8ZM19.2 13.06C19.7466 13.5643 20.1873 14.1724 20.4964 14.8489C20.8054 15.5254 20.9766 16.2566 21 17V19H24V17C24 17 24 13.55 19.2 13.06ZM18 5C17.6979 5.00002 17.3976 5.04726 17.11 5.14C17.6951 5.97897 18.0087 6.97718 18.0087 8C18.0087 9.02282 17.6951 10.021 17.11 10.86C17.3976 10.9527 17.6979 11 18 11C18.7956 11 19.5587 10.6839 20.1213 10.1213C20.6839 9.55871 21 8.79565 21 8C21 7.20435 20.6839 6.44129 20.1213 5.87868C19.5587 5.31607 18.7956 5 18 5ZM8 10H5V7H3V10H0V12H3V15H5V12H8V10Z',
+                fill: 'currentColor',
+              }),
+            ]),
+          h('span', { class: 'text-gray-700' }, isInviting.value ? 'Sharing invite…' : 'Invite'),
+        ]),
+    })
+  }
+
+  options.push({
     key: 'delete',
     label: () =>
       h('div', { class: 'flex items-center gap-2' }, [
@@ -233,8 +265,10 @@ const actionOptions = computed(() => [
         ]),
         h('span', { class: 'text-gray-700' }, 'Delete this person'),
       ]),
-  },
-])
+  })
+
+  return options
+})
 
 const memberIdStr = computed(() => (props.member.id != null ? String(props.member.id) : ''))
 
@@ -342,8 +376,57 @@ const onViewInTree = () => {
   emit('update:show', false)
 }
 
+const canShareInvite = computed(() => {
+  const m = resolvedMember.value
+  if (props.isSelf || m._isSelf) return false
+  if (m.is_deceased) return false
+  return m.id != null
+})
+
+const handleShareInvite = async () => {
+  const memberId = resolvedMember.value.id
+  if (!memberId || isInviting.value) return
+
+  isInviting.value = true
+  try {
+    const linkResponse = await registrationLinkMutation.mutateAsync({
+      family_member_id: Number(memberId),
+    })
+
+    const registrationLink = linkResponse.data.registration_link
+    const url = new URL(registrationLink)
+    const queryParams = url.search
+    const appUrl = import.meta.env.VITE_APP_URL + 'onboarding/signup' || ''
+    const finalUrl = queryParams ? `${appUrl}${queryParams}` : appUrl
+
+    const result = await shareLink({
+      title: 'Join our family tree on Molebi App',
+      text: 'I invite you to join our family tree on Molebi App',
+      url: finalUrl,
+    })
+
+    if (result.success) {
+      message.success(
+        result.method === 'clipboard'
+          ? 'Registration link copied to clipboard'
+          : 'Invite link shared successfully',
+      )
+    }
+  } catch (error) {
+    handleApiError(error, message)
+  } finally {
+    isInviting.value = false
+  }
+}
+
 const onActionSelect = (key: string) => {
-  if (key === 'delete') showDeleteConfirm.value = true
+  if (key === 'delete') {
+    showDeleteConfirm.value = true
+    return
+  }
+  if (key === 'share-invite') {
+    void handleShareInvite()
+  }
 }
 
 const onConfirmDelete = () => {
