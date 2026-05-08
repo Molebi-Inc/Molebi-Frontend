@@ -4,6 +4,7 @@ import WelcomeView from '@/views/auth/WelcomeView.vue'
 import OnboardingView from '@/views/auth/OnboardingView.vue'
 import OnboardingViewWeb from '@/views/auth/OnboardingViewWeb.vue'
 import SocialAuthenticationView from '@/views/auth/SocialAuthenticationView.vue'
+import InviteView from '@/views/auth/InviteView.vue'
 
 export const guestRoutes = {
   path: '/',
@@ -97,6 +98,15 @@ export const guestRoutes = {
       // Use the component directly so Vue Router doesn't treat it as an async loader
       // that returns a non-promise value (which was causing c.then is not a function).
       component: SocialAuthenticationView,
+      meta: {
+        layout: 'guest',
+        requiresGuest: true,
+      },
+    },
+    {
+      path: '/auth/invitation',
+      name: 'Guests.InviteView',
+      component: InviteView,
       meta: {
         layout: 'guest',
         requiresGuest: true,

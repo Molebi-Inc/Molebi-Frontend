@@ -205,6 +205,7 @@ interface CreatedMember {
   name: string
   gender: string
   relationKey: string
+  relationType: string
   isDeceased: boolean
 }
 
@@ -347,6 +348,7 @@ const buildApiPayload = (): FamilyMemberFormValues => {
       is_former: f.is_former,
       is_deceased: f.is_deceased,
       date_of_birth: f.date_of_birth,
+      email: f.email
     }
   }
 
@@ -397,6 +399,7 @@ const buildApiPayload = (): FamilyMemberFormValues => {
     is_former: f.is_former,
     is_deceased: f.is_deceased,
     date_of_birth: f.date_of_birth,
+    email: f.email
   }
 }
 
@@ -456,6 +459,7 @@ const handleSubmit = async () => {
       name: fullName,
       gender: form.value.gender,
       relationKey: props.memberType.relationConfigKey,
+      relationType: payload.relation_type as string,
       isDeceased: form.value.is_deceased,
     })
   } catch (error) {

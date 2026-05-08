@@ -16,6 +16,7 @@ export interface FamilyMemberFormValues {
   date_of_birth: string | null
   biography?: string | null
   relation_name?: RelationType
+  email?: string | null
 }
 
 export type RelationType =
