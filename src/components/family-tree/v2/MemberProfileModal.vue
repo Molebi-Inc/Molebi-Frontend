@@ -168,7 +168,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, h } from 'vue'
-import { useMediaQuery } from '@vueuse/core'
+import { useFetch, useMediaQuery } from '@vueuse/core'
 import { NDropdown, useMessage } from 'naive-ui'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
@@ -183,7 +183,6 @@ import nodeBlobUrl from '@/assets/images/node-blob.png?url'
 import MemberTimelineSection from './MemberTimelineSection.vue'
 import MemberBiographySection from './MemberBiographySection.vue'
 import MemberTaggedMediaSection from './MemberTaggedMediaSection.vue'
-import MlbIcon from '@/components/ui/MlbIcon.vue'
 
 type ExtendedMember = FamilyMemberInterface & {
   biography?: string | null
@@ -232,7 +231,7 @@ const actionOptions = computed(() => {
   if (canShareInvite.value) {
     options.push({
       key: 'share-invite',
-      disabled: isInviting.value,
+      disabled: isInviting.value || resolvedMember.value.is_registered,
       label: () =>
         h('div', { class: 'flex items-center gap-2' }, [
           isInviting.value
@@ -393,11 +392,15 @@ const handleShareInvite = async () => {
       family_member_id: Number(memberId),
     })
 
-    const registrationLink = linkResponse.data.registration_link
-    const url = new URL(registrationLink)
+    const registrationLink = linkResponse.data.invitation_link
+    const signedRegistrationLink = await quickFetch(registrationLink, linkResponse.data.signed_api_url)
+    console.log('signedRegistrationLink', signedRegistrationLink)
+    const url = new URL(signedRegistrationLink)
     const queryParams = url.search
     const appUrl = import.meta.env.VITE_APP_URL + 'onboarding/signup' || ''
-    const finalUrl = queryParams ? `${appUrl}${queryParams}` : appUrl
+    let finalUrl = queryParams ? `${appUrl}${queryParams}` : appUrl
+
+    finalUrl = finalUrl.includes('family_member_id') ? finalUrl : `${finalUrl}&family_member_id=${memberId}`
 
     const result = await shareLink({
       title: 'Join our family tree on Molebi App',
@@ -420,13 +423,24 @@ const handleShareInvite = async () => {
 }
 
 const onActionSelect = (key: string) => {
+  console.log('key', key)
   if (key === 'delete') {
     showDeleteConfirm.value = true
     return
   }
   if (key === 'share-invite') {
+    console.log('share-invite')
     void handleShareInvite()
   }
+}
+
+const quickFetch = async (registrationLink: string, signedApiUrl: string) => {
+  const { data, execute } = useFetch<string>(signedApiUrl, {
+    immediate: false,
+  }).get().json<{ data: { signed_registration_url: string } }>()
+
+  await execute()
+  return data?.value?.data?.signed_registration_url ?? registrationLink
 }
 
 const onConfirmDelete = () => {

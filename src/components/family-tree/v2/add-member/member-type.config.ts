@@ -15,12 +15,7 @@
  */
 
 /** Determines which extra fields section is injected. */
-export type ExtraFieldsVariant =
-  | 'sibling'
-  | 'partner'
-  | 'child'
-  | 'step-sibling'
-  | null
+export type ExtraFieldsVariant = 'sibling' | 'partner' | 'child' | 'step-sibling' | null
 
 /**
  * Named injection points in the form.
@@ -194,7 +189,7 @@ export interface V2MemberFormData {
 
   // Invite
   email: string
-  send_invite: boolean
+  invite_to_tree: boolean
 
   // Relationship metadata (set programmatically from member type + extra fields)
   relation_type: string | null
@@ -236,7 +231,7 @@ export const defaultFormData = (): V2MemberFormData => ({
   date_of_birth: null,
   is_deceased: false,
   email: '',
-  send_invite: false,
+  invite_to_tree: false,
   relation_type: null,
   gender: 'male',
   related_through: null,

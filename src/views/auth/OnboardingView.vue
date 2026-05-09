@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import OtpForm from '@/components/auth/OtpForm.vue'
 import { maskEmail } from '@/helpers/general.helpers'
 import SignupForm from '@/components/auth/SignupForm.vue'
@@ -49,9 +49,13 @@ import PersonalInformationForm from '@/components/auth/PersonalInformationForm.v
 import SeedPhase from '@/components/auth/SeedPhase.vue'
 import LinkExpiredView from '@/components/auth/LinkExpiredView.vue'
 import type { InvitationParamsInterface } from '@/types/authentication.types'
+import { useMediaQuery } from '@vueuse/core'
 
 const $route = useRoute()
+const $router = useRouter()
 const authenticationStore = useAuthenticationStore()
+const isDesktop = useMediaQuery('(min-width: 768px)')
+
 const isLinkExpired = ref(false)
 const invitationParams = ref<InvitationParamsInterface | null>(null)
 
@@ -84,6 +88,18 @@ const checkLinkExpiry = () => {
 
 onMounted(() => {
   checkLinkExpiry()
+  if (!isLinkExpired.value &&
+    isDesktop.value && moduleParam.value === 'signup') {
+    const queryParams = $route.query.family_member_id && $route.query.expires && $route.query.signature ? {
+      family_member_id: String($route.query.family_member_id),
+      expires: String($route.query.expires),
+      signature: String($route.query.signature)
+    } : undefined
+    $router.push({
+      name: 'Guests.OnboardingViewWeb',
+      query: queryParams
+    })
+  }
 })
 
 const component = computed(() => {

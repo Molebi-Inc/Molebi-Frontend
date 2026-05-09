@@ -85,7 +85,8 @@
     <div>
       <div :class="['relative flex items-center', isCompactConstrainedMobile ? 'py-3' : 'py-5']">
         <div class="grow border-t border-gray-400"></div>
-        <span :class="['shrink text-gray-400', isCompactConstrainedMobile ? 'mx-2 text-xs' : 'mx-4']">or continue with</span>
+        <span :class="['shrink text-gray-400', isCompactConstrainedMobile ? 'mx-2 text-xs' : 'mx-4']">or continue
+          with</span>
         <div class="grow border-t border-gray-400"></div>
       </div>
       <div class="flex gap-2 justify-center">
@@ -114,6 +115,7 @@ import { countryOptions } from '@/constants/options.constants'
 import { useAuthenticationStore } from '@/stores/authentication.store'
 import {
   useSignupMutation,
+  useJoinWithInvitationMutation,
   useRegisterWithInvitationMutation,
 } from '@/services/authentication.services'
 import { signupValidation } from '@/validations/authentication.validations'
@@ -172,14 +174,16 @@ const invitationParams = computed<InvitationParamsInterface | null>(() => {
       expires: Number(expires),
       family_member_id: Number(family_member_id),
       signature: String(signature),
+      email_invite: Number($route.query.email_invite ?? 0),
+      invitation_token: String($route.query.invitation_token ?? '')
     }
   }
   return null
 })
 
-const invitationMutation = invitationParams.value
-  ? useRegisterWithInvitationMutation(invitationParams)
-  : null
+const invitationMutation = invitationParams.value && invitationParams.value.email_invite === 0
+  ? useJoinWithInvitationMutation(invitationParams)
+  : useRegisterWithInvitationMutation(invitationParams)
 
 const loading = computed(() => {
   if (invitationMutation) {
@@ -262,7 +266,7 @@ const onFormSubmit = async () => {
       let response
 
       // Use invitation mutation if invitation params are present
-      if (props.invitationParams && invitationMutation) {
+      if (invitationParams.value && invitationMutation) {
         response = await invitationMutation.mutateAsync(formData)
       } else {
         response = await signupMutation.mutateAsync(formData)
