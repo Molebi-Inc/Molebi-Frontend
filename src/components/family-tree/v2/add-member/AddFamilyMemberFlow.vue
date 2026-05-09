@@ -12,7 +12,29 @@
             :is-inviting="isInviting" :context-mappings="contextMappings" :context-member="contextMember ?? null"
             :context-override="contextOverride" @select="handleSelect" @back="step = 'select'"
             @success="handleSuccess" @add-another="handleAddAnother" @view-profile="handleViewProfile"
-            @view-tree="handleViewTree" @invite="handleInvite" @close="internalShow = false" />
+            @view-tree="handleViewTree" @invite="handleInvite" @close="onShowUpdate(false)" />
+        </div>
+      </MlbModal>
+      <MlbModal v-model:show="showExtendedHintModal" class="rounded-3xl! max-w-md! w-full!" :closable="true"
+        :mask-closable="true" @update:show="onExtendedHintShowUpdate">
+        <template #header>
+          <div />
+        </template>
+        <div class="px-6 py-6">
+          <p class="text-sm text-neutral-700 leading-relaxed mb-5">
+            You have added an extended family member, click on the extended family filter on the side bar to view them
+          </p>
+          <label class="flex items-center gap-3 cursor-pointer select-none">
+            <input v-model="hideExtendedHintNextTime" type="checkbox" class="w-4 h-4 accent-primary-700" />
+            <span class="text-sm text-neutral-600">Don't show this again</span>
+          </label>
+          <div class="mt-6 flex justify-end">
+            <button
+              class="bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
+              @click="closeExtendedHintModal">
+              Okay
+            </button>
+          </div>
         </div>
       </MlbModal>
     </div>
@@ -30,7 +52,30 @@
               :is-inviting="isInviting" :context-mappings="contextMappings" :context-member="contextMember ?? null"
               :context-override="contextOverride" @select="handleSelect" @back="step = 'select'"
               @success="handleSuccess" @add-another="handleAddAnother" @view-profile="handleViewProfile"
-              @view-tree="handleViewTree" @invite="handleInvite" />
+              @view-tree="handleViewTree" @invite="handleInvite" @close="onShowUpdate(false)" />
+          </div>
+        </n-drawer-content>
+      </n-drawer>
+      <n-drawer v-model:show="showExtendedHintModal" placement="bottom" :height="'38vh'" :mask-closable="true"
+        @update:show="onExtendedHintShowUpdate">
+        <n-drawer-content :body-content-style="{ padding: 0 }" :closable="false">
+          <div class="flex justify-center pt-3 pb-1">
+            <div class="w-10 h-1 rounded-full bg-neutral-200" />
+          </div>
+          <div class="px-5 pb-5 pt-2">
+            <p class="text-sm text-neutral-700 leading-relaxed mb-5">
+              You have added an extended family member, click on the extended family filter on the side bar to view
+              them
+            </p>
+            <label class="flex items-center gap-3 cursor-pointer select-none mb-6">
+              <input v-model="hideExtendedHintNextTime" type="checkbox" class="w-4 h-4 accent-primary-700" />
+              <span class="text-sm text-neutral-600">Don't show this again</span>
+            </label>
+            <button
+              class="w-full bg-primary-700 hover:bg-primary-800 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
+              @click="closeExtendedHintModal">
+              Okay
+            </button>
           </div>
         </n-drawer-content>
       </n-drawer>
@@ -65,6 +110,7 @@ interface CreatedMember {
   name: string
   gender: string
   relationKey: string
+  relationType: string
   isDeceased: boolean
 }
 
@@ -93,6 +139,25 @@ const step = ref<Step>('select')
 const selectedMemberType = ref<MemberTypeConfig | null>(null)
 const createdMember = ref<CreatedMember | null>(null)
 const isInviting = ref(false)
+const showExtendedHintModal = ref(false)
+const hideExtendedHintNextTime = ref(false)
+
+const EXTENDED_HINT_STORAGE_KEY = 'family_tree_hide_extended_member_hint'
+const EXTENDED_RELATION_TYPES = new Set([
+  'paternal_grandfather',
+  'paternal_grandmother',
+  'maternal_grandfather',
+  'maternal_grandmother',
+  'aunt',
+  'uncle',
+  'cousin',
+  'grandchild',
+  'great_grandfather',
+  'great_grandmother',
+  'great_grandchild',
+  'niece',
+  'nephew',
+])
 
 /** true when context is set AND the target is not Self */
 const hasContext = computed(
@@ -143,12 +208,43 @@ watch(
       step.value = 'select'
       selectedMemberType.value = null
       createdMember.value = null
+      showExtendedHintModal.value = false
+      hideExtendedHintNextTime.value = false
     }
   },
 )
 
 const onShowUpdate = (val: boolean) => {
+  if (!val && step.value === 'success' && shouldShowExtendedHint.value) {
+    showExtendedHintModal.value = true
+  }
   emit('update:show', val)
+}
+
+const shouldShowExtendedHint = computed(() => {
+  const relationType = createdMember.value?.relationType
+  if (!relationType || !EXTENDED_RELATION_TYPES.has(relationType)) return false
+  if (typeof window === 'undefined') return true
+  return window.localStorage.getItem(EXTENDED_HINT_STORAGE_KEY) !== '1'
+})
+
+const persistExtendedHintPreference = () => {
+  if (typeof window === 'undefined') return
+  if (hideExtendedHintNextTime.value) {
+    window.localStorage.setItem(EXTENDED_HINT_STORAGE_KEY, '1')
+    return
+  }
+  window.localStorage.removeItem(EXTENDED_HINT_STORAGE_KEY)
+}
+
+const closeExtendedHintModal = () => {
+  persistExtendedHintPreference()
+  showExtendedHintModal.value = false
+}
+
+const onExtendedHintShowUpdate = (val: boolean) => {
+  if (!val) persistExtendedHintPreference()
+  showExtendedHintModal.value = val
 }
 
 const handleSelect = (type: MemberTypeConfig) => {
@@ -194,7 +290,7 @@ const handleInvite = async () => {
       family_member_id: createdMember.value.id,
     })
 
-    const registrationLink = linkResponse.data.registration_link
+    const registrationLink = linkResponse.data.invitation_link
     const url = new URL(registrationLink)
     const queryParams = url.search
     const appUrl = import.meta.env.VITE_APP_URL + 'onboarding/signup' || ''

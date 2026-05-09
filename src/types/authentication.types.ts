@@ -171,7 +171,34 @@ export interface SocialAuthenticationRedirectResponseData {
 }
 
 export interface InvitationParamsInterface {
-  expires: number
-  family_member_id: number
+  expires: number | string
+  family_member_id?: number | string
   signature: string
+  email_invite?: number | string
+  invitation_token?: string | null
+}
+
+export interface InvitationDetailsResponseData {
+  family_member: {
+    id: number
+    first_name: string
+    family_name: string
+    email: string | null
+  }
+  family_tree: {
+    name: string
+  }
+  inviter: {
+    name: string
+  }
+  relationship_type: string
+  signed_registration_url: string
+  signed_decline_url?: string
+  invitation_expires_at?: string
+}
+
+export interface RegistrationLinkResponseData {
+  invitation_link: string
+  signed_api_url: string
+  expires_at: string
 }

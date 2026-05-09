@@ -17,6 +17,7 @@ export interface FamilyMemberFormValues {
   biography?: string | null
   relation_name?: RelationType
   email?: string | null
+  invite_to_tree?: boolean
 }
 
 export type RelationType =

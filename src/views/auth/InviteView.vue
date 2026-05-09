@@ -1,5 +1,4 @@
 <template>
-  <!-- Phase 2: Carousel + Signup -->
   <div key="carousel" :class="[
     'bg-brand-green',
     isScrollable
@@ -8,7 +7,6 @@
         ? 'h-screen overflow-hidden md:grid grid-cols-6 gap-4'
         : 'h-screen overflow-hidden flex flex-col',
   ]">
-    <!-- Left: Carousel -->
     <div :class="[
       isDesktop
         ? 'col-span-3 md:px-[72px] md:py-[40px] flex flex-col overflow-hidden'
@@ -52,43 +50,91 @@
       </div>
     </div>
 
-    <!-- Right: Signup form -->
     <div class="flex flex-col col-span-3 px-[38px] py-8 justify-center min-h-0">
       <div class="md:rounded-3xl flex flex-col min-h-0 max-h-full overflow-hidden md:px-6 py-8 md:p-12">
         <div class="min-h-0">
-          <InvitationCard :familySpaceName="familySpaceName" :inviterName="inviterName" :relationship="relationship"
-            :loading="loading" :accepting="accepting" :onAccept="onAccept" :onDecline="onDecline" />
+          <InvitationCard :invitationDetails="invitationDetails" :loading="loading" @accept="onAccept"
+            @decline="onDecline" />
         </div>
       </div>
     </div>
   </div>
-  <!-- </Transition> -->
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
+import { useMessage } from 'naive-ui'
 import InvitationCard from '@/components/auth/InvitationCard.vue'
-// import MlbButton from '@/components/ui/MlbButton.vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import type { InvitationDetailsResponseData } from '@/types/authentication.types'
+import { useFetchInvitationDetailsQuery, useFetchInvitationWithTokenQuery } from '@/services/authentication.services'
+import { handleApiError } from '@/helpers/error.helpers'
+import { useRouter } from 'vue-router'
 
-const isScrollable = useMediaQuery('(max-width: 375px)')
+
+const $route = useRoute()
+const $router = useRouter()
+const message = useMessage()
 const isSmall = useMediaQuery('(max-width: 400px)')
 const isDesktop = useMediaQuery('(min-width: 768px)')
+const isScrollable = useMediaQuery('(max-width: 375px)')
 
-const familySpaceName = ref('')
-const inviterName = ref('')
-const relationship = ref('')
-const loading = ref(false)
-const accepting = ref(false)
+const fetchDetailsQuery = !!$route.params.family_member_id ? useFetchInvitationDetailsQuery(
+  {
+    family_member_id: String($route.params.family_member_id),
+    expires: String($route.query.expires),
+    signature: String($route.query.signature),
+  },
+) : useFetchInvitationWithTokenQuery(
+  String($route.query.token),
+)
+
+const loading = ref('')
+const slotHeightPx = ref(72)
+const viewportRef = ref<HTMLElement | null>(null)
+const routeQuery = ref<Record<string, string | number> | null>(null)
+const invitationDetails = ref<InvitationDetailsResponseData | null>(null)
+
 const onAccept = () => {
-  console.log('onAccept')
+  if (isDesktop.value) {
+    $router.push({
+      name: 'Guests.OnboardingViewWeb',
+      query: {
+        family_member_id: String(routeQuery.value?.family_member_id),
+        expires: String(routeQuery.value?.expires),
+        signature: String(routeQuery.value?.signature),
+        email_invite: Number(routeQuery.value?.email_invite),
+        invitation_token: String(routeQuery.value?.invitation_token)
+      }
+    })
+  } else {
+    $router.push({
+      name: 'Guests.OnboardingSignup',
+      params: { module: 'signup' },
+      query: {
+        family_member_id: String(routeQuery.value?.family_member_id),
+        expires: String(routeQuery.value?.expires),
+        signature: String(routeQuery.value?.signature),
+        email_invite: Number(routeQuery.value?.email_invite),
+        invitation_token: String(routeQuery.value?.invitation_token)
+      }
+    })
+  }
 }
 const onDecline = () => {
-  console.log('onDecline')
+  message.success('Invitation declined successfully')
+  if (isDesktop.value) {
+    $router.push({
+      name: 'Guests.OnboardingViewWeb'
+    })
+  } else {
+    $router.push({
+      name: 'Guests.OnboardingSignup',
+      params: { module: 'signup' }
+    })
+  }
 }
-
-const viewportRef = ref<HTMLElement | null>(null)
-const slotHeightPx = ref(72)
 
 let welcomeTimer: ReturnType<typeof setInterval> | null = null
 
@@ -139,18 +185,6 @@ const componentConfigs: ComponentConfig[] = [
     primary_button_route: { name: 'Guests.LandingView', params: { module: 'connection' } },
     secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
   },
-  // {
-  //   step: 2,
-  //   image_url: '/src/assets/gifs/safe_space.gif',
-  //   title: 'Safer than Social Media for Families',
-  //   has_back_button: true,
-  //   description:
-  //     'Molebi is a private family-only social app for families, invite-only circles, and WhatsApp alternatives that respect all family members.',
-  //   primary_button_label: 'Next',
-  //   secondary_button_label: 'Skip',
-  //   primary_button_route: { name: 'Guests.LandingView', params: { module: 'vault' } },
-  //   secondary_button_route: { name: 'Guests.OnboardingSignup', params: { module: 'signup' } },
-  // },
   {
     step: 2,
     image_url: '/src/assets/gifs/private_media.gif',
@@ -206,13 +240,68 @@ const onVisibilityChange = () => {
   else resumeCarousel()
 }
 
+const resolveInviteQuery = async () => {
+  const familyMemberId = $route.params.family_member_id
+  if (familyMemberId) {
+    await fetchInvitationDetails()
+  } else {
+    await fetchInvitationWithToken()
+  }
+}
+
+const fetchInvitationDetails = async () => {
+  loading.value += 'fetching'
+  try {
+    const res = await fetchDetailsQuery.refetch()
+    invitationDetails.value = res.data?.data ?? null
+    routeQuery.value = {
+      family_member_id: String($route.params.family_member_id),
+      expires: String($route.query.expires),
+      signature: String($route.query.signature),
+      email_invite: 0,
+      invitation_token: String($route.query.invitation_token ?? '')
+    }
+  } catch (error) {
+    handleApiError(error, message)
+  } finally {
+    loading.value = loading.value.replace('fetching', '')
+  }
+}
+
+const fetchInvitationWithToken = async () => {
+  loading.value += 'fetching'
+  try {
+    const res = await fetchDetailsQuery.refetch()
+    invitationDetails.value = res.data?.data ?? null
+
+    const registrationLink = invitationDetails.value?.signed_registration_url
+    if (registrationLink) {
+      const url = new URL(registrationLink)
+      const queryParamsObject = Object.fromEntries(new URLSearchParams(url.search))
+      routeQuery.value = {
+        family_member_id: String(invitationDetails.value?.family_member.id),
+        expires: String(queryParamsObject.expires),
+        signature: String(queryParamsObject.signature),
+        email_invite: 1,
+        invitation_token: String(queryParamsObject.invitation_token)
+      }
+    }
+  } catch (error) {
+    handleApiError(error, message)
+  } finally {
+    loading.value = loading.value.replace('fetching', '')
+  }
+}
+
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
-onMounted(() => {
+onMounted(async () => {
   nextTick(syncSlotHeight)
   window.addEventListener('resize', syncSlotHeight, { passive: true })
   // startWelcomeAnimation()
   document.addEventListener('visibilitychange', onVisibilityChange, { passive: true })
   startCarouselAutoScroll()
+
+  await resolveInviteQuery()
 })
 
 onUnmounted(() => {
