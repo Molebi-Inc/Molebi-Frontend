@@ -12,6 +12,8 @@ import type {
   VerifyEmailResponseData,
   ResendOtpResponseData,
   InvitationParamsInterface,
+  InvitationDetailsResponseData,
+  RegistrationLinkResponseData,
 } from '@/types/authentication.types'
 import type { FamilyInfoFormValues } from '@/types/profile.types'
 import type { AxiosError } from 'axios'
@@ -27,7 +29,6 @@ import type {
   SocialAuthenticationProvider,
   SocialAuthenticationRedirectResponseData,
 } from '@/types/authentication.types'
-
 
 const authConfig = useAuthConfig()
 
@@ -243,21 +244,91 @@ export const useSocialAuthenticationRedirectMutation = (provider: SocialAuthenti
 }
 
 export const useRegistrationLinkMutation = () => {
-  return useMutation<ApiResponse<{registration_link: string}>, AxiosError<ValidationErrorResponse>, {family_member_id: number}>({
-    mutationFn: async ({family_member_id}: {family_member_id: number}) => {
-      const response = await axiosInstance.post<ApiResponse<{registration_link: string}>>('/api/user/auth/registration-link', {
-        family_member_id,
-      }, {headers: { Authorization: `Bearer ${authConfig.getToken()}` }})
+  return useMutation<
+    ApiResponse<RegistrationLinkResponseData>,
+    AxiosError<ValidationErrorResponse>,
+    { family_member_id: number }
+  >({
+    mutationFn: async ({ family_member_id }: { family_member_id: number }) => {
+      const response = await axiosInstance.post<ApiResponse<RegistrationLinkResponseData>>(
+        '/api/user/auth/registration-link',
+        {
+          family_member_id,
+        },
+        { headers: { Authorization: `Bearer ${authConfig.getToken()}` } },
+      )
       return response.data
     },
   })
 }
 
-export const useRegisterWithInvitationMutation = (params: MaybeRefOrGetter<InvitationParamsInterface | null>) => {
+//from email invite
+export const useRegisterWithInvitationMutation = (
+  params: MaybeRefOrGetter<InvitationParamsInterface | null>,
+) => {
   const paramsValue = computed(() => toValue(params))
-  return useMutation<ApiResponse<SignupResponseData>, AxiosError<ValidationErrorResponse>, SignupFormValues>({
+  return useMutation<
+    ApiResponse<SignupResponseData>,
+    AxiosError<ValidationErrorResponse>,
+    SignupFormValues
+  >({
     mutationFn: async (data: SignupFormValues) => {
-      const response = await axiosInstance.post<ApiResponse<SignupResponseData>>(`/api/user/auth/register/invitation?${new URLSearchParams(paramsValue.value as unknown as Record<string, string>).toString()}`, data)
+      const response = await axiosInstance.post<ApiResponse<SignupResponseData>>(
+        `/api/user/auth/register/invitation?expires=${paramsValue.value?.expires}&signature=${paramsValue.value?.signature}&invitation_token=${paramsValue.value?.invitation_token}`,
+        data,
+      )
+      return response.data
+    },
+  })
+}
+
+export const useFetchInvitationDetailsQuery = (
+  params: MaybeRefOrGetter<InvitationParamsInterface | null>,
+) => {
+  const paramsValue = computed(() => toValue(params))
+  return useQuery<ApiResponse<InvitationDetailsResponseData>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['invitation-details', paramsValue.value],
+    enabled: computed(() => !!paramsValue.value),
+    queryFn: async ({ queryKey }) => {
+      const [, params] = queryKey
+      const { family_member_id, expires, signature } = params as InvitationParamsInterface
+      const response = await axiosInstance.get<ApiResponse<InvitationDetailsResponseData>>(
+        `/api/user/auth/join/${family_member_id}?expires=${expires}&signature=${signature}`,
+      )
+      return response.data
+    },
+  })
+}
+
+//shared link
+export const useJoinWithInvitationMutation = (
+  params: MaybeRefOrGetter<InvitationParamsInterface | null>,
+) => {
+  const paramsValue = computed(() => toValue(params))
+  return useMutation<
+    ApiResponse<SignupResponseData>,
+    AxiosError<ValidationErrorResponse>,
+    SignupFormValues
+  >({
+    mutationFn: async (data: SignupFormValues) => {
+      const response = await axiosInstance.post<ApiResponse<SignupResponseData>>(
+        `/api/user/auth/register/join/${paramsValue.value?.family_member_id}?expires=${paramsValue.value?.expires}&signature=${paramsValue.value?.signature}`,
+        data,
+      )
+      return response.data
+    },
+  })
+}
+
+export const useFetchInvitationWithTokenQuery = (token: string) => {
+  return useQuery<ApiResponse<InvitationDetailsResponseData>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['invitation-with-token', token],
+    enabled: !!token,
+    queryFn: async ({ queryKey }) => {
+      const [, token] = queryKey
+      const response = await axiosInstance.get<ApiResponse<InvitationDetailsResponseData>>(
+        `/api/user/auth/invitation/${token}`,
+      )
       return response.data
     },
   })

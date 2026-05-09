@@ -104,7 +104,7 @@ export const guestRoutes = {
       },
     },
     {
-      path: '/auth/invitation',
+      path: '/auth/invitation/:family_member_id?',
       name: 'Guests.InviteView',
       component: InviteView,
       meta: {

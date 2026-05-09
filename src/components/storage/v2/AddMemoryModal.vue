@@ -194,6 +194,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useMessage } from 'naive-ui'
 import { useMediaQuery } from '@vueuse/core'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import MediaTypeSelector from '@/components/shared/media/MediaTypeSelector.vue'
@@ -205,6 +206,7 @@ import AudioPreviewPlayer from '@/components/shared/media/AudioPreviewPlayer.vue
 import UploadSuccessState from '@/components/shared/media/UploadSuccessState.vue'
 import type { RecordedAudio } from '@/components/shared/media/AudioRecorder.vue'
 import type { CreateMemoryValues } from '@/types/memory.types'
+import { handleApiError } from '@/helpers/error.helpers'
 
 const props = withDefaults(defineProps<{
   show: boolean
@@ -220,7 +222,7 @@ const emit = defineEmits<{
 }>()
 
 const isMobile = useMediaQuery('(max-width: 767px)')
-
+const message = useMessage()
 type Step =
   | 'type-select'
   | 'photo-drop'
@@ -311,7 +313,10 @@ const submitMemory = async () => {
     await props.submitHandler(formData)
     successType.value = isAudio ? 'audio' : 'photo'
     step.value = 'success'
-  } finally {
+  } catch (error) {
+    handleApiError(error, message)
+  }
+  finally {
     submitting.value = false
   }
 }

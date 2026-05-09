@@ -226,6 +226,7 @@ import TagFamilyModal from '@/components/storage/v2/TagFamilyModal.vue'
 import type { AttachmentInterface } from '@/types/vault.types'
 import { useCreateMemoryMutation } from '@/services/memory.service'
 import MediaViewerModal2 from '@/components/shared/media/MediaViewerModal2.vue'
+import { handleApiError } from '@/helpers/error.helpers'
 
 const message = useMessage()
 const $route = useRoute()
@@ -442,8 +443,8 @@ const handleMemorySubmit = async (formData: FormData) => {
 
     await createMemoryWithoutFolder(formData)
     await fetchAllMedia()
-  } catch {
-    message.error('Failed to upload memory')
+  } catch(error) {
+    handleApiError(error, message)
     return
   }
 }

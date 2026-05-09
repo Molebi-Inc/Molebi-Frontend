@@ -134,10 +134,10 @@
       <!-- Invite checkbox -->
       <label class="flex items-center gap-3 cursor-pointer">
         <span class="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 transition-colors" :class="[
-          form.send_invite ? 'bg-primary-600 border-primary-600' : 'border-neutral-300',
+          form.invite_to_tree ? 'bg-primary-600 border-primary-600' : 'border-neutral-300',
           canToggleInvite ? '' : 'opacity-50 cursor-not-allowed',
         ]" @click="toggleInvite">
-          <svg v-if="form.send_invite" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white"
+          <svg v-if="form.invite_to_tree" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white"
             class="w-3 h-3">
             <path fill-rule="evenodd"
               d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
@@ -297,14 +297,14 @@ const getUploadFile = (value: unknown): File | null => {
 
 const toggleInvite = () => {
   if (!canToggleInvite.value) return
-  form.value.send_invite = !form.value.send_invite
+  form.value.invite_to_tree = !form.value.invite_to_tree
 }
 
 watch(
   () => form.value.email,
   (email) => {
-    if (!email?.trim() && form.value.send_invite) {
-      form.value.send_invite = false
+    if (!email?.trim() && form.value.invite_to_tree) {
+      form.value.invite_to_tree = false
     }
   },
 )
@@ -348,10 +348,10 @@ const buildApiPayload = (): FamilyMemberFormValues => {
       is_former: f.is_former,
       is_deceased: f.is_deceased,
       date_of_birth: f.date_of_birth,
-      email: f.email
+      email: f.email,
+      invite_to_tree: f.invite_to_tree ?? false,
     }
   }
-
   // Default (self) flow: derive relation_type and related_through from form + config.
   const relationTypeMap: Record<string, string> = {
     mother: 'mother',
@@ -399,7 +399,8 @@ const buildApiPayload = (): FamilyMemberFormValues => {
     is_former: f.is_former,
     is_deceased: f.is_deceased,
     date_of_birth: f.date_of_birth,
-    email: f.email
+    email: f.email,
+    invite_to_tree: f.invite_to_tree ?? false,
   }
 }
 

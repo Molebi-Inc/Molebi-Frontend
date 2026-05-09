@@ -10,10 +10,10 @@ export interface CreateMemoryValues {
 }
 
 /** Polymorphic type for comment targets (matches API `commentable_type`). */
-export type CommentableType = 'storage_media' | 'family_update'
+export type CommentableType = 'storage_media' | 'announcement'
 
 /** Polymorphic type for like targets (matches API `likeable_type`). */
-export type LikeableType = 'comment' | 'storage_media' | 'family_update'
+export type LikeableType = 'comment' | 'storage_media' | 'announcement'
 
 export interface CreateCommentPayload {
   commentable_type: CommentableType

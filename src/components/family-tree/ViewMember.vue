@@ -294,7 +294,7 @@ const handleInviteMember = async () => {
       family_member_id: familyMemberId,
     })
 
-    const registrationLink = linkResponse.data.registration_link
+    const registrationLink = linkResponse.data.invitation_link
 
     // Extract query parameters from the registration link
     const url = new URL(registrationLink)
