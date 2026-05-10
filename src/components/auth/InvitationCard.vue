@@ -18,7 +18,7 @@
         <strong class="text-neutral-900 font-bold">{{ invitationDetails?.family_tree.name }}</strong>
         by
         <strong class="text-neutral-900 font-bold">{{ invitationDetails?.inviter.name }}</strong>
-        as your {{ invitationDetails?.relationship_type }}
+        as their {{ invitationDetails?.relationship_type }}
       </p>
     </div>
 

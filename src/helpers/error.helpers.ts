@@ -11,15 +11,19 @@ export function handleApiError(error: unknown, message: MessageApi): void {
   const axiosError = error as AxiosError<ValidationErrorResponse>
 
   // Handle 422 validation errors
-  if (axiosError?.response?.status === 422) {
-    const validationErrors = axiosError.response.data.errors
-
+  const validationErrors = axiosError.response?.data?.errors
+  if (axiosError?.response?.status === 422 && validationErrors) {
     // Loop through each field and display all error messages
     Object.entries(validationErrors).forEach(([field, messages]) => {
       ;(messages as string[]).forEach((errorMessage: string) => {
         // Format: "Field name: error message" (e.g., "Email: The email has already been taken.")
         const formattedMessage = `${formatFieldName(field)}: ${errorMessage}`
-        message.error(formattedMessage)
+        message.error(
+          formattedMessage ||
+            axiosError.response?.data?.message ||
+            axiosError.message ||
+            'An error occurred. Please try again.',
+        )
       })
     })
   } else {
