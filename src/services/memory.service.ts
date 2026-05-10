@@ -6,6 +6,8 @@ import type {
   CommentsListParams,
   CreateCommentPayload,
   CreateLikePayload,
+  LikeableType,
+  LikeListRecord,
   LikeResponse,
   UpdateCommentPayload,
 } from '@/types/memory.types'
@@ -149,4 +151,86 @@ export const useToggleLikeMutation = () => {
       return response.data
     },
   })
+}
+
+export const useGetLikeQuery = (likeable_type: LikeableType, likeable_id: number) => {
+  return useQuery<ApiResponse<LikeResponse[]>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['like', likeable_type, likeable_id],
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<LikeResponse[]>>(
+        `/api/user/likes?likeable_type=${likeable_type}&likeable_id=${likeable_id}`,
+        {
+          headers: { Authorization: `Bearer ${authConfig.getToken()}` },
+        },
+      )
+      return response.data
+    },
+  })
+}
+
+export interface AnnouncementEngagement {
+  comments_count: number
+  likes_count: number
+  is_liked: boolean
+}
+
+function commentTotalFromApiBody(body: ApiResponse<CommentResponse>): number {
+  const inner = body.data
+  if (!inner) return 0
+  if (Array.isArray(inner)) return inner.length
+  if (typeof inner !== 'object') return 0
+  if (inner.meta && typeof inner.meta.total === 'number') return inner.meta.total
+  if (Array.isArray(inner.data)) return inner.data.length
+  return 0
+}
+
+/**
+ * Loads comment count (via paginated meta when available) and likes for one announcement.
+ * `is_liked` is true when `currentUserId` matches a like's `user.id`.
+ */
+export async function fetchAnnouncementEngagement(
+  announcementId: number,
+  currentUserId?: number | null,
+): Promise<AnnouncementEngagement> {
+  const headers = { Authorization: `Bearer ${authConfig.getToken()}` }
+
+  const [commentsRes, likesRes] = await Promise.all([
+    axiosInstance.get<ApiResponse<CommentResponse>>('/api/user/comments', {
+      params: {
+        commentable_type: 'announcement',
+        commentable_id: String(announcementId),
+        page: 1,
+        per_page: 1,
+      },
+      headers,
+    }),
+    axiosInstance.get<ApiResponse<LikeListRecord[] | LikeResponse>>(
+      `/api/user/likes?likeable_type=announcement&likeable_id=${announcementId}`,
+      { headers },
+    ),
+  ])
+
+  const comments_count = commentTotalFromApiBody(commentsRes.data)
+
+  const likesPayload = likesRes.data.data
+  let likes_count = 0
+  let is_liked = false
+
+  if (Array.isArray(likesPayload)) {
+    likes_count = likesPayload.length
+    if (currentUserId != null) {
+      is_liked = likesPayload.some((row) => row.user?.id === currentUserId)
+    }
+  } else if (
+    likesPayload &&
+    typeof likesPayload === 'object' &&
+    'likes_count' in likesPayload &&
+    typeof (likesPayload as LikeResponse).likes_count === 'number'
+  ) {
+    const agg = likesPayload as LikeResponse
+    likes_count = agg.likes_count
+    is_liked = Boolean(agg.liked)
+  }
+
+  return { comments_count, likes_count, is_liked }
 }

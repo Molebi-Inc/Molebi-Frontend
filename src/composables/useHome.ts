@@ -1,6 +1,7 @@
 import { useMessage } from 'naive-ui'
 import { watch, computed, ref } from 'vue'
 import { useGeneralStore } from '@/stores/general.store'
+import { useProfileStore } from '@/stores/profile.store'
 import type { PaginationParams } from '@/types/general.types'
 import {
   useGetAnnouncementsQuery,
@@ -19,7 +20,8 @@ import { useFamilyTraditionStore } from '@/stores/family-tradition.store'
 import { useGetFamilyMembersQuery } from '@/services/family-tree.service'
 import type { FamilyTraditionFormValues, FamilyTraditionTab } from '@/types/family-tradition.types'
 import { handleApiError } from '@/helpers/error.helpers'
-import type { AnnouncementFormValues } from '@/types/announcement.types'
+import type { Announcement, AnnouncementFormValues } from '@/types/announcement.types'
+import { fetchAnnouncementEngagement } from '@/services/memory.service'
 import { useRoute, useRouter } from 'vue-router'
 import { AlertService } from '@/services/alert.service'
 import { useGetTourStagesQuery } from '@/services/general.service'
@@ -29,6 +31,7 @@ export const useHome = () => {
   const $router = useRouter()
   const message = useMessage()
   const generalStore = useGeneralStore()
+  const profileStore = useProfileStore()
   const announcementStore = useAnnouncementStore()
   const familyTraditionStore = useFamilyTraditionStore()
 
@@ -62,7 +65,32 @@ export const useHome = () => {
     try {
       announcementStore.setStoreProp('loading', isLoadingAnnouncements.value)
       const response = await refetchAnnouncements()
-      announcementStore.setStoreProp('announcements', response.data?.data || [])
+      const list = (response.data?.data || []) as Announcement[]
+      const currentUserId = profileStore.userDetails?.id ?? null
+
+      const chunkSize = 6
+      const enriched: Announcement[] = []
+      for (let i = 0; i < list.length; i += chunkSize) {
+        const chunk = list.slice(i, i + chunkSize)
+        const chunkResults = await Promise.all(
+          chunk.map(async (announcement) => {
+            try {
+              const engagement = await fetchAnnouncementEngagement(announcement.id, currentUserId)
+              return {
+                ...announcement,
+                comments_count: engagement.comments_count,
+                likes_count: engagement.likes_count,
+                is_liked: engagement.is_liked,
+              }
+            } catch {
+              return announcement
+            }
+          }),
+        )
+        enriched.push(...chunkResults)
+      }
+
+      announcementStore.setStoreProp('announcements', enriched)
     } catch (error) {
       announcementStore.setStoreProp('error', error)
     } finally {

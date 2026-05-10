@@ -93,14 +93,16 @@ watch(
 watch(
   () => props.item,
   (item) => {
-    const meta = item as Announcement & { likes_count?: number; is_liked?: boolean }
-    likesCount.value = meta.likes_count ?? 0
-    isLiked.value = Boolean(meta.is_liked)
+    likesCount.value = item.likes_count ?? 0
+    isLiked.value = Boolean(item.is_liked)
   },
   { immediate: true },
 )
 
-const commentsCount = computed(() => localComments.value.length)
+/** Prefer live list length when comments have been loaded or added in-session */
+const commentsCount = computed(() =>
+  Math.max(props.item.comments_count ?? 0, localComments.value.length),
+)
 
 const toggleCommentsPanel = async () => {
   showCommentsPanel.value = !showCommentsPanel.value

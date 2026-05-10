@@ -46,6 +46,19 @@ export interface LikeResponse {
   }
 }
 
+/** Row from GET /api/user/likes?likeable_type=…&likeable_id=… */
+export interface LikeListRecord {
+  id: number
+  likeable_type: string
+  likeable_id: number
+  user: {
+    id: number
+    name: string
+    avatar_url: string
+  }
+  created_at: string
+}
+
 export interface CommentsListParams {
   commentable_type: CommentableType
   commentable_id: string
