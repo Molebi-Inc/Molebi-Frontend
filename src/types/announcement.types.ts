@@ -34,6 +34,9 @@ export interface Announcement {
   view_count: number
   is_viewed: boolean
   created_at: string
+  comments_count?: number
+  likes_count?: number
+  is_liked?: boolean
 }
 
 export interface AnnouncementStoreInterface {

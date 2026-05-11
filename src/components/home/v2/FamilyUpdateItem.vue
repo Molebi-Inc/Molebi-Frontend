@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, h, computed, watch } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { NDropdown, NButton } from 'naive-ui'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import MlbAvatar from '@/components/ui/MlbAvatar.vue'
@@ -18,6 +19,8 @@ const showCommentsPanel = ref(false)
 const commentText = ref('')
 const sendingComment = ref(false)
 const liking = ref(false)
+const isMdScreen = useMediaQuery('(min-width: 768px)')
+const memberAvatarSize = computed(() => (isMdScreen.value ? 24 : 18))
 const localComments = ref<CommentResource[]>([])
 const likesCount = ref(0)
 const isLiked = ref(false)
@@ -93,14 +96,16 @@ watch(
 watch(
   () => props.item,
   (item) => {
-    const meta = item as Announcement & { likes_count?: number; is_liked?: boolean }
-    likesCount.value = meta.likes_count ?? 0
-    isLiked.value = Boolean(meta.is_liked)
+    likesCount.value = item.likes_count ?? 0
+    isLiked.value = Boolean(item.is_liked)
   },
   { immediate: true },
 )
 
-const commentsCount = computed(() => localComments.value.length)
+/** Prefer live list length when comments have been loaded or added in-session */
+const commentsCount = computed(() =>
+  Math.max(props.item.comments_count ?? 0, localComments.value.length),
+)
 
 const toggleCommentsPanel = async () => {
   showCommentsPanel.value = !showCommentsPanel.value
@@ -156,12 +161,13 @@ const onToggleLike = async () => {
   <div class="bg-white rounded-2xl p-4 shadow-sm">
     <!-- Priority badge + three-dot menu -->
     <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center gap-1.5">
+      <!-- <div class="flex items-center gap-1.5">
         <span :class="['w-2 h-2 rounded-full flex-shrink-0', priorityConfig[item.priority]?.dot ?? 'bg-neutral-400']" />
         <span :class="['text-xs font-semibold capitalize', priorityConfig[item.priority]?.text ?? 'text-neutral-500']">
           {{ item.priority }}
         </span>
-      </div>
+      </div> -->
+      <h3 class="text-base font-bold text-neutral-900 mb-0.5">{{ item.title }}</h3>
       <NDropdown :show="showDropdown" :options="menuOptions" @select="handleMenuSelect"
         @clickoutside="showDropdown = false">
         <NButton text @click.stop="showDropdown = !showDropdown">
@@ -171,50 +177,50 @@ const onToggleLike = async () => {
     </div>
 
     <!-- Title + date -->
-    <h3 class="text-base font-bold text-neutral-900 mb-0.5">{{ item.title }}</h3>
-    <p class="text-xs text-neutral-400 mb-2">{{ formatDate(item.created_at) }}</p>
+    <!-- <h3 class="text-base font-bold text-neutral-900 mb-0.5">{{ item.title }}</h3> -->
+    <!-- <p class="text-xs text-neutral-400 mb-2">{{ formatDate(item.created_at) }}</p> -->
 
 
     <p class="text-sm text-neutral-700 leading-relaxed line-clamp-2">{{ item.content }}</p>
 
     <hr class="my-3 border-neutral-100" />
 
-    <div class="flex items-center justify-between gap-2">
+    <div class="flex min-w-0 items-center justify-between gap-1.5 md:gap-2">
 
-      <div class="flex items-center gap-4">
-        <button
-          class="flex items-center gap-1.5 text-sm transition-colors disabled:opacity-60 bg-gray-50 rounded-full p-1"
-          :disabled="liking" @click="onToggleLike">
-          <svg width="16" height="16" viewBox="0 0 24 24" :fill="isLiked ? '#ef4444' : 'none'"
+      <div class="flex shrink-0 items-center gap-1.5 sm:gap-2 md:gap-4">
+        <button type="button"
+          class="flex items-center gap-1 rounded-full bg-gray-50 px-2 py-1 text-[11px] font-medium transition-colors disabled:opacity-60 max-md:px-1.5 max-md:py-0.5 md:gap-1.5 md:px-2.5 md:py-1.5 md:text-sm"
+          :disabled="liking" aria-label="Like" @click="onToggleLike">
+          <svg class="size-3.5 shrink-0 md:size-4" viewBox="0 0 24 24" :fill="isLiked ? '#ef4444' : 'none'"
             :stroke="isLiked ? '#ef4444' : 'black'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path
               d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
-          <span>Like</span>
+          <span class="max-sm:hidden sm:inline">Like</span>
         </button>
-        <button
-          class="flex items-center gap-1.5 text-sm hover:text-primary-700 transition-colors bg-gray-50 rounded-full p-1"
-          @click="toggleCommentsPanel">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6.66675 11.2502H13.3334M6.66675 7.0835H10.0001" stroke="black" stroke-width="1.5"
+        <button type="button"
+          class="flex items-center gap-1 rounded-full bg-gray-50 px-2 py-1 text-[11px] font-medium text-neutral-800 transition-colors hover:text-primary-700 max-md:px-1.5 max-md:py-0.5 md:gap-1.5 md:px-2.5 md:py-1.5 md:text-sm"
+          aria-label="Comment" @click="toggleCommentsPanel">
+          <svg class="size-4 shrink-0 md:size-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6.66675 11.2502H13.3334M6.66675 7.0835H10.0001" stroke="currentColor" stroke-width="1.5"
               stroke-linecap="round" stroke-linejoin="round" />
             <path
               d="M5.08258 15.8335C3.9998 15.7268 3.18675 15.4013 2.64341 14.8568C1.66675 13.881 1.66675 12.3093 1.66675 9.16683V8.75016C1.66675 5.60766 1.66675 4.036 2.64341 3.06016C3.62008 2.08433 5.19091 2.0835 8.33341 2.0835H11.6667C14.8092 2.0835 16.3809 2.0835 17.3567 3.06016C18.3326 4.03683 18.3334 5.60766 18.3334 8.75016V9.16683C18.3334 12.3093 18.3334 13.881 17.3567 14.8568C16.3801 15.8327 14.8092 15.8335 11.6667 15.8335C11.2001 15.8435 10.8276 15.8793 10.4626 15.9627C9.46341 16.1927 8.53841 16.7043 7.62508 17.1493C6.32258 17.7843 5.67175 18.1018 5.26341 17.8043C4.48175 17.2227 5.24591 15.4185 5.41675 14.5835"
-              stroke="black" stroke-width="1.5" stroke-linecap="round" />
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
 
-          <span>Comment</span>
+          <span class="max-sm:hidden sm:inline">Comment</span>
         </button>
       </div>
 
-      <div class="flex items-center gap-2 min-w-0">
+      <div class="flex min-w-0 items-center gap-1 md:gap-2">
         <MlbAvatar v-if="item.members.length" :options="{
           firstname_field: 'first_name',
           lastname_field: 'last_name',
           src_field: 'avatar',
           users: item.members,
-        }" :max="3" :size="24" />
-        <span class="text-xs text-neutral-400 whitespace-nowrap">
+        }" :max="3" :size="memberAvatarSize" />
+        <span class="truncate text-[10px] leading-tight text-neutral-400 md:text-xs">
           {{ likesCount }} Likes · {{ commentsCount }} Comments
         </span>
       </div>
