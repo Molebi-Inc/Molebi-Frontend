@@ -169,21 +169,31 @@ const invitationParams = computed<InvitationParamsInterface | null>(() => {
   const expires = $route.query.expires
   const family_member_id = $route.query.family_member_id
   const signature = $route.query.signature
+  const invitationToken = $route.query.invitation_token
+  if (expires && family_member_id && signature && invitationToken) {
+    return {
+      expires: Number(expires),
+      family_member_id: Number(family_member_id),
+      signature: String(signature),
+      email_invite: Number($route.query.email_invite ?? 0),
+      invitation_token: String(invitationToken)
+    }
+  }
   if (expires && family_member_id && signature) {
     return {
       expires: Number(expires),
       family_member_id: Number(family_member_id),
       signature: String(signature),
       email_invite: Number($route.query.email_invite ?? 0),
-      invitation_token: String($route.query.invitation_token ?? '')
     }
   }
   return null
 })
 
-const invitationMutation = invitationParams.value && invitationParams.value.email_invite === 0
-  ? useJoinWithInvitationMutation(invitationParams)
-  : useRegisterWithInvitationMutation(invitationParams)
+const invitationMutation = invitationParams.value ? invitationParams.value.email_invite === 0
+  ? useJoinWithInvitationMutation(invitationParams.value)
+  : useRegisterWithInvitationMutation(invitationParams.value)
+  : null
 
 const loading = computed(() => {
   if (invitationMutation) {
