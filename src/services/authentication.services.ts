@@ -263,10 +263,7 @@ export const useRegistrationLinkMutation = () => {
 }
 
 //from email invite
-export const useRegisterWithInvitationMutation = (
-  params: MaybeRefOrGetter<InvitationParamsInterface | null>,
-) => {
-  const paramsValue = computed(() => toValue(params))
+export const useRegisterWithInvitationMutation = (params: InvitationParamsInterface) => {
   return useMutation<
     ApiResponse<SignupResponseData>,
     AxiosError<ValidationErrorResponse>,
@@ -274,7 +271,7 @@ export const useRegisterWithInvitationMutation = (
   >({
     mutationFn: async (data: SignupFormValues) => {
       const response = await axiosInstance.post<ApiResponse<SignupResponseData>>(
-        `/api/user/auth/register/invitation?expires=${paramsValue.value?.expires}&signature=${paramsValue.value?.signature}&invitation_token=${paramsValue.value?.invitation_token}`,
+        `/api/user/auth/register/invitation?expires=${params?.expires}&signature=${params?.signature}&invitation_token=${params?.invitation_token}`,
         data,
       )
       return response.data
