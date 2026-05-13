@@ -97,6 +97,11 @@ const routeQuery = ref<Record<string, string | number> | null>(null)
 const invitationDetails = ref<InvitationDetailsResponseData | null>(null)
 
 const onAccept = () => {
+  const signupDetails = {
+    email: invitationDetails.value?.family_member.email,
+    first_name: invitationDetails.value?.family_member.first_name,
+    family_name: invitationDetails.value?.family_member.family_name,
+  }
   if (isDesktop.value) {
     $router.push({
       name: 'Guests.OnboardingViewWeb',
@@ -105,7 +110,8 @@ const onAccept = () => {
         expires: String(routeQuery.value?.expires),
         signature: String(routeQuery.value?.signature),
         email_invite: Number(routeQuery.value?.email_invite),
-        invitation_token: String(routeQuery.value?.invitation_token)
+        invitation_token: String(routeQuery.value?.invitation_token),
+        ...signupDetails
       }
     })
   } else {
@@ -117,7 +123,8 @@ const onAccept = () => {
         expires: String(routeQuery.value?.expires),
         signature: String(routeQuery.value?.signature),
         email_invite: Number(routeQuery.value?.email_invite),
-        invitation_token: String(routeQuery.value?.invitation_token)
+        invitation_token: String(routeQuery.value?.invitation_token),
+        ...signupDetails
       }
     })
   }

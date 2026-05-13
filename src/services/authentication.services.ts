@@ -14,6 +14,7 @@ import type {
   InvitationParamsInterface,
   InvitationDetailsResponseData,
   RegistrationLinkResponseData,
+  ExistingUserInvitationParams,
 } from '@/types/authentication.types'
 import type { FamilyInfoFormValues } from '@/types/profile.types'
 import type { AxiosError } from 'axios'
@@ -97,10 +98,15 @@ export const useUpdateProfileMutation = () => {
   return useMutation<
     ApiResponse,
     AxiosError<ValidationErrorResponse>,
-    PersonalInformationFormValues | ProfileFormValues | FamilyInfoFormValues
+    | Partial<PersonalInformationFormValues>
+    | Partial<ProfileFormValues>
+    | Partial<FamilyInfoFormValues>
   >({
     mutationFn: async (
-      data: PersonalInformationFormValues | ProfileFormValues | FamilyInfoFormValues,
+      data:
+        | Partial<PersonalInformationFormValues>
+        | Partial<ProfileFormValues>
+        | Partial<FamilyInfoFormValues>,
     ) => {
       const formData = new FormData()
       Object.entries({
@@ -325,6 +331,92 @@ export const useFetchInvitationWithTokenQuery = (token: string) => {
       const [, token] = queryKey
       const response = await axiosInstance.get<ApiResponse<InvitationDetailsResponseData>>(
         `/api/user/auth/invitation/${token}`,
+      )
+      return response.data
+    },
+  })
+}
+
+/* Existing User Invitation — GET/POST use token + expires + signature from the invite URL */
+
+export const useFetchExistingUserInvitationQuery = (
+  params: MaybeRefOrGetter<ExistingUserInvitationParams | null>,
+) => {
+  const paramsValue = computed(() => toValue(params))
+  return useQuery<ApiResponse<InvitationDetailsResponseData>, AxiosError<ValidationErrorResponse>>({
+    queryKey: computed(() => [
+      'existing-user-invitation',
+      paramsValue.value?.token,
+      paramsValue.value?.expires,
+      paramsValue.value?.signature,
+    ]),
+    enabled: computed(() => {
+      const p = paramsValue.value
+      return !!(p?.token && p.signature !== '' && String(p.expires ?? '') !== '')
+    }),
+    queryFn: async () => {
+      const p = paramsValue.value!
+      const token = encodeURIComponent(String(p.token))
+      const expires = Number(p.expires)
+      const signature = encodeURIComponent(String(p.signature))
+      const response = await axiosInstance.get<ApiResponse<InvitationDetailsResponseData>>(
+        `/api/user/invitations/${token}?expires=${expires}&signature=${signature}`,
+      )
+      return response.data
+    },
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+  })
+}
+
+export const useAcceptExistingUserInvitationMutation = (
+  params: MaybeRefOrGetter<ExistingUserInvitationParams | null>,
+) => {
+  const paramsValue = computed(() => toValue(params))
+  return useMutation<
+    ApiResponse<InvitationDetailsResponseData>,
+    AxiosError<ValidationErrorResponse>,
+    void
+  >({
+    mutationFn: async () => {
+      const p = paramsValue.value
+      if (!p?.token) throw new Error('Missing invitation parameters')
+      const token = encodeURIComponent(String(p.token))
+      const expires = Number(p.expires)
+      const signature = encodeURIComponent(String(p.signature))
+      const response = await axiosInstance.post<ApiResponse<InvitationDetailsResponseData>>(
+        `/api/user/invitations/${token}/accept?expires=${expires}&signature=${signature}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${authConfig.getToken()}`,
+          },
+        },
+      )
+      return response.data
+    },
+  })
+}
+
+export const useDeclineExistingUserInvitationMutation = (
+  params: MaybeRefOrGetter<ExistingUserInvitationParams | null>,
+) => {
+  const paramsValue = computed(() => toValue(params))
+  return useMutation<
+    ApiResponse<InvitationDetailsResponseData>,
+    AxiosError<ValidationErrorResponse>,
+    void
+  >({
+    mutationFn: async () => {
+      const p = paramsValue.value
+      if (!p?.token) throw new Error('Missing invitation parameters')
+      const token = encodeURIComponent(String(p.token))
+      const expires = Number(p.expires)
+      const signature = encodeURIComponent(String(p.signature))
+      const response = await axiosInstance.post<ApiResponse<InvitationDetailsResponseData>>(
+        `/api/user/invitations/${token}/decline?expires=${expires}&signature=${signature}`,
       )
       return response.data
     },

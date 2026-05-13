@@ -69,8 +69,7 @@
     </MlbModal>
 
     <FamilyUpdatesModal v-model:show="showAllUpdatesModal" :items="announcements" :loading="loadingAnnouncements"
-        @create="handleCreateAnnouncementFromModal" @edit-item="handleEditAnnouncementFromModal"
-        @delete-item="handleDeleteAnnouncement" />
+        @edit-item="handleEditAnnouncementFromModal" @delete-item="handleDeleteAnnouncement" />
 
     <WelcomeModal v-model:show="showWelcomeModal" />
 </template>
@@ -162,11 +161,6 @@ const handleCreateAnnouncement = () => {
     const query = { ...$route.query, ftype: 'announcement' }
     delete (query as Record<string, unknown>).fid
     $router.push({ name: 'App.HomeView', query })
-}
-
-const handleCreateAnnouncementFromModal = () => {
-    showAllUpdatesModal.value = false
-    handleCreateAnnouncement()
 }
 
 const handleEditAnnouncementFromModal = (item: Announcement) => {

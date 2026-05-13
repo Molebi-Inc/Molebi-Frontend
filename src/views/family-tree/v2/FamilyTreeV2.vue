@@ -10,10 +10,10 @@
           :male-members="familyInsights?.male_members_count" :female-members="familyInsights?.female_members_count"
           :unknown-members="familyInsights?.prefer_not_to_say_count"
           :youngest-birth-year="familyInsights?.youngest_member_birth_year ?? 'N/A'" :family-view="familyView"
-          :branch="branch" :show-photos="showPhotos" :show-names="showNames" @update:family-view="onFamilyViewUpdate"
-          @update:branch="onBranchUpdate" @update:show-photos="onShowPhotosUpdate"
-          @update:show-names="onShowNamesUpdate" @open-tree-settings="showTreeSettingsModal = true"
-          @view-self-profile="openSelfProfile" />
+          :branch="branch" :neutral-branch-labels="isViewingMemberTree" :show-photos="showPhotos"
+          :show-names="showNames" @update:family-view="onFamilyViewUpdate" @update:branch="onBranchUpdate"
+          @update:show-photos="onShowPhotosUpdate" @update:show-names="onShowNamesUpdate"
+          @open-tree-settings="showTreeSettingsModal = true" @view-self-profile="openSelfProfile" />
       </div>
     </aside>
     <!-- Tree Area -->
@@ -197,10 +197,10 @@
           :male-members="familyInsights?.male_members_count" :female-members="familyInsights?.female_members_count"
           :unknown-members="familyInsights?.prefer_not_to_say_count"
           :youngest-birth-year="familyInsights?.youngest_member_birth_year ?? 'N/A'" :family-view="familyView"
-          :branch="branch" :show-photos="showPhotos" :show-names="showNames" @update:family-view="onFamilyViewUpdate"
-          @update:branch="onBranchUpdate" @update:show-photos="onShowPhotosUpdate"
-          @update:show-names="onShowNamesUpdate" @open-tree-settings="showTreeSettingsModal = true"
-          @view-self-profile="openSelfProfile" />
+          :branch="branch" :neutral-branch-labels="isViewingMemberTree" :show-photos="showPhotos"
+          :show-names="showNames" @update:family-view="onFamilyViewUpdate" @update:branch="onBranchUpdate"
+          @update:show-photos="onShowPhotosUpdate" @update:show-names="onShowNamesUpdate"
+          @open-tree-settings="showTreeSettingsModal = true" @view-self-profile="openSelfProfile" />
       </n-drawer-content>
     </n-drawer>
 
@@ -227,6 +227,8 @@
     <TreeSettingsModal v-model:show="showTreeSettingsModal" :who-scope="whoCanEditScope"
       :show-relationship-title="modalShowRelationshipTitle" :show-full-name="modalShowFullName"
       :saving="privacySettingsSaving" @update:privacy="handleTreePrivacyUpdate" />
+
+    <FamilyTreeWelcomeModal v-model:show="showWelcomeModal" />
   </div>
 </template>
 
@@ -250,6 +252,7 @@ import MemberProfileModal from '@/components/family-tree/v2/MemberProfileModal.v
 import NodeActionModal from '@/components/family-tree/v2/NodeActionModal.vue'
 import EditMemberModal from '@/components/family-tree/v2/EditMemberModal.vue'
 import TreeSettingsModal from '@/components/family-tree/v2/TreeSettingsModal.vue'
+import FamilyTreeWelcomeModal from '@/components/family-tree/v2/FamilyTreeWelcomeModal.vue'
 import {
   displayFromApi,
   displayToApi,
@@ -288,6 +291,7 @@ const familyTreeStore = useFamilyTreeStore()
 // UI state
 const showBottomSheet = ref(false)
 const showTreeSettingsModal = ref(false)
+const showWelcomeModal = ref(false)
 const showAddMemberModal = ref(false)
 const addMemberContextMember = ref<FamilyMemberInterface | null>(null)
 const showProfileModal = ref(false)
@@ -803,6 +807,10 @@ const fetchFamilyInsights = async () => {
 onMounted(async () => {
   loadSavedMembersFromStorage()
   await fetchFamilyInsights()
+  if (!profileStore.userDetails?.dob) {
+    // change this
+    showWelcomeModal.value = false
+  }
 })
 </script>
 

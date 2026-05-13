@@ -7,7 +7,8 @@ export interface AnnouncementFormValues {
   title: string
   content: string
   priority: 'high' | 'medium' | 'low'
-  member_ids: FamilyMemberInterface['id'][]
+  // member_ids: FamilyMemberInterface['id'][]
+  member_ids: number[]
   create_reminder: boolean
 }
 

@@ -4,24 +4,13 @@
     <n-form ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-6 px-0 md:px-10">
       <div>
         <n-form-item path="title" :show-require-mark="false" :show-feedback="false">
-          <MlbInput
-            id="title"
-            v-model="form.title"
-            name="title"
-            type="text"
-            placeholder="Add a Title.."
-            custom-class="w-full borderless title-input"
-          />
+          <MlbInput id="title" v-model="form.title" name="title" type="text" placeholder="Add a Title.."
+            custom-class="w-full borderless title-input" />
         </n-form-item>
         <hr class="border-gray-200" />
         <n-form-item path="content" :show-require-mark="false" :show-feedback="false">
-          <n-input
-            v-model:value="form.content"
-            type="textarea"
-            placeholder="What do you want to announce..."
-            rows="2"
-            class="w-full borderless"
-          />
+          <n-input v-model:value="form.content" type="textarea" placeholder="What do you want to announce..." rows="2"
+            class="w-full borderless" />
         </n-form-item>
       </div>
 
@@ -30,14 +19,9 @@
         <template #label>
           <label for="type" class="text-sm font-medium text-gray-500">Select Type</label>
         </template>
-        <NSelect
-          v-model:value="form.type"
-          :options="typeOptions"
-          placeholder="Select Type"
-          size="large"
-          class="w-full rounded!"
-        />
-      </n-form-item> -->
+<NSelect v-model:value="form.type" :options="typeOptions" placeholder="Select Type" size="large"
+  class="w-full rounded!" />
+</n-form-item> -->
 
       <!-- Priority Select -->
       <!-- <n-form-item path="priority" :show-require-mark="false" :show-feedback="false">
@@ -54,13 +38,8 @@
       </n-form-item> -->
 
       <!-- Family Member Selection -->
-      <UserSelector
-        label="Tag Family Member"
-        :form="form"
-        :users="familyMembers"
-        :options="userSelectorOptions"
-        @update:selected-users="updateForm"
-      />
+      <UserSelector label="Tag Family Member" :form="form" :users="familyMembers" :options="userSelectorOptions"
+        @update:selected-users="updateForm" />
 
       <!-- Reminder Checkbox -->
       <!-- <div class="flex items-center gap-2 mb-11">
@@ -69,15 +48,8 @@
       </div> -->
 
       <!-- Create Button -->
-      <MlbButton
-        type="submit"
-        label="Create"
-        :loading="!!loading"
-        :disabled="!!loading"
-        :primary="true"
-        class="w-full rounded-2xl! h-13!"
-        @click="onFormSubmit"
-      />
+      <MlbButton type="submit" label="Create" :loading="!!loading" :disabled="!!loading" :primary="true"
+        class="w-full rounded-2xl! h-13!" @click="onFormSubmit" />
     </n-form>
   </div>
 </template>
@@ -151,7 +123,7 @@ const getEditData = () => {
       content: selectedAnnouncement.content,
       type: null,
       priority: selectedAnnouncement.priority,
-      member_ids: selectedAnnouncement.members.map((member: FamilyMemberInterface) => member.id),
+      member_ids: selectedAnnouncement.members?.flatMap((member: FamilyMemberInterface) => member.id != null ? [member.id] : []) ?? [],
       create_reminder: selectedAnnouncement.send_to_all,
     }
   }
@@ -168,6 +140,7 @@ onMounted(() => {
   background-color: #16a34a;
   border-color: #16a34a;
 }
+
 :deep(.n-input.borderless) {
   --n-border: none !important;
   --n-border-hover: none !important;
@@ -182,6 +155,7 @@ onMounted(() => {
   line-height: 150% !important;
   font-family: General Sans;
 }
+
 :deep(.title-input .n-input__input-el) {
   font-size: 24px !important;
   font-weight: 700 !important;

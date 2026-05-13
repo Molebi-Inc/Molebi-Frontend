@@ -26,7 +26,7 @@
                 </n-form-item>
                 <n-form-item label="Password" path="password">
                   <MlbInput v-model="form.password" id="password" name="password" type="password"
-                    show-password-on="mousedown" placeholder="Enter your password"
+                    show-password-on="click" placeholder="Enter your password"
                     custom-class="border-gray-300 focus:border-primary-500" />
                 </n-form-item>
               </div>

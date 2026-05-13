@@ -17,7 +17,7 @@
         You have been invited to join the
         <strong class="text-neutral-900 font-bold">{{ invitationDetails?.family_tree.name }}</strong>
         by
-        <strong class="text-neutral-900 font-bold">{{ invitationDetails?.inviter.name }}</strong>
+        <strong class="text-neutral-900 font-bold">{{ invitationDetails?.inviter?.name }}</strong>
         as their {{ invitationDetails?.relationship_type }}
       </p>
     </div>

@@ -5,6 +5,7 @@ import OnboardingView from '@/views/auth/OnboardingView.vue'
 import OnboardingViewWeb from '@/views/auth/OnboardingViewWeb.vue'
 import SocialAuthenticationView from '@/views/auth/SocialAuthenticationView.vue'
 import InviteView from '@/views/auth/InviteView.vue'
+import ExistingUserInviteView from '@/views/auth/ExistingUserInviteView.vue'
 
 export const guestRoutes = {
   path: '/',
@@ -110,6 +111,14 @@ export const guestRoutes = {
       meta: {
         layout: 'guest',
         requiresGuest: true,
+      },
+    },
+    {
+      path: '/family/invitation/:action(accept|decline)?',
+      name: 'Guests.ExistingUserInviteView',
+      component: ExistingUserInviteView,
+      meta: {
+        layout: 'guest',
       },
     },
     {

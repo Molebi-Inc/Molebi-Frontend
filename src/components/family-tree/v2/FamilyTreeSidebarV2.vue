@@ -70,14 +70,16 @@
       <SidebarSection title="View Branch" :open="openSections.branch" @toggle="toggle('branch')">
         <div class="space-y-2 pt-2">
           <label v-for="option in branchOptions" :key="option.value"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors"
+            class="flex items-start gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors"
             :class="branch === option.value ? 'bg-primary-50' : 'hover:bg-neutral-50'"
             @click="$emit('update:branch', option.value)">
-            <span class="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
+            <span
+              class="mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
               :class="branch === option.value ? 'border-primary-600' : 'border-neutral-300'">
               <span v-if="branch === option.value" class="w-2 h-2 rounded-full bg-primary-600" />
             </span>
-            <p class="text-sm font-medium" :class="branch === option.value ? 'text-neutral-900' : 'text-neutral-700'">
+            <p class="text-sm font-medium leading-tight"
+              :class="branch === option.value ? 'text-neutral-900' : 'text-neutral-700'">
               {{ option.label }}
             </p>
           </label>
@@ -171,12 +173,15 @@ interface Props {
   branch: Branch
   showPhotos: boolean
   showNames: boolean
+  /** When true, branch filter copy avoids "My …" (e.g. viewing a relative's tree as focal). */
+  neutralBranchLabels?: boolean
   containerClass?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   viewingLabel: 'Your Family',
   containerClass: '',
+  neutralBranchLabels: false,
 })
 
 const emit = defineEmits<{
@@ -213,11 +218,14 @@ const familyViewOptions: { value: FamilyView; label: string; description: string
   },
 ]
 
-const branchOptions: { value: Branch; label: string }[] = [
-  { value: 'direct', label: 'My Direct Family' },
-  { value: 'father', label: "Father's Side" },
-  { value: 'mother', label: "Mother's Side" },
-]
+const branchOptions = computed<{ value: Branch; label: string }[]>(() => {
+  const direct = props.neutralBranchLabels ? 'Direct family' : 'My Direct Family'
+  return [
+    { value: 'direct', label: direct },
+    { value: 'father', label: "Father's Side" },
+    { value: 'mother', label: "Mother's Side" },
+  ]
+})
 
 const displayOptions = computed(() => [
   {
