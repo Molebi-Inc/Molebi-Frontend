@@ -18,7 +18,7 @@
             id="old_password"
             name="old_password"
             type="password"
-            show-password-on="mousedown"
+            show-password-on="click"
             :placeholder="mode === 'change' ? 'Old Password' : 'Enter your password'"
             custom-class="border-gray-300 focus:border-primary-500"
           />
@@ -29,7 +29,7 @@
             id="password"
             name="password"
             type="password"
-            show-password-on="mousedown"
+            show-password-on="click"
             :placeholder="mode === 'change' ? 'New Password' : 'Enter your password'"
             custom-class="border-gray-300 focus:border-primary-500"
           />
@@ -43,7 +43,7 @@
             id="password_confirmation"
             name="password_confirmation"
             type="password"
-            show-password-on="mousedown"
+            show-password-on="click"
             :placeholder="mode === 'change' ? 'Confirm Password' : 'Confirm your password'"
             custom-class="border-gray-300 focus:border-primary-500"
           />

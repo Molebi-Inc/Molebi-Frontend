@@ -178,6 +178,13 @@ export interface InvitationParamsInterface {
   invitation_token?: string | null
 }
 
+/** Query params for `/family/invitation` existing-user invite links */
+export interface ExistingUserInvitationParams {
+  token: string
+  expires: number | string
+  signature: string
+}
+
 export interface InvitationDetailsResponseData {
   family_member: {
     id: number
@@ -188,10 +195,19 @@ export interface InvitationDetailsResponseData {
   family_tree: {
     name: string
   }
-  inviter: {
+  invited_by?: {
+    name: string
+    email: string
+  }
+  invited_user?: {
+    name: string
+    email: string
+  }
+  inviter?: {
     name: string
   }
-  relationship_type: string
+  relationship_type?: string
+  relation_type_label: string
   signed_registration_url: string
   signed_decline_url?: string
   invitation_expires_at?: string

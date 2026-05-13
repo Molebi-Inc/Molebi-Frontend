@@ -50,7 +50,7 @@
             </div>
             <!-- Add memories button -->
             <button v-if="displayedMedia.length > 0"
-              class="flex items-center gap-2 px-5 py-2.5 bg-primary-700 text-white rounded-full text-sm font-semibold hover:bg-primary-800 transition-colors whitespace-nowrap"
+              class="flex items-center gap-2 px-5 py-2.5 bg-primary-700 text-white rounded-full text-sm font-semibold hover:bg-primary-800 transition-colors whitespace-nowrap cursor-pointer"
               @click="openAddMemories()">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M8 2V14M2 8H14" stroke="white" stroke-width="2" stroke-linecap="round" />
@@ -184,16 +184,12 @@
       @add-media="onAlbumCreatedAddMedia" />
 
     <!-- ── Media viewer ──────────────────────────────────────────────────── -->
-    <!-- <MediaViewerModal :show="showViewer" :items="viewerItems" :initial-index="viewerIndex"
-      :album-name="selectedAlbum?.name || mobileSelectedAlbum?.name"
-      :description="selectedAlbum?.description || mobileSelectedAlbum?.description"
-      @update:show="showViewer = $event" /> -->
     <MediaViewerModal2 :show="showViewer" :media="viewerItems[viewerIndex] ?? null"
       @update:show="showViewer = $event" />
 
     <!-- ── Add memory modal ───────────────────────────────────────────────── -->
-    <AddMemoryModal :show="showAddMemory" :initial-type="addMemoryInitialType"
-      :submit-handler="handleMemorySubmit" @update:show="onAddMemoryModalShowChange" />
+    <AddMemoryModal :show="showAddMemory" :initial-type="addMemoryInitialType" :submit-handler="handleMemorySubmit"
+      @update:show="onAddMemoryModalShowChange" />
   </div>
 </template>
 
@@ -217,7 +213,6 @@ import MemoriesAlbumRow from '@/components/storage/v2/MemoriesAlbumRow.vue'
 import MemoriesAddFab from '@/components/storage/v2/MemoriesAddFab.vue'
 import CreateAlbumModal from '@/components/storage/v2/CreateAlbumModal.vue'
 import AddMemoryModal from '@/components/storage/v2/AddMemoryModal.vue'
-// import MediaViewerModal from '@/components/shared/media/MediaViewerModal.vue'
 import AlbumActionsMenu from '@/components/storage/v2/AlbumActionsMenu.vue'
 import EditAlbumModal from '@/components/storage/v2/EditAlbumModal.vue'
 import DeleteAlbumModal from '@/components/storage/v2/DeleteAlbumModal.vue'
@@ -443,7 +438,7 @@ const handleMemorySubmit = async (formData: FormData) => {
 
     await createMemoryWithoutFolder(formData)
     await fetchAllMedia()
-  } catch(error) {
+  } catch (error) {
     handleApiError(error, message)
     return
   }

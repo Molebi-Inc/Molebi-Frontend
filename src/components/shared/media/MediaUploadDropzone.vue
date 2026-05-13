@@ -14,7 +14,7 @@
     </div>
 
     <button type="button"
-      class="px-5 py-2 bg-primary-700 text-white rounded-full text-sm font-medium hover:bg-primary-800 transition-colors"
+      class="px-5 py-2 bg-primary-700 text-white rounded-full text-sm font-medium hover:bg-primary-800 transition-colors cursor-pointer"
       @click.stop="triggerInput">
       <span class="md:hidden">Select from device</span>
       <span class="hidden md:block">Select from computer</span>

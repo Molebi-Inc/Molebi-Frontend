@@ -139,6 +139,17 @@
         </select>
       </div>
 
+      <!-- Which parent this child is linked to (son/daughter → relation_type child) -->
+      <div v-if="showParentSelect">
+        <label class="block text-sm font-medium text-neutral-600 mb-2">Parent in tree</label>
+        <select :value="form.parent_id != null ? String(form.parent_id) : ''"
+          class="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm text-neutral-800 outline-none focus:border-primary-400 transition-colors"
+          @change="onParentIdChange">
+          <option value="">Select parent</option>
+          <option v-for="opt in parentSelectOptions" :key="opt.value" :value="String(opt.value)">{{ opt.label }}</option>
+        </select>
+      </div>
+
       <div class="pt-2 flex justify-center">
         <button
           class="w-100 px-6 h-11 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -157,6 +168,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useFamilyTreeStore } from '@/stores/family-tree.store'
 import { useMediaQuery } from '@vueuse/core'
 import { useMessage } from 'naive-ui'
 import MlbModal from '@/components/ui/MlbModal.vue'
@@ -179,6 +191,8 @@ interface EditForm {
   date_of_birth: string | null
   is_deceased: boolean
   relation_type: RelationType | ''
+  /** Which parent node this child is attached to (API `parent_id` on relationship). */
+  parent_id: number | null
 }
 
 const props = defineProps<{
@@ -194,6 +208,7 @@ const emit = defineEmits<{
 const isMobile = useMediaQuery('(max-width: 767px)')
 const message = useMessage()
 const updateMutation = useUpdateFamilyMemberMutation()
+const familyTreeStore = useFamilyTreeStore()
 
 const isSelf = computed(() => !!props.member?._isSelf)
 
@@ -211,7 +226,31 @@ const form = ref<EditForm>({
   date_of_birth: null,
   is_deceased: false,
   relation_type: '',
+  parent_id: null,
 })
+
+const showParentSelect = computed(
+  () => !isSelf.value && form.value.relation_type === 'child',
+)
+
+const parentSelectOptions = computed(() => {
+  const parents = familyTreeStore.familyTreeData?.familyTree?.parents ?? []
+  return parents
+    .filter((m) => m.id != null)
+    .map((m) => {
+      const id = Number(m.id)
+      const label =
+        (m.full_name || '').trim() ||
+        [m.first_name, m.family_name].filter(Boolean).join(' ').trim() ||
+        `Member ${id}`
+      return { value: id, label }
+    })
+})
+
+function onParentIdChange(event: Event) {
+  const raw = (event.target as HTMLSelectElement).value
+  form.value.parent_id = raw ? Number(raw) : null
+}
 
 // Pre-fill when modal opens or member changes
 watch(
@@ -228,12 +267,25 @@ watch(
       date_of_birth: (m as any).date_of_birth ?? null,
       is_deceased: !!(m as any).is_deceased,
       relation_type: (m.relationship_metadata?.relation_type as RelationType) ?? '',
+      parent_id:
+        m.relationship_metadata?.relation_type === 'child'
+          ? (m.relationship_metadata?.parent_id != null ? Number(m.relationship_metadata.parent_id) : null)
+          : null,
     }
     currentPhotoUrl.value = m.profile_picture_url ?? null
     photoFile.value = null
     photoPreview.value = null
   },
   { immediate: true },
+)
+
+watch(
+  () => form.value.relation_type,
+  (rt, prev) => {
+    if (prev !== undefined && prev === 'child' && rt !== 'child') {
+      form.value.parent_id = null
+    }
+  },
 )
 
 const genderOptions: Array<{ label: string; value: GenderType }> = [
@@ -301,7 +353,10 @@ const save = async () => {
         : {
           relation_name: form.value.relation_type as RelationType,
           related_through: props.member.relationship_metadata?.related_through ?? null,
-          parent_id: props.member.relationship_metadata?.parent_id ?? null,
+          parent_id:
+            form.value.relation_type === 'child'
+              ? form.value.parent_id
+              : (props.member.relationship_metadata?.parent_id ?? null),
           is_adoptive: props.member.relationship_metadata?.is_adoptive ?? false,
           is_former: props.member.relationship_metadata?.is_former ?? false,
         }),

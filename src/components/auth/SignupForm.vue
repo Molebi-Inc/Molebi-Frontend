@@ -36,17 +36,16 @@
         </n-form-item>
         <n-form-item label="Email" path="email" :show-feedback="!!fieldErrors['email']">
           <MlbInput v-model="form.email" id="email" name="email" type="text" placeholder="Enter Email"
-            :custom-class="inputCustomClass" />
+            :custom-class="inputCustomClass" :disabled="!!form.email && authDetails" />
         </n-form-item>
         <n-form-item label="Password" path="password" :show-feedback="!!fieldErrors['password']">
-          <MlbInput v-model="form.password" id="password" name="password" type="password" show-password-on="mousedown"
+          <MlbInput v-model="form.password" id="password" name="password" type="password" show-password-on="click"
             placeholder="Enter your password" :custom-class="inputCustomClass" />
         </n-form-item>
         <n-form-item label="Confirm Password" path="password_confirmation"
           :show-feedback="!!fieldErrors['password_confirmation']">
           <MlbInput v-model="form.password_confirmation" id="password_confirmation" name="password_confirmation"
-            type="password" show-password-on="mousedown" placeholder="Confirm password"
-            :custom-class="inputCustomClass" />
+            type="password" show-password-on="click" placeholder="Confirm password" :custom-class="inputCustomClass" />
         </n-form-item>
         <div v-if="form.password" :class="[isCompactConstrainedMobile ? 'mb-1' : 'mb-3']">
           <div v-for="item in isPasswordValid" :key="item.label" class="flex items-center">
@@ -102,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
@@ -148,6 +147,7 @@ const { genderOptions } = useMemberForm('self')
 
 const formRef = ref<FormInst | null>(null)
 const socialAuthLoader = ref<boolean>(false)
+const authDetails = ref<boolean>(false)
 const isMobile = useMediaQuery('(max-width: 767px)')
 const isCompactHeight = useMediaQuery('(max-height: 760px)')
 
@@ -326,6 +326,16 @@ const handleSocialAuth = async (provider: SocialAuthenticationProvider) => {
     socialAuthLoader.value = false
   }
 }
+
+onMounted(() => {
+  const { email, first_name, family_name } = $route.query
+  if (email && first_name && family_name) {
+    form.value.first_name = String(first_name)
+    form.value.family_name = String(family_name)
+    form.value.email = String(email)
+    authDetails.value = true
+  }
+})
 </script>
 
 <style scoped>

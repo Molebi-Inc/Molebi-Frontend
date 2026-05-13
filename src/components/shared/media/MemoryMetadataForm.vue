@@ -1,13 +1,15 @@
 <template>
-  <div class="flex flex-col gap-8">
+  <div class="flex flex-col gap-6">
     <!-- Title -->
     <input v-model="form.title" type="text" placeholder="Add a Title..."
       class="w-full h-9 text-lg font-semibold text-neutral-900 placeholder-neutral-300 border-0 border-b border-neutral-100 pb-2 focus:outline-none focus:border-primary-400 bg-transparent" />
     <n-input v-model:value="form.description" type="textarea" placeholder="Write something about this memory..."
-      rows="4" class="w-full borderless" />
+      rows="3" class="w-full borderless" />
 
     <!-- Location -->
-    <div class="flex items-center gap-3 py-3 px-1">
+    <div class="flex items-center gap-3 py-3 px-1 border-b border-neutral-100 pb-3">
+      <n-select class="location-select flex-1 min-w-0" v-model:value="locationSelectValue" :options="locationOptions"
+        :bordered="false" filterable placeholder="Add location" clearable />
       <div class="flex items-center gap-3 text-neutral-500 min-w-[18px]">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -15,13 +17,16 @@
             fill="currentColor" />
         </svg>
       </div>
-      <n-select class="location-select" v-model:value="form.metadata.location" :options="locationOptions" filterable
-        placeholder="Select a location in the world" clearable />
     </div>
 
     <!-- Tag Family Members -->
-    <FamilyMemberPicker class="family-picker-bottom-only" placeholder="Tag Family Members" :show-selected-members="true"
-      :selected="form.family_member_ids" @toggle="toggleMember" />
+    <!-- <FamilyMemberPicker class="family-picker-bottom-only" placeholder="Tag Family Members" :show-selected-members="true"
+      :selected="form.family_member_ids" @toggle="toggleMember" /> -->
+    <div class="flex items-center gap-3 border-b border-neutral-100 pb-3">
+      <MlbUserSelector class="location-select" :family-members="familyMembers" :model-value="form.family_member_ids"
+        @update:model-value="toggleMember" />
+      <MlbIcon name="tag_2" :size="18" />
+    </div>
 
     <!-- Add Date -->
     <n-date-picker v-model:formatted-value="form.event_date" id="event_date" name="event_date" type="date"
@@ -30,11 +35,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { NInput, NDatePicker, NSelect } from 'naive-ui'
-import FamilyMemberPicker from '@/components/shared/media/FamilyMemberPicker.vue'
+// import FamilyMemberPicker from '@/components/shared/media/FamilyMemberPicker.vue'
 import { useGetStatesQuery } from '@/services/general.service'
 import type { CreateMemoryValues } from '@/types/memory.types'
+import type { FamilyMemberInterface } from '@/types/family-tree.types'
+import { useGeneralStore } from '@/stores/general.store'
+import MlbUserSelector from '@/components/ui/MlbUserSelector.vue'
+import { useHome } from '@/composables/useHome'
+import MlbIcon from '@/components/ui/MlbIcon.vue'
 
 const baseLocationOptions = [
   { label: 'New York, United States', value: 'New York, United States' },
@@ -71,6 +81,8 @@ const baseLocationOptions = [
 ]
 
 const statesQuery = useGetStatesQuery()
+const generalStore = useGeneralStore()
+const { fetchFamilyMembers } = useHome()
 
 const locationOptions = computed(() => {
   const stateOptions = (statesQuery.data.value?.data ?? []).map((state) => {
@@ -82,10 +94,19 @@ const locationOptions = computed(() => {
   // Deduplicate by value while preserving order.
   return merged.filter((opt, idx, arr) => arr.findIndex((item) => item.value === opt.value) === idx)
 })
+const familyMembers = computed<FamilyMemberInterface[]>(() => generalStore.familyMembers)
 
 
 const form = defineModel<CreateMemoryValues>('modelValue', {
   default: () => ({ title: '', description: '', family_member_ids: [], event_date: null, files: [], metadata: { location: '' } }),
+})
+
+/** NSelect only shows placeholder when value is null/undefined, not ''. */
+const locationSelectValue = computed<string | null>({
+  get: () => form.value.metadata.location || null,
+  set: (v) => {
+    form.value.metadata.location = v ?? ''
+  },
 })
 const dateDisabled = (ts: number) => {
   // Disable dates after today (future dates)
@@ -97,16 +118,15 @@ const dateDisabled = (ts: number) => {
   return selectedDate > today
 }
 
-const toggleMember = (id: number | undefined) => {
-  if (id === undefined) return
-  const ids = form.value.family_member_ids
-  const idx = ids.indexOf(id)
-  if (idx === -1) {
-    form.value = { ...form.value, family_member_ids: [...ids, id] }
-  } else {
-    form.value = { ...form.value, family_member_ids: ids.filter((i) => i !== id) }
-  }
+const toggleMember = (value: number[]) => {
+  form.value.family_member_ids = value
 }
+
+onMounted(() => {
+  if (!generalStore.familyMembers.length) {
+    fetchFamilyMembers()
+  }
+})
 </script>
 <style scoped>
 :deep(.n-input.borderless) {
@@ -143,5 +163,13 @@ const toggleMember = (id: number | undefined) => {
   box-shadow: none !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
+}
+
+:deep(.location-select .n-base-selection) {
+  --n-border: none !important;
+  --n-border-hover: none !important;
+  --n-border-active: none !important;
+  --n-border-focus: none !important;
+  --n-box-shadow-focus: none !important;
 }
 </style>

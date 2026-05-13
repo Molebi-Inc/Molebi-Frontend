@@ -39,7 +39,7 @@
       </div>
 
       <button v-if="!!selectedFiles.length"
-        class="mt-auto px-8 py-3 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40"
+        class="mt-auto px-8 py-3 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40 cursor-pointer"
         :disabled="selectedFiles.length === 0" @click="step = 'photo-meta'">
         Next
       </button>
@@ -51,14 +51,14 @@
     :max-width="800" style="--modal-max-width: 860px" class="rounded-3xl!" @update:show="onClose">
     <template #header>
       <div class="flex items-center justify-between md:hidden">
-        <button class="text-neutral-500 hover:text-neutral-800" @click="step = 'photo-preview'">
+        <button class="text-neutral-500 hover:text-neutral-800 cursor-pointer" @click="step = 'photo-preview'">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
               stroke-linejoin="round" />
           </svg>
         </button>
         <h3 class="text-sm font-semibold text-neutral-800">Add new memory</h3>
-        <button class="text-neutral-400" @click="onClose">
+        <button class="text-neutral-400 cursor-pointer" @click="onClose">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M3 3L15 15M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
@@ -111,7 +111,7 @@
           <MemoryMetadataForm v-model="metadata" />
         </div>
         <button
-          class="w-full py-3 mt-4 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40"
+          class="w-full py-3 mt-4 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40 cursor-pointer"
           :disabled="!metadata.title.trim() || submitting" @click="submitMemory">
           {{ submitting ? 'Saving…' : 'Add Memory' }}
         </button>
@@ -125,14 +125,15 @@
     :style="step === 'audio-meta' ? '--modal-max-width: 860px' : ''" @update:show="onClose">
     <template #header>
       <div class="flex items-center justify-between">
-        <button class="text-neutral-500 hover:text-neutral-800 transition-colors" @click="goBack">
+        <button class="text-neutral-500 hover:text-neutral-800 transition-colors cursor-pointer" @click="goBack">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M12 15L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
               stroke-linejoin="round" />
           </svg>
         </button>
         <h3 class="text-sm md:text-2xl font-semibold text-neutral-800">Add new memory</h3>
-        <button class="text-neutral-400 hover:text-neutral-600 transition-colors md:hidden" @click="onClose">
+        <button class="text-neutral-400 hover:text-neutral-600 transition-colors md:hidden cursor-pointer"
+          @click="onClose">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M3 3L15 15M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
@@ -157,7 +158,7 @@
         <AudioRecorder v-else @ready="onAudioReady" />
 
         <button v-if="step !== 'audio-meta'"
-          class="w-full py-3 mt-4 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40"
+          class="w-full py-3 mt-4 rounded-2xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40 cursor-pointer"
           :disabled="!recordedAudio" @click="step = 'audio-meta'">
           Next
         </button>
@@ -174,7 +175,7 @@
           <MemoryMetadataForm v-model="metadata" />
         </div>
         <button
-          class="w-full py-3 mt-4 rounded-4xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40"
+          class="w-full py-3 mt-4 rounded-4xl bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800 transition-colors disabled:opacity-40 cursor-pointer"
           :disabled="!metadata.title.trim() || submitting" @click="submitMemory">
           {{ submitting ? 'Saving…' : 'Add Memory' }}
         </button>

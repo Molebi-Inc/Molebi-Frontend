@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, watchEffect, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import type { Payload, FamilyMemberInterface } from '@/types/family-tree.types'
 import FamilyTreeNode from '@/components/family-tree/v2/FamilyTreeNode.vue'
 
@@ -375,6 +375,9 @@ defineExpose({ highlightMember, zoomIn, zoomOut, zoomReset, resetPan })
 const nodeKey = (m: FamilyMemberInterface): string =>
   m.id ? String(m.id) : `${m.first_name}-${m.family_name}`
 
+const escapeAttrSelector = (id: string) =>
+  typeof CSS !== 'undefined' && typeof CSS.escape === 'function' ? CSS.escape(id) : id.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+
 const leftMinWidth = computed(() => Math.round(props.nodeSize * 1.6 + 16))
 
 const isTierEmpty = (tier: GenerationTier) =>
@@ -450,6 +453,20 @@ function isMemberVisible(key: string, m: FamilyMemberInterface, fatherId?: numbe
   return true
 }
 
+/** Bio or step parents — matches API when viewing another member's pivoted tree. */
+function resolveFatherMotherMembers(parents: FamilyMemberInterface[] | undefined) {
+  const list = parents ?? []
+  const father = list.find((m) => {
+    const t = m.relationship_metadata?.relation_type
+    return t === 'father' || t === 'stepfather'
+  })
+  const mother = list.find((m) => {
+    const t = m.relationship_metadata?.relation_type
+    return t === 'mother' || t === 'stepmother'
+  })
+  return { father, mother }
+}
+
 // ── visibleGenerations ───────────────────────────────────────────────────────
 
 const EMPTY_TIER: GenerationTier = { leftMembers: [], centerMembers: [], rightMembers: [] }
@@ -458,12 +475,9 @@ const visibleGenerations = computed<GenerationRow[]>(() => {
   const p = props.payload as ExtendedPayload | null
   if (!p) return []
 
-  const father = p.parents?.find((m: FamilyMemberInterface) =>
-    m.relationship_metadata?.relation_type === 'father')
-  const mother = p.parents?.find((m: FamilyMemberInterface) =>
-    m.relationship_metadata?.relation_type === 'mother')
-  const fatherId = father?.id
-  const motherId = mother?.id
+  const { father, mother } = resolveFatherMotherMembers(p.parents)
+  const fatherId = father?.id !== undefined ? Number(father.id) : undefined
+  const motherId = mother?.id !== undefined ? Number(mother.id) : undefined
 
   // relation_types that are always paternal/maternal regardless of related_through
   const PATERNAL_TYPES = new Set(['paternal_grandfather', 'paternal_grandmother'])
@@ -536,8 +550,7 @@ const visibleGenerations = computed<GenerationRow[]>(() => {
   // ── Gen -1: Parents (elevated) + Aunts/Uncles (standard) ──────────────────
   {
     const allParents = take(p.parents, 'parents')
-    const fatherNode = allParents.find(m => m.relationship_metadata?.relation_type === 'father')
-    const motherNode = allParents.find(m => m.relationship_metadata?.relation_type === 'mother')
+    const { father: fatherNode, mother: motherNode } = resolveFatherMotherMembers(allParents)
     const extraParents = allParents.filter(m => m !== fatherNode && m !== motherNode)
     const [extraParentsL, extraParentsR] = splitEvenly(extraParents)
 
@@ -571,9 +584,9 @@ const visibleGenerations = computed<GenerationRow[]>(() => {
 
     const allSiblings = take(p.siblings, 'siblings')
     const paternalSibs = allSiblings.filter(
-      m => fatherId !== undefined && m.relationship_metadata?.related_through === fatherId)
+      m => fatherId !== undefined && Number(m.relationship_metadata?.related_through) === Number(fatherId))
     const maternalSibs = allSiblings.filter(
-      m => motherId !== undefined && m.relationship_metadata?.related_through === motherId)
+      m => motherId !== undefined && Number(m.relationship_metadata?.related_through) === Number(motherId))
     const fullSibs = allSiblings.filter(m => !paternalSibs.includes(m) && !maternalSibs.includes(m))
     const [fullSibsL, fullSibsR] = splitEvenly(fullSibs)
 
@@ -668,7 +681,7 @@ const BLOB_RING_SCALE_SVG = 1.35
 function nodePoints(id: string): { x: number; top: number; bottom: number } | null {
   const container = treeContentRef.value
   if (!container) return null
-  const el = container.querySelector<HTMLElement>(`[data-tree-id="${id}"]`)
+  const el = container.querySelector<HTMLElement>(`[data-tree-id="${escapeAttrSelector(id)}"]`)
   if (!el) return null
   const cr = container.getBoundingClientRect()
   const er = el.getBoundingClientRect()
@@ -702,8 +715,8 @@ function buildSvgPaths() {
   const paths: SvgPath[] = []
 
   const selfKey = nodeKey(p.self)
-  const father = p.parents?.find(m => m.relationship_metadata?.relation_type === 'father')
-  const mother = p.parents?.find(m => m.relationship_metadata?.relation_type === 'mother')
+
+  const { father, mother } = resolveFatherMotherMembers(p.parents)
   const fatherId = father?.id !== undefined ? Number(father.id) : undefined
   const motherId = mother?.id !== undefined ? Number(mother.id) : undefined
   const fatherKey = father ? nodeKey(father) : null
@@ -739,15 +752,37 @@ function buildSvgPaths() {
     const fatherPt = fatherKey ? nodePoints(fatherKey) : null
     const motherPt = motherKey ? nodePoints(motherKey) : null
 
+    /** Any parent nodes in the DOM (when API omits father/mother types, pivoted trees still connect). */
+    let parentPtsForFan: NonNullable<ReturnType<typeof nodePoints>>[] = []
+    if (fatherPt || motherPt) {
+      parentPtsForFan = [fatherPt, motherPt].filter(Boolean) as NonNullable<ReturnType<typeof nodePoints>>[]
+    } else {
+      const seenParent = new Set<string>()
+      for (const par of p.parents ?? []) {
+        const pk = nodeKey(par)
+        if (seenParent.has(pk)) continue
+        const pt = nodePoints(pk)
+        if (pt) {
+          seenParent.add(pk)
+          parentPtsForFan.push(pt)
+        }
+      }
+    }
+
     const fullSibs = (p.siblings ?? []).filter((s: FamilyMemberInterface) => relThrough(s) === null)
     const paternalSibs = (p.siblings ?? []).filter((s: FamilyMemberInterface) => relThrough(s) === fatherId && fatherId !== undefined)
     const maternalSibs = (p.siblings ?? []).filter((s: FamilyMemberInterface) => relThrough(s) === motherId && motherId !== undefined)
 
-    if (selfPt && (fatherPt || motherPt)) {
-      const parentPts = [fatherPt, motherPt].filter(Boolean) as NonNullable<ReturnType<typeof nodePoints>>[]
-      const sibPts = fullSibs.map((s: FamilyMemberInterface) => nodePoints(nodeKey(s))).filter(Boolean) as NonNullable<ReturnType<typeof nodePoints>>[]
+    const sibPts = fullSibs.map((s: FamilyMemberInterface) => nodePoints(nodeKey(s))).filter(Boolean) as NonNullable<ReturnType<typeof nodePoints>>[]
+
+    if (selfPt && parentPtsForFan.length > 0) {
       // Self is the key convergence point; siblings fan out from self's avatar top
-      fanFromKey(parentPts, selfPt, sibPts)
+      fanFromKey(parentPtsForFan, selfPt, sibPts)
+    } else if (selfPt && sibPts.length > 0) {
+      // No resolvable parent nodes: still link self ↔ full siblings (e.g. API parent typing differs)
+      const jx = selfPt.x
+      const jy = selfPt.top
+      sibPts.forEach((c) => connect(jx, jy, c.x, c.top))
     }
 
     // Paternal-only half-siblings: father → leftmost half-sib as key → others fan
@@ -765,21 +800,6 @@ function buildSvgPaths() {
     }
   }
 
-  // ── Self + Spouse (only when no children) ────────────────────────────────
-  const hasChildren = (p.children?.length ?? 0) > 0
-  const spouses = p.spouse ?? []
-  if (!hasChildren) {
-    spouses.forEach(spouse => {
-      const from = nodePoints(selfKey)
-      const to = nodePoints(nodeKey(spouse))
-      if (!from || !to) return
-      const y = Math.max(from.bottom, to.bottom)
-      const bulge = props.nodeSize * 0.3
-      const midX = (from.x + to.x) / 2
-      paths.push({ d: `M ${from.x} ${y} Q ${midX} ${y + bulge}, ${to.x} ${y}`, type: 'spouse' })
-    })
-  }
-
   // ── Self → middle child (key) → other children fan ───────────────────────
   {
     const children = p.children ?? []
@@ -789,9 +809,10 @@ function buildSvgPaths() {
       if (selfPt && childPts.length > 0) {
         const midIdx = Math.floor(childPts.length / 2)
         const keyPt = childPts[midIdx]
-        if (!keyPt) return
-        const otherPts = childPts.filter((_, i) => i !== midIdx)
-        fanFromKey([selfPt], keyPt, otherPts)
+        if (keyPt) {
+          const otherPts = childPts.filter((_, i) => i !== midIdx)
+          fanFromKey([selfPt], keyPt, otherPts)
+        }
       }
     }
   }
@@ -833,6 +854,18 @@ function buildSvgPaths() {
     connectGpGroup(maternalGPs.map(nodeKey), motherKey, maternalAUs.map(nodeKey))
   }
 
+  // ── Self + Spouse (after parent–child lines so the curve stays readable on top)
+  const spouses = p.spouse ?? []
+  spouses.forEach(spouse => {
+    const from = nodePoints(selfKey)
+    const to = nodePoints(nodeKey(spouse))
+    if (!from || !to) return
+    const y = Math.max(from.bottom, to.bottom)
+    const bulge = props.nodeSize * 0.3
+    const midX = (from.x + to.x) / 2
+    paths.push({ d: `M ${from.x} ${y} Q ${midX} ${y + bulge}, ${to.x} ${y}`, type: 'spouse' })
+  })
+
   svgPaths.value = paths
 }
 
@@ -852,6 +885,26 @@ const onViewportChange = () => scheduleSvgRebuild()
 // Rebuild paths whenever tree data changes or zoom changes (zoom affects getBoundingClientRect)
 watch(visibleGenerations, scheduleSvgRebuild)
 watch(zoom, scheduleSvgRebuild)
+watch(
+  () =>
+    [
+      props.showRelationshipTitle,
+      props.showNames,
+      props.showFullName,
+      props.showPhotos,
+      props.nodeSize,
+      props.showAdd,
+    ] as const,
+  scheduleSvgRebuild,
+)
+
+watchEffect((onCleanup) => {
+  const el = treeContentRef.value
+  if (!el || typeof ResizeObserver === 'undefined') return
+  const ro = new ResizeObserver(() => scheduleSvgRebuild())
+  ro.observe(el)
+  onCleanup(() => ro.disconnect())
+})
 
 onMounted(() => {
   scheduleSvgRebuild()

@@ -38,10 +38,10 @@ const hasMore = computed(() => props.items.length > PREVIEW_COUNT)
         <MlbIcon name="vuesax.linear.arrow-right" :size="16" />
       </button>
 
-      <!-- Mobile: + create button -->
+      <!-- Mobile: + button opens the bottom sheet -->
       <button
         class="md:hidden w-7 h-7 border-primary-700 flex items-center justify-center shrink-0 text-primary-700 hover:bg-primary-50 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-        @click="$emit('create')">
+        @click="$emit('view-all')">
         <span class="text-lg leading-none">+</span>
       </button>
     </div>
@@ -68,9 +68,8 @@ const hasMore = computed(() => props.items.length > PREVIEW_COUNT)
       </p>
       <button
         class="bg-primary hover:bg-primary-900 text-white text-sm font-semibold px-6 py-3 rounded-3xl transition-colors w-[80%] md:w-auto cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-        @click="$emit('create')">
-        <span class="hidden md:inline">Add your first update</span>
-        <span class="md:hidden">Create your first announcement</span>
+        @click="$emit('view-all')">
+        Add your first update
       </button>
     </div>
 
