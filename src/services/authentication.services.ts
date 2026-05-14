@@ -389,11 +389,7 @@ export const useAcceptExistingUserInvitationMutation = (
       const response = await axiosInstance.post<ApiResponse<InvitationDetailsResponseData>>(
         `/api/user/invitations/${token}/accept?expires=${expires}&signature=${signature}`,
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${authConfig.getToken()}`,
-          },
-        },
+        { headers: { Authorization: `Bearer ${authConfig.getToken()}` } },
       )
       return response.data
     },

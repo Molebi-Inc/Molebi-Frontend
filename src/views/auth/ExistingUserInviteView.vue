@@ -7,15 +7,30 @@
 
     <!-- Centered content -->
     <div class="flex-1 flex items-center justify-center px-6 py-8">
-      <!-- Loading -->
+
+      <!-- Loading invitation details -->
       <div v-if="isFetching" class="flex flex-col items-center gap-4 text-neutral-500">
         <div class="w-10 h-10 rounded-full border-2 border-primary-400 border-t-transparent animate-spin" />
         <span class="text-sm">Loading invitation...</span>
       </div>
 
+      <!-- Auto-acting on one-click email link -->
+      <div v-else-if="isAutoActing" class="flex flex-col items-center gap-4 text-neutral-500">
+        <div class="w-10 h-10 rounded-full border-2 border-primary-400 border-t-transparent animate-spin" />
+        <span class="text-sm">{{ autoAction === 'accept' ? 'Accepting invitation...' : 'Declining invitation...' }}</span>
+      </div>
+
       <!-- Missing or invalid link -->
       <div v-else-if="!inviteParams" class="text-center text-neutral-500 text-sm max-w-xs">
         This invitation link is invalid. Check that the URL includes token, expires, and signature.
+      </div>
+
+      <!-- Fetch error -->
+      <div v-else-if="isError" class="text-center text-neutral-500 text-sm max-w-xs">
+        <p class="mb-3">Could not load the invitation. It may have expired or the link is no longer valid.</p>
+        <button class="text-primary-600 underline text-sm" @click="refetchInvitation()">
+          Try again
+        </button>
       </div>
 
       <!-- Not found -->
@@ -43,14 +58,18 @@
 
         <!-- Actions -->
         <div class="flex flex-col gap-3">
-          <button type="button"
+          <button
+            type="button"
             class="w-full py-4 rounded-full bg-primary text-white font-semibold text-base transition-colors hover:bg-primary-800 active:bg-primary-900 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            :disabled="isAccepting || isDeclining" @click="handleAccept">
+            :disabled="isAccepting || isDeclining"
+            @click="handleAccept">
             {{ isAccepting ? 'Please wait...' : 'Accept & continue' }}
           </button>
-          <button type="button"
+          <button
+            type="button"
             class="w-full py-3 rounded-full border border-neutral-300 bg-white text-neutral-700 font-medium text-sm transition-colors hover:bg-neutral-50 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            :disabled="isAccepting || isDeclining" @click="handleDecline">
+            :disabled="isAccepting || isDeclining"
+            @click="handleDecline">
             {{ isDeclining ? 'Please wait...' : 'Decline invitation' }}
           </button>
         </div>
@@ -68,14 +87,16 @@
           </p>
         </div>
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
+import type { ExistingUserInvitationParams } from '../../types/authentication.types'
 import {
   useFetchExistingUserInvitationQuery,
   useAcceptExistingUserInvitationMutation,
@@ -89,6 +110,7 @@ const message = useMessage()
 
 const isAccepting = ref(false)
 const isDeclining = ref(false)
+const isAutoActing = ref(false)
 
 /** Expected query: ?token=&expires=&signature= */
 const inviteParams = computed(() => {
@@ -103,13 +125,53 @@ const inviteParams = computed(() => {
   return { token, expires, signature }
 })
 
-const { isLoading: isFetching, data: invitationQueryData } = useFetchExistingUserInvitationQuery(inviteParams)
+/** Route param: /family/invitation/:action(accept|decline)? */
+const autoAction = computed(() => $route.params.action as 'accept' | 'decline' | undefined)
+
+const {
+  isLoading: isFetching,
+  isError,
+  data: invitationQueryData,
+  refetch: refetchInvitation,
+} = useFetchExistingUserInvitationQuery(inviteParams)
+
 const invitationDetails = computed(() => invitationQueryData.value?.data ?? null)
-const acceptMutation = useAcceptExistingUserInvitationMutation(inviteParams)
-const declineMutation = useDeclineExistingUserInvitationMutation(inviteParams)
+
+/**
+ * The signed_accept_url / signed_decline_url are frontend URLs whose query
+ * string carries the token, expires and signature for the action endpoint.
+ * e.g. https://app.molebi.com/family/invitation/accept?token=X&expires=Y&signature=Z
+ */
+function extractParamsFromSignedUrl(rawUrl: string | undefined): ExistingUserInvitationParams | null {
+  if (!rawUrl) return null
+  try {
+    const url = new URL(rawUrl, window.location.origin)
+    const token = url.searchParams.get('token')
+    const expires = url.searchParams.get('expires')
+    const signature = url.searchParams.get('signature')
+    if (!token || !expires || !signature) return null
+    return { token, expires: Number(expires), signature }
+  } catch {
+    return null
+  }
+}
+
+const acceptActionParams = computed(() =>
+  extractParamsFromSignedUrl(invitationDetails.value?.signed_accept_url),
+)
+
+const declineActionParams = computed(() =>
+  extractParamsFromSignedUrl(invitationDetails.value?.signed_decline_url),
+)
+
+const acceptMutation = useAcceptExistingUserInvitationMutation(acceptActionParams)
+const declineMutation = useDeclineExistingUserInvitationMutation(declineActionParams)
 
 const handleAccept = async () => {
-  if (!inviteParams.value) return
+  if (!acceptActionParams.value) {
+    message.error('Accept link is missing or invalid.')
+    return
+  }
   isAccepting.value = true
   try {
     const response = await acceptMutation.mutateAsync()
@@ -119,11 +181,15 @@ const handleAccept = async () => {
     handleApiError(error, message)
   } finally {
     isAccepting.value = false
+    isAutoActing.value = false
   }
 }
 
 const handleDecline = async () => {
-  if (!inviteParams.value) return
+  if (!declineActionParams.value) {
+    message.error('Decline link is missing or invalid.')
+    return
+  }
   isDeclining.value = true
   try {
     const response = await declineMutation.mutateAsync()
@@ -133,15 +199,22 @@ const handleDecline = async () => {
     handleApiError(error, message)
   } finally {
     isDeclining.value = false
+    isAutoActing.value = false
   }
 }
 
-onMounted(() => {
-  if ($route.params.action === 'accept') {
-    handleAccept()
-  }
-  if ($route.params.action === 'decline') {
-    handleDecline()
-  }
-})
+/**
+ * One-click email link — waits for invitation details to load so
+ * signed_accept_url / signed_decline_url are available before acting.
+ */
+watch(
+  [invitationDetails, autoAction],
+  ([details, action]) => {
+    if (!details || !action) return
+    isAutoActing.value = true
+    if (action === 'accept') handleAccept()
+    else if (action === 'decline') handleDecline()
+  },
+  { once: true },
+)
 </script>

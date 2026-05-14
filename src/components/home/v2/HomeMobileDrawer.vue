@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { h } from 'vue'
+import { h, computed, watch } from 'vue'
 import { NDrawer, NDropdown } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import MlbIcon from '@/components/ui/MlbIcon.vue'
 import { useProfileStore } from '@/stores/profile.store'
 import { useLogout } from '@/composables/useLogout'
+import { useFamilyTreeStore } from '@/stores/family-tree.store'
+import { useGetMyFamilyTreesQuery } from '@/services/family-tree.service'
 
 defineProps<{ show: boolean }>()
 const emit = defineEmits<{ (e: 'update:show', value: boolean): void }>()
@@ -13,6 +15,7 @@ const $route = useRoute()
 const $router = useRouter()
 const profileStore = useProfileStore()
 const { logout } = useLogout()
+const familyTreeStore = useFamilyTreeStore()
 
 // ── User dropdown (profile/account/logout) ─────────────────────────────────────
 const userOptions = [
@@ -84,6 +87,42 @@ const navLinks = [
 ]
 
 const close = () => emit('update:show', false)
+
+const handleFamilyTreeSelect = (key: string) => {
+  const id = Number(key)
+  if (!Number.isNaN(id)) {
+    familyTreeStore.selectedFamilyTreeId = id
+  }
+}
+const { data: myTreesData } = useGetMyFamilyTreesQuery()
+
+const myTrees = computed(() => myTreesData.value?.data ?? [])
+
+watch(myTrees, (trees) => {
+  if (!trees.length) return
+  familyTreeStore.myFamilyTrees = trees
+  if (familyTreeStore.selectedFamilyTreeId != null) return
+  const ownerTree = trees.find((t) => t.is_owner) ?? trees[0]
+  familyTreeStore.selectedFamilyTreeId = ownerTree?.id ?? null
+}, { immediate: true })
+
+const selectedTree = computed(() =>
+  myTrees.value.find((t) => t.id === familyTreeStore.selectedFamilyTreeId) ?? myTrees.value[0],
+)
+
+const familyTreeLabel = computed(() => {
+  if (selectedTree.value) return selectedTree.value.name
+  const ft = profileStore.userDetails?.family_tree
+  return ft?.name || `${profileStore.userDetails?.family_name ?? ''} Family Tree`.trim()
+})
+
+const familyTreeOptions = computed(() =>
+  myTrees.value.map((t) => ({
+    label: t.name,
+    key: String(t.id),
+    icon: () => h(MlbIcon, { name: 'vuesax.outline.hierarchy', size: 14, color: '#737373' }),
+  })),
+)
 </script>
 
 <template>
@@ -113,6 +152,18 @@ const close = () => emit('update:show', false)
 
       <!-- Footer: user, help, language -->
       <div class="border-t border-neutral-100 px-3 py-4 space-y-1">
+        <NDropdown v-if="$route.name === 'App.FamilyTreeView'" :options="familyTreeOptions" trigger="click"
+          placement="bottom-start" @select="handleFamilyTreeSelect">
+          <button
+            class="flex items-center gap-2 bg-[#3EB369] hover:bg-primary-500 transition-colors text-white text-sm font-medium px-4 py-1.5 rounded-full">
+            <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+              <MlbIcon name="user" :size="13" color="#ffffff" />
+            </span>
+            <span class="max-w-[180px] truncate">{{ familyTreeLabel }}</span>
+            <MlbIcon name="vuesax.linear.arrow-right" :size="11" class="rotate-90 opacity-80" />
+          </button>
+        </NDropdown>
+
         <!-- User dropdown -->
         <NDropdown :options="userOptions" trigger="click" placement="bottom-end" @select="handleUserSelect">
           <button

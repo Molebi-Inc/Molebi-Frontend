@@ -189,10 +189,21 @@ export type Payload = {
   [K in Exclude<FamilyTreeMember, 'self'>]?: FamilyMemberInterface[]
 }
 
+export interface UserFamilyTreeInterface {
+  id: number
+  name: string
+  unique_identifier: string
+  description: string | null
+  members_count: number
+  is_owner: boolean
+}
+
 export interface FamilyTreeStoreInterface {
   familyTreeData: FamilyTreeInterface | null
   loading: boolean
   error: string | null
+  myFamilyTrees: UserFamilyTreeInterface[]
+  selectedFamilyTreeId: number | null
 }
 
 export interface NodeMemberInterface {

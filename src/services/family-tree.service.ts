@@ -20,6 +20,7 @@ import type {
   TreePrivacySettingsInterface,
   TreeSettingsFormValues,
   TreeSettingsInterface,
+  UserFamilyTreeInterface,
 } from '@/types/family-tree.types'
 const authConfig = useAuthConfig()
 
@@ -169,18 +170,38 @@ export const useGetFamilyMemberQuery = (
   })
 }
 
+export const useGetMyFamilyTreesQuery = (options?: { enabled?: boolean }) => {
+  return useQuery<ApiResponse<UserFamilyTreeInterface[]>, AxiosError<ValidationErrorResponse>>({
+    queryKey: ['my-family-trees'],
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<UserFamilyTreeInterface[]>>(
+        '/api/user/family-trees/my-trees',
+        { headers: { Authorization: `Bearer ${authConfig.getToken()}` } },
+      )
+      return response.data
+    },
+    enabled: options?.enabled ?? true,
+  })
+}
+
 export const useGetFamilyTreesQuery = (options?: {
   enabled?: boolean
   relativeMemberId?: MaybeRef<string | number | null>
+  familyTreeId?: MaybeRef<number | null>
 }) => {
   const memberId = computed(() => toValue(options?.relativeMemberId))
+  const familyTreeId = computed(() => toValue(options?.familyTreeId))
   return useQuery<ApiResponse<FamilyTreeInterface>, AxiosError<ValidationErrorResponse>>({
-    queryKey: ['family-trees', memberId],
+    queryKey: ['family-trees', memberId, familyTreeId],
     queryFn: async () => {
       const currentMemberId = toValue(options?.relativeMemberId)
+      const currentFamilyTreeId = toValue(options?.familyTreeId)
       const params: Record<string, string | number> = {}
       if (currentMemberId) {
         params.relative_member_id = currentMemberId
+      }
+      if (currentFamilyTreeId) {
+        params.family_tree_id = currentFamilyTreeId
       }
       const response = await axiosInstance.get<ApiResponse<FamilyTreeInterface>>(
         '/api/user/family-trees',

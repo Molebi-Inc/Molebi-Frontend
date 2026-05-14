@@ -53,7 +53,6 @@ import { useMediaQuery } from '@vueuse/core'
 import { NDatePicker, useMessage } from 'naive-ui'
 import MlbModal from '@/components/ui/MlbModal.vue'
 import MlbButton from '@/components/ui/MlbButton.vue'
-import { useProfileStore } from '@/stores/profile.store'
 import { handleApiError } from '@/helpers/error.helpers'
 import { useUpdateProfileMutation } from '@/services/authentication.services'
 import { useProfile } from '@/composables/useProfile'
@@ -62,7 +61,6 @@ defineProps<{ show: boolean }>()
 const emit = defineEmits<{ (e: 'update:show', value: boolean): void }>()
 
 const message = useMessage()
-const profileStore = useProfileStore()
 const { getProfile } = useProfile()
 const updateProfileMutation = useUpdateProfileMutation()
 const isMobile = useMediaQuery('(max-width: 767px)')
@@ -79,18 +77,9 @@ const dateDisabled = (ts: number) => {
 
 const onContinue = async () => {
   if (!dob.value) return
-  // const user = profileStore.userDetails
   try {
     await updateProfileMutation.mutateAsync({
-      // first_name: user?.first_name || '',
-      // middle_name: user?.middle_name || null,
-      // nickname: user?.nickname || null,
-      // family_name: user?.family_name || '',
       dob: dob.value
-      // state_id: user?.state_id || null,
-      // community_name: user?.community_name || '',
-      // mother_family_name: user?.mother_family_name || '',
-      // gender: user?.gender || null,
     })
     await getProfile()
     message.success('Date of birth saved!')
