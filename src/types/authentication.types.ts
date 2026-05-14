@@ -209,6 +209,7 @@ export interface InvitationDetailsResponseData {
   relationship_type?: string
   relation_type_label: string
   signed_registration_url: string
+  signed_accept_url?: string
   signed_decline_url?: string
   invitation_expires_at?: string
 }

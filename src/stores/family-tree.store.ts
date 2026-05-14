@@ -6,6 +6,8 @@ export const useFamilyTreeStore = defineStore('family-tree', {
     familyTreeData: null,
     loading: false,
     error: null,
+    myFamilyTrees: [],
+    selectedFamilyTreeId: null,
   }),
 
   actions: {

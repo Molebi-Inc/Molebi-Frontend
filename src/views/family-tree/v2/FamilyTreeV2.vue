@@ -404,6 +404,7 @@ const relativeMemberId = computed(() => {
 const familyTreesQuery = useGetFamilyTreesQuery({
   enabled: true,
   relativeMemberId: relativeMemberId,
+  familyTreeId: computed(() => familyTreeStore.selectedFamilyTreeId),
 })
 const familyTreeByMemberQuery = useGetFamilyTreeByMemberIdQuery(
   computed(() => String(focusedTreeMemberId.value ?? '')),
@@ -808,8 +809,7 @@ onMounted(async () => {
   loadSavedMembersFromStorage()
   await fetchFamilyInsights()
   if (!profileStore.userDetails?.dob) {
-    // change this
-    showWelcomeModal.value = false
+    showWelcomeModal.value = true
   }
 })
 </script>
