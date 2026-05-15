@@ -25,12 +25,6 @@ const localComments = ref<CommentResource[]>([])
 const likesCount = ref(0)
 const isLiked = ref(false)
 
-const priorityConfig: Record<string, { dot: string; text: string }> = {
-  high: { dot: 'bg-red-500', text: 'text-red-500' },
-  medium: { dot: 'bg-yellow-500', text: 'text-yellow-600' },
-  low: { dot: 'bg-blue-500', text: 'text-blue-500' },
-}
-
 const formatDate = (dateStr: string) => {
   try {
     return new Date(dateStr).toLocaleString('en-US', {
@@ -159,14 +153,8 @@ const onToggleLike = async () => {
 
 <template>
   <div class="bg-white rounded-2xl p-4 shadow-sm">
-    <!-- Priority badge + three-dot menu -->
+    <!--  + three-dot menu -->
     <div class="flex items-center justify-between mb-3">
-      <!-- <div class="flex items-center gap-1.5">
-        <span :class="['w-2 h-2 rounded-full flex-shrink-0', priorityConfig[item.priority]?.dot ?? 'bg-neutral-400']" />
-        <span :class="['text-xs font-semibold capitalize', priorityConfig[item.priority]?.text ?? 'text-neutral-500']">
-          {{ item.priority }}
-        </span>
-      </div> -->
       <h3 class="text-base font-bold text-neutral-900 mb-0.5">{{ item.title }}</h3>
       <NDropdown :show="showDropdown" :options="menuOptions" @select="handleMenuSelect"
         @clickoutside="showDropdown = false">
@@ -216,8 +204,8 @@ const onToggleLike = async () => {
       <div class="flex min-w-0 items-center gap-1 md:gap-2">
         <MlbAvatar v-if="item.members.length" :options="{
           firstname_field: 'first_name',
-          lastname_field: 'last_name',
-          src_field: 'avatar',
+          lastname_field: 'family_name',
+          src_field: 'profile_picture_url',
           users: item.members,
         }" :max="3" :size="memberAvatarSize" />
         <span class="truncate text-[10px] leading-tight text-neutral-400 md:text-xs">

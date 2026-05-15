@@ -14,38 +14,9 @@
         </n-form-item>
       </div>
 
-      <!-- Type Select -->
-      <!-- <n-form-item path="type" :show-require-mark="false" :show-feedback="false">
-        <template #label>
-          <label for="type" class="text-sm font-medium text-gray-500">Select Type</label>
-        </template>
-<NSelect v-model:value="form.type" :options="typeOptions" placeholder="Select Type" size="large"
-  class="w-full rounded!" />
-</n-form-item> -->
-
-      <!-- Priority Select -->
-      <!-- <n-form-item path="priority" :show-require-mark="false" :show-feedback="false">
-        <template #label>
-          <label for="priority" class="text-sm font-medium text-gray-500">Select Priority</label>
-        </template>
-        <NSelect
-          v-model:value="form.priority"
-          :options="formattedPriorityOptions"
-          placeholder="Select Priority"
-          size="large"
-          class="w-full mlb-select"
-        />
-      </n-form-item> -->
-
       <!-- Family Member Selection -->
       <UserSelector label="Tag Family Member" :form="form" :users="familyMembers" :options="userSelectorOptions"
         @update:selected-users="updateForm" />
-
-      <!-- Reminder Checkbox -->
-      <!-- <div class="flex items-center gap-2 mb-11">
-        <NCheckbox v-model:checked="form.create_reminder" />
-        <label class="text-sm font-medium text-gray-500">Create a reminder</label>
-      </div> -->
 
       <!-- Create Button -->
       <MlbButton type="submit" label="Create" :loading="!!loading" :disabled="!!loading" :primary="true"
@@ -64,7 +35,6 @@ import { useGeneralStore } from '@/stores/general.store'
 import { typeOptions } from '@/constants/options.constants'
 import type { FamilyMemberInterface } from '@/types/family-tree.types'
 import UserSelector from '@/components/common/UserSelector.vue'
-import { priorityOptions } from '@/constants/priority.constants'
 import { announcementValidation } from '@/validations/dashboard.validations'
 import type { UserSelectorOptions } from '@/components/common/UserSelector.vue'
 import { useMessage, NForm, NFormItem, NInput, NSelect, NCheckbox } from 'naive-ui'
@@ -85,14 +55,6 @@ const userSelectorOptions: UserSelectorOptions = {
 }
 
 const familyMembers = computed<FamilyMemberInterface[]>(() => generalStore.familyMembers)
-
-// Format priority options for NSelect
-const formattedPriorityOptions = computed<SelectOption[]>(() => {
-  return priorityOptions.map((option) => ({
-    label: option.label,
-    value: option.value,
-  }))
-})
 
 const emit = defineEmits<{
   (e: 'submit', data: typeof form.value): void
@@ -121,8 +83,6 @@ const getEditData = () => {
     form.value = {
       title: selectedAnnouncement.title,
       content: selectedAnnouncement.content,
-      type: null,
-      priority: selectedAnnouncement.priority,
       member_ids: selectedAnnouncement.members?.flatMap((member: FamilyMemberInterface) => member.id != null ? [member.id] : []) ?? [],
       create_reminder: selectedAnnouncement.send_to_all,
     }

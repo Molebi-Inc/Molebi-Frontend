@@ -3,11 +3,8 @@ import type { FamilyMemberInterface } from './family-tree.types'
 import type { FamilyTreeDetails } from './family-tree.types'
 import type { PaginationParams, ValidationErrorResponse } from './general.types'
 export interface AnnouncementFormValues {
-  type: 'information' | 'alert' | null
   title: string
   content: string
-  priority: 'high' | 'medium' | 'low'
-  // member_ids: FamilyMemberInterface['id'][]
   member_ids: number[]
   create_reminder: boolean
 }
@@ -15,7 +12,6 @@ export interface AnnouncementFormValues {
 export interface AnnouncementFormErrors {
   title?: { message: string }[]
   description?: { message: string }[]
-  priority?: { message: string }[]
   family_members?: { message: string }[]
 }
 
@@ -24,7 +20,6 @@ export interface Announcement {
   family_tree_id: number
   title: string
   content: string
-  priority: 'high' | 'medium' | 'low'
   send_to_all: boolean
   creator: {
     id: number
