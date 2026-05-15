@@ -1,29 +1,20 @@
 <template>
-  <div
-    :class="{
-      'flex justify-center items-center h-full': loading,
-    }"
-  >
+  <div :class="{
+    'flex justify-center items-center h-full': loading,
+  }">
     <div v-if="!items.length && !loading">
       <div
-        class="py-9 px-4 bg-white rounded-2xl border border-gray-200 md:border-none shadow-[0px_4px_50px_0px_#a8a8a81a]"
-      >
-        <p
-          class="text-gray-400 text-sm font-medium text-center"
-          @click="handleAddOption('announcement')"
-        >
+        class="py-9 px-4 bg-white rounded-2xl border border-gray-200 md:border-none shadow-[0px_4px_50px_0px_#a8a8a81a]">
+        <p class="text-gray-400 text-sm font-medium text-center" @click="handleAddOption('announcement')">
           You don't have any announcements yet? <br />Let's start one!<br /><br />
 
           <span class="hidden md:block">
             Click the announcement button <br />
             to start
           </span>
-          <MlbButton
-            v-if="!isLargeScreen"
-            label="Create your first announcement"
+          <MlbButton v-if="!isLargeScreen" label="Create your first announcement"
             class="rounded-lg! bg-primary-50! text-primary-700! h-9! border-none!"
-            @click="handleAddOption('announcement')"
-          />
+            @click="handleAddOption('announcement')" />
         </p>
       </div>
     </div>
@@ -35,43 +26,15 @@
       </n-spin>
     </div>
     <div v-else class="space-y-3">
-      <div
-        v-for="announcement in items"
-        :key="announcement.id"
-        class="p-4 bg-white rounded-2xl cursor-pointer"
-        style="box-shadow: 0px 4px 30px 0px #0000001a"
-        @click="handleAddOption('announcement')"
-      >
+      <div v-for="announcement in items" :key="announcement.id" class="p-4 bg-white rounded-2xl cursor-pointer"
+        style="box-shadow: 0px 4px 30px 0px #0000001a" @click="handleAddOption('announcement')">
         <div class="flex items-center justify-between gap-1 mb-3">
-          <span
-            :class="[
-              'text-[10px] px-2 font-medium py-0.5 rounded-[20px]',
-              {
-                'text-red-500 bg-red-100': announcement.priority.toLowerCase() === 'high',
-                'text-yellow-500 bg-yellow-100': announcement.priority.toLowerCase() === 'medium',
-                'text-blue-500 bg-blue-100': announcement.priority.toLowerCase() === 'low',
-              },
-            ]"
-            >⚉ {{ announcement.priority.toLowerCase() }}
-          </span>
           <div>
-            <n-dropdown
-              :show="showDropdown(announcement.id)"
-              :options="options"
-              @select="(key) => handleSelect(key, announcement)"
-              class="z-10!"
-            >
-              <n-button
-                text
-                type="tertiary"
-                @click.stop.prevent="(e: MouseEvent) => handleShowDropdown(announcement.id, e)"
-              >
-                <MlbIcon
-                  name="vuesax.linear.more"
-                  :size="20"
-                  color="#737373"
-                  style="transform: rotate(90deg)"
-                />
+            <n-dropdown :show="showDropdown(announcement.id)" :options="options"
+              @select="(key) => handleSelect(key, announcement)" class="z-10!">
+              <n-button text type="tertiary"
+                @click.stop.prevent="(e: MouseEvent) => handleShowDropdown(announcement.id, e)">
+                <MlbIcon name="vuesax.linear.more" :size="20" color="#737373" style="transform: rotate(90deg)" />
               </n-button>
             </n-dropdown>
           </div>
@@ -87,18 +50,13 @@
             {{ announcement.view_count }}
             <span class="text-gray-300 mr-0.5">/ {{ announcement.members.length }} </span> Views
           </div>
-          <MlbAvatar
-            :options="{ firstname_field: 'name', src_field: 'avatar', users: announcement.members }"
-            :max="5"
-          />
+          <MlbAvatar :options="{ firstname_field: 'name', src_field: 'avatar', users: announcement.members }"
+            :max="5" />
         </div>
       </div>
-      <MlbButton
-        v-if="!isLargeScreen && items.length"
-        label="Create new announcement"
+      <MlbButton v-if="!isLargeScreen && items.length" label="Create new announcement"
         class="rounded-lg! bg-primary-50! text-primary-700! h-9! border-none! w-full!"
-        @click="handleAddOption('announcement')"
-      />
+        @click="handleAddOption('announcement')" />
     </div>
   </div>
 </template>
@@ -189,32 +147,5 @@ const handleShowDropdown = (id: string | number, e?: MouseEvent) => {
   e?.stopPropagation()
 
   selectedId.value === id ? (selectedId.value = 0) : (selectedId.value = id)
-}
-
-const handleClick = (announcement: Announcement) => {
-  AlertService.info({
-    subject: announcement.title,
-    message: announcement.content,
-    closable: true,
-    showIcon: false,
-    closablePosition: 'left',
-    html: `<div class="max-w-3xl mx-auto py-3 border-y border-gray-300">
-  <div class="flex items-start justify-between gap-6">
-    <div class="flex-1 min-w-0">
-      <div class="text-[10px] font-semibold text-gray-600">Created by:</div>
-      <div class="mt-1 text-xs font-medium text-gray-700 truncate">
-  ${announcement.creator?.name || 'Molebi User'}
-      </div>
-    </div>
-
-    <div class="flex-1 min-w-0 text-right">
-      <div class="text-[10px] font-semibold text-gray-600">Happening:</div>
-      <div class="mt-1 text-xs font-medium text-gray-700">
-        ${announcement.created_at}
-      </div>
-    </div>
-  </div>`,
-    showCancelButton: false,
-  })
 }
 </script>
