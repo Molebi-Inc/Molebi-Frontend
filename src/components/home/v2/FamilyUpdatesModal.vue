@@ -51,7 +51,7 @@ const updateForm = (value: number[]) => {
 const handlePost = async () => {
   if (!form.value.title.trim()) return
   await createAnnouncement(form.value)
-  form.value = { title: '', content: '', type: null, priority: 'high', member_ids: [], create_reminder: true }
+  form.value = { title: '', content: '', member_ids: [], create_reminder: true }
   showForm.value = false
   showMemberSelector.value = false
 }
@@ -137,11 +137,6 @@ onMounted(() => {
 
       <div v-else-if="!hasItems" class="text-center py-8">
         <p class="text-sm text-neutral-400 mb-5">No family updates yet.</p>
-        <button
-          class="bg-primary-700 hover:bg-primary-800 text-white text-sm font-semibold px-6 py-3 rounded-3xl transition-colors cursor-pointer"
-          @click="toggleForm">
-          Add your first update
-        </button>
       </div>
 
       <div v-else class="space-y-3">

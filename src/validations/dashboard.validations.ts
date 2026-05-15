@@ -15,8 +15,6 @@ export const announcementValidation = () => {
   const form = ref<AnnouncementFormValues>({
     title: '',
     content: '',
-    priority: 'high',
-    type: null,
     member_ids: [],
     create_reminder: true,
   })
@@ -24,9 +22,6 @@ export const announcementValidation = () => {
   const schema = z.object({
     title: z.string().min(1, { message: 'Title is required.' }),
     description: z.string().min(1, { message: 'Description is required.' }),
-    priority: z.enum(['high', 'medium', 'low'], {
-      message: 'Priority must be high, medium, or low.',
-    }),
     member_ids: z.array(z.any()).min(0),
     create_reminder: z.boolean(),
   })
@@ -56,20 +51,6 @@ export const announcementValidation = () => {
         } catch (err: unknown) {
           const messageText =
             err instanceof z.ZodError ? err.issues?.[0]?.message : 'Description is required.'
-          return Promise.reject(messageText)
-        }
-      },
-    },
-    priority: {
-      required: true,
-      trigger: 'change',
-      validator: async (_rule: FormItemRule, value: string) => {
-        try {
-          schema.pick({ priority: true }).parse({ priority: value })
-          return Promise.resolve()
-        } catch (err: unknown) {
-          const messageText =
-            err instanceof z.ZodError ? err.issues?.[0]?.message : 'Priority is required.'
           return Promise.reject(messageText)
         }
       },

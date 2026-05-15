@@ -51,15 +51,15 @@ const createDropdownOptions = (options: Option[]) => {
 const avatarOptions = computed(() => {
   return Array.isArray(props.options.users)
     ? props.options.users.map((user) => ({
-        name: handleUserFormatting(user).name,
-        src: handleUserFormatting(user).src,
-      }))
+      name: handleUserFormatting(user).name,
+      src: handleUserFormatting(user).src,
+    }))
     : [
-        {
-          name: handleUserFormatting(props.options.users).name,
-          src: handleUserFormatting(props.options.users).src,
-        },
-      ]
+      {
+        name: handleUserFormatting(props.options.users).name,
+        src: handleUserFormatting(props.options.users).src,
+      },
+    ]
 })
 
 const handleUserFormatting = (user: Record<string, any>): { name: string; src: string } => {
@@ -74,7 +74,8 @@ const handleUserFormatting = (user: Record<string, any>): { name: string; src: s
   const hasName = Boolean(firstName || familyName)
   const fallbackName = hasName ? `${firstName ?? ''} ${familyName ?? ''}`.trim() : 'Molebi User'
   const encodedName = encodeURIComponent(fallbackName)
-  const src = props.options.src_field
+  console.log('src', props.options.src_field)
+  const src = props.options.src_field && user[props.options.src_field as keyof typeof user] != null
     ? user[props.options.src_field as keyof typeof user]
     : `https://ui-avatars.com/api/?name=${encodedName}&background=random&size=${props.size}`
   return { name, src }
